@@ -1,64 +1,55 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ResultViewManager : MonoBehaviour
 {
-    public GameObject cellPrefab;  // セルのプレハブ
-    public Transform fixedColumn;  // 左端の固定列
-    public Transform contentPanel; // スクロールする表のパネル
+    public GameObject cellPrefab; // セルのプレハブ
+    public RectTransform resultView; // 表全体のコンテンツ
+    public RectTransform columnTitle; // 固定列 (行タイトル)
 
-    private int rows = 3;
-    private int cols = 16;
-
-    private string[] rowTitles = { "項目1", "項目2", "項目3" };
+    private int rows = 3; // 行数
+    private int cols = 16; // 列数
 
     void Start()
     {
+        if (resultView == null)
+        {
+            Debug.LogError("resultView が設定されていません！", this);
+            return;
+        }
         if (cellPrefab == null)
         {
-            Debug.LogError("cellPrefab is null");
+            Debug.LogError("cellPrefab が設定されていません！", this);
             return;
         }
-        if (fixedColumn == null)
-        {
-            Debug.LogError("fixedColumn is null");
-            return;
-        }
-        if (contentPanel == null)
-        {
-            Debug.LogError("contentPanel is null");
-            return;
-        }
-
         GenerateTable();
     }
 
     void GenerateTable()
     {
-        // 固定列（左側のタイトル部分）
-        for (int i = 0; i < rows; i++)
+        // 既存の子オブジェクトを削除
+        foreach (Transform child in resultView)
         {
-            GameObject cell = Instantiate(cellPrefab, fixedColumn);
-            if (cell.GetComponent<Text>() != null)
-            {
-                cell.GetComponent<Text>().text = rowTitles[i];
-            }
+            Destroy(child.gameObject);
         }
-
-        // データ部分（スクロールする表）
+        
         for (int i = 0; i < rows; i++)
         {
-            GameObject row = new GameObject("Row" + i, typeof(RectTransform));
-            row.transform.SetParent(contentPanel);
-            row.AddComponent<HorizontalLayoutGroup>(); // 横にセルを並べる
+            // 行の作成
+            GameObject row = new GameObject($"Row{i}", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(resultView, false);
+            row.GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
+            row.GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
+            row.GetComponent<RectTransform>().pivot = new Vector2(0, 1);
+            row.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 30);
 
-            for (int j = 0; j < cols - 1; j++) // 1列分少ない
+            // 各セルを追加
+            for (int j = 0; j < cols - 1; j++)
             {
-                GameObject cell = Instantiate(cellPrefab, row.transform);
-                if (cell.GetComponent<Text>() != null)
-                {
-                    cell.GetComponent<Text>().text = $"({i},{j + 1})";
-                }
+                GameObject cell = Instantiate(cellPrefab, row.transform, false);
+                cell.GetComponent<Text>().text = $"({i},{j + 1})";
             }
         }
     }
