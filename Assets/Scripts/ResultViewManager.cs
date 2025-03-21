@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class ResultViewManager : MonoBehaviour
 {
@@ -14,16 +15,6 @@ public class ResultViewManager : MonoBehaviour
 
     void Start()
     {
-        if (resultView == null)
-        {
-            Debug.LogError("resultView が設定されていません！", this);
-            return;
-        }
-        if (cellPrefab == null)
-        {
-            Debug.LogError("cellPrefab が設定されていません！", this);
-            return;
-        }
         GenerateTable();
     }
 
@@ -40,16 +31,38 @@ public class ResultViewManager : MonoBehaviour
             // 行の作成
             GameObject row = new GameObject($"Row{i}", typeof(RectTransform), typeof(HorizontalLayoutGroup));
             row.transform.SetParent(resultView, false);
-            row.GetComponent<RectTransform>().anchorMin = new Vector2(0, 1);
-            row.GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
-            row.GetComponent<RectTransform>().pivot = new Vector2(0, 1);
-            row.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 30);
+            
+            RectTransform rowRect = row.GetComponent<RectTransform>();
+            rowRect.anchorMin = new Vector2(0, 1);
+            rowRect.anchorMax = new Vector2(0, 1);
+            rowRect.pivot = new Vector2(0, 1);
+            rowRect.sizeDelta = new Vector2(resultView.rect.width, 30); // 幅を resultView に合わせる
+
+            // HorizontalLayoutGroup 設定
+            HorizontalLayoutGroup layoutGroup = row.GetComponent<HorizontalLayoutGroup>();
+            layoutGroup.childForceExpandWidth = false;
+            layoutGroup.childForceExpandHeight = true;
+            layoutGroup.spacing = 5;
 
             // 各セルを追加
             for (int j = 0; j < cols - 1; j++)
             {
                 GameObject cell = Instantiate(cellPrefab, row.transform, false);
-                cell.GetComponent<Text>().text = $"({i},{j + 1})";
+                
+                // LayoutElementを追加して最小幅を設定
+                LayoutElement layoutElement = cell.AddComponent<LayoutElement>();
+                layoutElement.minWidth = 50; // 最小幅を設定
+                
+                // TextMeshProUGUIコンポーネントを取得してテキスト設定
+                TextMeshProUGUI textComponent = cell.GetComponent<TextMeshProUGUI>();
+                if (textComponent != null)
+                {
+                    textComponent.text = $"({i},{j + 1})";
+                }
+                else
+                {
+                    Debug.LogError("cellPrefab に TextMeshProUGUI コンポーネントが見つかりません！");
+                }
             }
         }
     }
