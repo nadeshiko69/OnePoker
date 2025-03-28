@@ -9,9 +9,14 @@ public class RandomChoiceCard : MonoBehaviour
 
     void Start()
     {
-        shuffledCard = Enumerable.Range(1, 52).ToList();
+        shuffledCard = Enumerable.Range(0, 51).ToList();
         ShuffleCard();
         PrintCard();
+
+        PopCard();
+        PopCard();
+        PopCard();
+        PopCard();
     }
 
     public void ShuffleCard()
@@ -28,15 +33,21 @@ public class RandomChoiceCard : MonoBehaviour
         Debug.Log(string.Join(", ", shuffledCard));
     }
 
-    public int PopCard()
+    public (int Mark, int Number) PopCard()
     {
         if (shuffledCard.Count == 0)
         {
             Debug.LogWarning("No more cards to pop!");
-            return -1;
+            return (-1, -1); // エラー値
         }
+
         int topCard = shuffledCard[shuffledCard.Count - 1];
         shuffledCard.RemoveAt(shuffledCard.Count - 1);
-        return topCard;
+
+        int Mark = topCard / 13;  // 0 ダイヤ, 1 ハート, 2 スペード, 3 クラブ
+        int Number = topCard % 13 + 1;
+
+        Debug.Log($"Mark: {Mark}, Number: {Number}");
+        return (Mark, Number);
     }
 }
