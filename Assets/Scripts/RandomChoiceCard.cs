@@ -34,8 +34,10 @@ public class RandomChoiceCard : MonoBehaviour
         // DisplayUI(opponentUI3);
         // DisplayUI(opponentUI4);
 
-        DisplayCardUI(playerCardNumber1, playerCardMark1);
-        DisplayCardUI(playerCardNumber2, playerCardMark2);
+        DrawCard(playerUI1);
+        DrawCard(playerUI2);
+        DrawCard(opponentUI3);
+        DrawCard(opponentUI4);
     }
 
     // カードをシャッフルする
@@ -48,7 +50,20 @@ public class RandomChoiceCard : MonoBehaviour
         }
     }
 
-    // カードを一枚引く
+    public void DrawCard(TextMeshProUGUI resultText )
+    {
+        var (idNumber, Mark, Number) = PopCard();
+
+        if (resultText == playerUI1 || resultText == playerUI2){
+            DisplayUI(resultText, idNumber);
+            DisplayCardUI(playerCardNumber1, playerCardMark1, idNumber, Mark, Number);
+        }
+        else{
+            DisplayUI(resultText, idNumber);
+        }
+    }
+
+    // 山札からカードを引いて、そのカードのID、マーク、数字を返す
     public (int idNumber, int Mark, string Number) PopCard()
     {
         var NumberView = new string[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
@@ -72,9 +87,9 @@ public class RandomChoiceCard : MonoBehaviour
     }
 
     // カードを1枚引いて、DOWN/UPをUIに表示
-    public void DisplayUI(TextMeshProUGUI resultText)
+    public void DisplayUI(TextMeshProUGUI resultText, int idNumber)
     {
-        var (idNumber, _, _) = PopCard(); // Markは使わないので無視 `_`
+        // var (idNumber, _, _) = PopCard(); // Markは使わないので無視 `_`
 
         // UI に表示
         if (resultText != null)
@@ -90,9 +105,9 @@ public class RandomChoiceCard : MonoBehaviour
     }
 
     // カードの数字とマークを表示
-    public void DisplayCardUI(TextMeshProUGUI numberText, TextMeshProUGUI markText)
+    public void DisplayCardUI(TextMeshProUGUI numberText, TextMeshProUGUI markText, int idNumber, int mark, string number)
     {
-        var (idNumber, mark, number) = PopCard();
+        // var (idNumber, mark, number) = PopCard();
 
         if (numberText != null)
         {
