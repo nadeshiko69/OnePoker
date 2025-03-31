@@ -7,10 +7,21 @@ public class RandomChoiceCard : MonoBehaviour
 {
     private List<int> shuffledCard;
     public IReadOnlyList<int> ShuffledCard => shuffledCard;
-    public TextMeshProUGUI playerUI1; // UI 表示用Text
-    public TextMeshProUGUI playerUI2; // UI 表示用Text
-    public TextMeshProUGUI opponentUI3; // UI 表示用Text
-    public TextMeshProUGUI opponentUI4; // UI 表示用Text
+    
+    // UP/DOWNの表示テキスト
+    public TextMeshProUGUI playerUI1;
+    public TextMeshProUGUI playerUI2;
+    public TextMeshProUGUI opponentUI3;
+    public TextMeshProUGUI opponentUI4;
+
+    // プレイヤーのカードの数字とマークを表示
+    public TextMeshProUGUI playerCardNumber1;
+    public TextMeshProUGUI playerCardNumber2;
+    public TextMeshProUGUI playerCardMark1;
+    public TextMeshProUGUI playerCardMark2;
+    private readonly string[] marks = { "♦", "♥", "♠", "♣" };
+    private readonly Color redColor = new Color(1f, 0.2f, 0.2f);        // 文字色　赤
+    private readonly Color blackColor = new Color(0.1f, 0.1f, 0.1f);    // 文字色　黒
 
     void Start()
     {
@@ -18,10 +29,13 @@ public class RandomChoiceCard : MonoBehaviour
         ShuffleCard();
         Debug.Log(string.Join(", ", shuffledCard));
 
-        DisplayUI(playerUI1);
-        DisplayUI(playerUI2);
-        DisplayUI(opponentUI3);
-        DisplayUI(opponentUI4);
+        // DisplayUI(playerUI1);
+        // DisplayUI(playerUI2);
+        // DisplayUI(opponentUI3);
+        // DisplayUI(opponentUI4);
+
+        DisplayCardUI(playerCardNumber1, playerCardMark1);
+        DisplayCardUI(playerCardNumber2, playerCardMark2);
     }
 
     // カードをシャッフルする
@@ -73,5 +87,23 @@ public class RandomChoiceCard : MonoBehaviour
         }
 
         Debug.Log($"DisplayUI: {resultText.text}");
+    }
+
+    // カードの数字とマークを表示
+    public void DisplayCardUI(TextMeshProUGUI numberText, TextMeshProUGUI markText)
+    {
+        var (idNumber, mark, number) = PopCard();
+
+        if (numberText != null)
+        {
+            numberText.text = number.ToString();
+            numberText.color = (mark == 0 || mark == 1) ? redColor : blackColor;
+        }
+
+        if (markText != null)
+        {
+            markText.text = marks[mark]; // マーク文字をセット
+            markText.color = (mark == 0 || mark == 1) ? redColor : blackColor;
+        }
     }
 }
