@@ -1,24 +1,30 @@
 using UnityEngine;
 using System.Linq;
-using System.Collections.Generic; // Listを使う
+using System.Collections.Generic;
+using TMPro;
 
 public class RandomChoiceCard : MonoBehaviour
 {
     private List<int> shuffledCard;
     public IReadOnlyList<int> ShuffledCard => shuffledCard;
+    public TextMeshProUGUI playerUI1; // UI 表示用Text
+    public TextMeshProUGUI playerUI2; // UI 表示用Text
+    public TextMeshProUGUI opponentUI3; // UI 表示用Text
+    public TextMeshProUGUI opponentUI4; // UI 表示用Text
 
     void Start()
     {
         shuffledCard = Enumerable.Range(0, 51).ToList();
         ShuffleCard();
-        PrintCard();
+        Debug.Log(string.Join(", ", shuffledCard));
 
-        PopCard();
-        PopCard();
-        PopCard();
-        PopCard();
+        DisplayUI(playerUI1);
+        DisplayUI(playerUI2);
+        DisplayUI(opponentUI3);
+        DisplayUI(opponentUI4);
     }
 
+    // カードをシャッフルする
     public void ShuffleCard()
     {
         for (int i = shuffledCard.Count - 1; i > 0; i--)
@@ -28,26 +34,44 @@ public class RandomChoiceCard : MonoBehaviour
         }
     }
 
-    public void PrintCard()
+    // カードを一枚引く
+    public (int idNumber, int Mark, string Number) PopCard()
     {
-        Debug.Log(string.Join(", ", shuffledCard));
-    }
+        var NumberView = new string[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
 
-    public (int Mark, int Number) PopCard()
-    {
         if (shuffledCard.Count == 0)
         {
             Debug.LogWarning("No more cards to pop!");
-            return (-1, -1); // エラー値
+            return (-1, -1, null); // エラー値
         }
 
         int topCard = shuffledCard[shuffledCard.Count - 1];
         shuffledCard.RemoveAt(shuffledCard.Count - 1);
 
         int Mark = topCard / 13;  // 0 ダイヤ, 1 ハート, 2 スペード, 3 クラブ
-        int Number = topCard % 13 + 1;
+        string Number = NumberView[topCard % 13];
 
-        Debug.Log($"Mark: {Mark}, Number: {Number}");
-        return (Mark, Number);
+
+
+        Debug.Log($"idNumber: {topCard}, Mark: {Mark}, Number: {Number}");
+        return (topCard%13, Mark, Number);
+    }
+
+    // カードを1枚引いて、DOWN/UPをUIに表示
+    public void DisplayUI(TextMeshProUGUI resultText)
+    {
+        var (idNumber, _, _) = PopCard(); // Markは使わないので無視 `_`
+
+        // UI に表示
+        if (resultText != null)
+        {
+            resultText.text = (idNumber <= 5) ? "DOWN" : "UP";
+        }
+        else
+        {
+            Debug.LogWarning("resultText is null");
+        }
+
+        Debug.Log($"DisplayUI: {resultText.text}");
     }
 }
