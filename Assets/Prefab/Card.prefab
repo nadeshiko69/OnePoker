@@ -283,6 +283,7 @@ GameObject:
   - component: {fileID: 1153646800515955142}
   - component: {fileID: 4609965968174140554}
   - component: {fileID: 1419736087886293770}
+  - component: {fileID: 3573624355274126565}
   m_Layer: 5
   m_Name: Card
   m_TagString: Untagged
@@ -349,3 +350,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3573624355274126565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8622914166395771307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74fc87dd07b4bdc47aab2ff3ba652b46, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  numberText: {fileID: 3028796803225780537}
+  markText: {fileID: 4376800749167064492}
+  cardImage: {fileID: 1419736087886293770}
+  frontSprite: {fileID: 7704196095705134382, guid: 3ea6ec1eebeeaff4ba8f9b505dcf6ff4, type: 3}
+  backSprite: {fileID: 1827056050872044259, guid: c426aa303f23cd244b1c1aa1244dd2c4, type: 3}

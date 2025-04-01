@@ -11,8 +11,13 @@ public class RandomChoiceCard : MonoBehaviour
     // UP/DOWNの表示テキスト
     public TextMeshProUGUI playerUI1;
     public TextMeshProUGUI playerUI2;
-    public TextMeshProUGUI opponentUI3;
-    public TextMeshProUGUI opponentUI4;
+    public TextMeshProUGUI opponentUI1;
+    public TextMeshProUGUI opponentUI2;
+
+    public CardDisplay playerCard1;
+    public CardDisplay playerCard2;
+    public CardDisplay opponentCard1;
+    public CardDisplay opponentCard2;
 
     // プレイヤーのカードの数字とマークを表示
     public TextMeshProUGUI playerCardNumber1;
@@ -34,10 +39,10 @@ public class RandomChoiceCard : MonoBehaviour
         // DisplayUI(opponentUI3);
         // DisplayUI(opponentUI4);
 
-        DrawCard(playerUI1);
-        DrawCard(playerUI2);
-        DrawCard(opponentUI3);
-        DrawCard(opponentUI4);
+        DrawCard(playerUI1, playerCard1);
+        DrawCard(playerUI2, playerCard2);
+        DrawCard(opponentUI1, opponentCard1);
+        DrawCard(opponentUI2, opponentCard2);
     }
 
     // カードをシャッフルする
@@ -50,16 +55,18 @@ public class RandomChoiceCard : MonoBehaviour
         }
     }
 
-    public void DrawCard(TextMeshProUGUI resultText )
+    public void DrawCard(TextMeshProUGUI resultText, CardDisplay cardPrefab)
     {
         var (idNumber, Mark, Number) = PopCard();
 
         if (resultText == playerUI1 || resultText == playerUI2){
             DisplayUI(resultText, idNumber);
+            cardPrefab.SetCard(true);
             DisplayCardUI(playerCardNumber1, playerCardMark1, idNumber, Mark, Number);
         }
         else{
             DisplayUI(resultText, idNumber);
+            cardPrefab.SetCard(false);
         }
     }
 
