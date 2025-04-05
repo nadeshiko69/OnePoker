@@ -1,38 +1,27 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 public class DropZone : MonoBehaviour, IDropHandler
 {
-    public static DropZone[] allZones;
-
-    private Image image;
-
-    void Awake()
-    {
-        if (allZones == null)
-            allZones = FindObjectsOfType<DropZone>();
-
-        image = GetComponent<Image>();
-        image.enabled = false;
-    }
-
-    public static void ShowDropZones(bool show)
-    {
-        foreach (var zone in allZones)
-        {
-            if (zone.image != null)
-                zone.image.enabled = show;
-        }
-    }
-
     public void OnDrop(PointerEventData eventData)
     {
-        if (CardDraggable.draggedCard != null)
+        GameObject droppedObj = eventData.pointerDrag;
+        if (droppedObj != null)
         {
-            // 親だけ仮に移動（確定前）
-            CardDraggable.draggedCard.transform.SetParent(transform);
-            FindObjectOfType<PlacementManager>().ShowConfirmation(CardDraggable.draggedCard, this);
+            CardDraggable draggable = droppedObj.GetComponent<CardDraggable>();
+            if (draggable != null)
+            {
+                // ドラッグ対象のカードをこのDropZoneの子にする
+                draggable.transform.SetParent(transform);
+
+                // カードの位置を整える（中央揃え）
+                draggable.transform.localPosition = Vector3.zero;
+
+                // ドロップ確認パネルを表示
+                // FindObjectOfType<PlacementManager>().AskConfirmation(droppedObj, this.gameObject);
+            }
         }
+
+        
     }
 }

@@ -26,7 +26,7 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         canvasGroup.alpha = 0.6f; // 透明度を下げる
         canvasGroup.blocksRaycasts = false; // 他のオブジェクトがドロップを受けられるようにする
 
-        // 親を `Canvas` に変更（ドラッグ時に他の UI の影響を受けないように）
+        // 親をCanvasに変更（ドラッグ時に他の UI の影響を受けないように）
         transform.SetParent(transform.root);
     }
 
