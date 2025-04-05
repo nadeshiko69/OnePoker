@@ -34,15 +34,16 @@ public class RandomChoiceCard : MonoBehaviour
         ShuffleCard();
         Debug.Log(string.Join(", ", shuffledCard));
 
-        // DisplayUI(playerUI1);
-        // DisplayUI(playerUI2);
-        // DisplayUI(opponentUI3);
-        // DisplayUI(opponentUI4);
-
         DrawCard(playerUI1, playerCard1);
         DrawCard(playerUI2, playerCard2);
         DrawCard(opponentUI1, opponentCard1);
         DrawCard(opponentUI2, opponentCard2);
+
+        // 裏向き配置
+        // playerCard1.SetCard(false);
+        // playerCard2.SetCard(false);
+        // opponentCard1.SetCard(false);
+        // opponentCard2.SetCard(false);
     }
 
     // カードをシャッフルする
