@@ -27,15 +27,33 @@ public class PlacementManager : MonoBehaviour
 
     private void ConfirmPlacement()
     {
-        currentCard.transform.position = currentZone.transform.position;
+        // カードをドロップゾーンに正式に配置
+        currentCard.transform.SetParent(currentZone.transform);
+        currentCard.transform.localPosition = Vector3.zero;
+
+        // パネル非表示 & 状態クリア
         confirmationPanel.SetActive(false);
+        ResetState();
     }
 
     private void CancelPlacement()
     {
+        // カードを元の位置に戻す
         var drag = currentCard.GetComponent<CardDraggable>();
-        currentCard.transform.SetParent(drag.OriginalParent);
-        currentCard.transform.position = drag.OriginalPosition;
+        if (drag != null)
+        {
+            currentCard.transform.SetParent(drag.OriginalParent);
+            currentCard.transform.position = drag.OriginalPosition;
+        }
+
+        // パネル非表示 & 状態クリア
         confirmationPanel.SetActive(false);
+        ResetState();
+    }
+
+    private void ResetState()
+    {
+        currentCard = null;
+        currentZone = null;
     }
 }
