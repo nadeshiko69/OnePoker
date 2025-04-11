@@ -3,22 +3,26 @@ using UnityEngine.EventSystems;
 
 public class DropZone : MonoBehaviour, IDropHandler
 {
+    public bool isPlayerZone = true;
     public void OnDrop(PointerEventData eventData)
     {
         GameObject droppedObj = eventData.pointerDrag;
-        if (droppedObj != null)
+        if (isPlayerZone)
         {
-            CardDraggable draggable = droppedObj.GetComponent<CardDraggable>();
-            if (draggable != null)
+            if (droppedObj != null)
             {
-                // ドラッグ対象のカードをこのDropZoneの子にする
-                draggable.transform.SetParent(transform);
+                CardDraggable draggable = droppedObj.GetComponent<CardDraggable>();
+                if (draggable != null)
+                {
+                    // ドラッグ対象のカードをこのDropZoneの子にする
+                    draggable.transform.SetParent(transform);
 
-                // カードの位置を整える（中央揃え）
-                draggable.transform.localPosition = Vector3.zero;
+                    // カードの位置を整える（中央揃え）
+                    draggable.transform.localPosition = Vector3.zero;
 
-                // ドロップ確認パネルを表示
-                FindObjectOfType<PlacementManager>().ShowConfirmation(droppedObj, this);
+                    // ドロップ確認パネルを表示
+                    FindObjectOfType<PlacementManager>().ShowConfirmation(droppedObj, this);
+                }
             }
         }
     }
