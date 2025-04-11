@@ -20,18 +20,29 @@ public class PlacementManager : MonoBehaviour
 
     public void ShowConfirmation(GameObject card, DropZone zone)
     {
+        Debug.Log("ShowConfirmation called");
+        Debug.Log("card: " + card);
+        Debug.Log("zone: " + zone);
+
         currentCard = card;
         currentZone = zone;
         confirmationPanel.SetActive(true);
+
+        // リスナーの多重登録防止
+        yesButton.onClick.RemoveAllListeners();
+        noButton.onClick.RemoveAllListeners();
+
+        yesButton.onClick.AddListener(ConfirmPlacement);
+        noButton.onClick.AddListener(CancelPlacement);
     }
+
 
     private void ConfirmPlacement()
     {
-        // カードをドロップゾーンに正式に配置
-        currentCard.transform.SetParent(currentZone.transform);
-        currentCard.transform.localPosition = Vector3.zero;
-
-        // パネル非表示 & 状態クリア
+        Debug.Log("ConfirmPlacement called");
+        Debug.Log("currentCard: " + currentCard);
+        Debug.Log("currentZone: " + currentZone);
+        currentCard.transform.position = currentZone.transform.position;
         confirmationPanel.SetActive(false);
         ResetState();
     }
@@ -45,7 +56,7 @@ public class PlacementManager : MonoBehaviour
             currentCard.transform.SetParent(drag.OriginalParent);
             currentCard.transform.position = drag.OriginalPosition;
         }
-
+        
         // パネル非表示 & 状態クリア
         confirmationPanel.SetActive(false);
         ResetState();
@@ -55,5 +66,10 @@ public class PlacementManager : MonoBehaviour
     {
         currentCard = null;
         currentZone = null;
+        confirmationPanel.SetActive(false);
+
+        // リスナーをリセット
+        yesButton.onClick.RemoveAllListeners();
+        noButton.onClick.RemoveAllListeners();
     }
 }
