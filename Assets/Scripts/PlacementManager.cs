@@ -1,25 +1,45 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
 
 public class PlacementManager : MonoBehaviour
 {
     public GameObject confirmationPanel;
     public Button yesButton;
     public Button noButton;
-    private bool opponent_setCard = false;
 
     private GameObject currentCard;
     private DropZone currentZone;
     private RandomChoiceCard randomChoiceCard;
 
     // For Debug ; 相手のカードを自動で配置
+    private bool opponent_setCard = false;
     public GameObject opponentCard;
     public DropZone opponentZone;
 
+    // 両者カードを配置したらベット開始
+    private bool bothCardsPlaced = false;
+
+    // ベットフェーズ用のUI
+    public GameObject bettingPanel;
+    public TextMeshProUGUI playerLifeText;
+    public TextMeshProUGUI opponentLifeText;
+    private int MAX_LIFE = 20;
+    private int MIN_LIFE = 0;
+    private int playerLife = 20;
+    private int opponentLife = 20;
+    private int betAmount = 0;
+    public Button bet1Button;
+    public Button bet2Button;
+
+
+
     void Start()
     {
-        confirmationPanel.SetActive(false); // デフォルトでは非表示にしておく
+        UpdateLifeUI();
+        confirmationPanel.SetActive(false);
+        bettingPanel.SetActive(false);
         randomChoiceCard = FindObjectOfType<RandomChoiceCard>();
 
         yesButton.onClick.AddListener(ConfirmPlacement);
@@ -32,6 +52,77 @@ public class PlacementManager : MonoBehaviour
         {
             PlaceOpponentCard(opponentCard, opponentZone);
             opponent_setCard = false;
+        }
+
+        if (bothCardsPlaced)
+        {
+            // ベット開始
+            Debug.Log("ベット開始");
+            ShowBettingUI();
+            bothCardsPlaced = false;
+        }
+    }
+
+    private IEnumerator HideBettingUI()
+    {
+        yield return new WaitForSeconds(1f);
+        bettingPanel.SetActive(false);
+    }
+
+    private IEnumerator SetOpponentCardFlag()
+    {
+        yield return new WaitForSeconds(1f);
+        opponent_setCard = true;
+    }
+    
+    private IEnumerator SetBettingPhase()
+    {
+        yield return new WaitForSeconds(1f);
+        bothCardsPlaced = true;
+    }
+
+    private void UpdateLifeUI()
+    {
+        playerLifeText.text = "Your Life: " + playerLife;
+        opponentLifeText.text = "Opponent Life: " + opponentLife;
+    }
+
+    private void ShowBettingUI()
+    {
+        bettingPanel.SetActive(true);
+        StartCoroutine(HideBettingUI());
+
+        bet1Button.onClick.RemoveAllListeners();
+        bet2Button.onClick.RemoveAllListeners();
+
+        bet1Button.onClick.AddListener(() => PlaceBet(1));
+        bet2Button.onClick.AddListener(() => PlaceBet(-1));
+    }
+
+    private void PlaceBet(int amount)
+    {
+        betAmount = amount;
+
+        if (playerLife >MIN_LIFE && betAmount == 1)
+        {
+            playerLife -= amount;
+
+            Debug.Log($"Betting {amount} life!");
+            UpdateLifeUI();
+            bettingPanel.SetActive(false);
+            // 次のフェーズへ
+        }
+        else if (playerLife < MAX_LIFE && betAmount == -1)
+        {
+            playerLife -= amount;
+
+            Debug.Log($"Betting {amount} life!");
+            UpdateLifeUI();
+            bettingPanel.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("ライフが足りないためベットできません！");
         }
     }
 
@@ -53,7 +144,6 @@ public class PlacementManager : MonoBehaviour
         noButton.onClick.AddListener(CancelPlacement);
     }
 
-
     private void ConfirmPlacement()
     {
         Debug.Log("ConfirmPlacement called");
@@ -62,15 +152,7 @@ public class PlacementManager : MonoBehaviour
         currentCard.transform.position = currentZone.transform.position;
         confirmationPanel.SetActive(false);
         ResetState();
-
-        // 1秒待機後にopponent_setCardをtrueにする
         StartCoroutine(SetOpponentCardFlag());
-    }
-
-    private IEnumerator SetOpponentCardFlag()
-    {
-        yield return new WaitForSeconds(1f);
-        opponent_setCard = true;
     }
 
     public void PlaceOpponentCard(GameObject card, DropZone zone)
@@ -95,6 +177,9 @@ public class PlacementManager : MonoBehaviour
         {
             Debug.LogError("Card or zone is null!");
         }
+
+        // 1秒待機後にベットフェーズに移行する
+        StartCoroutine(SetBettingPhase());
     }
 
     private void CancelPlacement()
