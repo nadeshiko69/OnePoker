@@ -170,6 +170,8 @@ public class PlacementManager : MonoBehaviour
         // CPUがコール
         Debug.Log("Opponent calls!");
         opponentCalled = true;
+        opponentLife -= currentBetAmount; // 相手のライフを減らす
+        UpdateLifeUI();
 
         yield return new WaitForSeconds(1f);
 
