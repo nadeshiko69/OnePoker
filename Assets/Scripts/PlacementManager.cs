@@ -29,11 +29,12 @@ public class PlacementManager : MonoBehaviour
     private int MIN_LIFE = 0;
     private int playerLife = 20;
     private int opponentLife = 20;
-    private int betAmount = 0;
+    private int currentBetAmount = 0;
     public Button bet1Button;
     public Button bet2Button;
-
-
+    
+    public Button callButton;
+    public TextMeshProUGUI callButtonText;
 
     void Start()
     {
@@ -44,6 +45,9 @@ public class PlacementManager : MonoBehaviour
 
         yesButton.onClick.AddListener(ConfirmPlacement);
         noButton.onClick.AddListener(CancelPlacement);
+
+        // Callボタンの初期テキストを設定
+        UpdateCallButtonText();
     }
 
     void Update()
@@ -83,14 +87,26 @@ public class PlacementManager : MonoBehaviour
 
     private void UpdateLifeUI()
     {
-        playerLifeText.text = "Your Life: " + playerLife;
-        opponentLifeText.text = "Opponent Life: " + opponentLife;
+        playerLifeText.text = "Life: " + playerLife;
+        opponentLifeText.text = "Life: " + opponentLife;
+    }
+
+    private void UpdateCallButtonText()
+    {
+        if (callButtonText != null)
+        {
+            string action = currentBetAmount >= 2 ? "Raise" : "Call";
+            callButtonText.text = $"{action} ({currentBetAmount})";
+        }
     }
 
     private void ShowBettingUI()
     {
         bettingPanel.SetActive(true);
         StartCoroutine(HideBettingUI());
+
+        // ベット開始時に自動で1をベット
+        PlaceBet(1);
 
         bet1Button.onClick.RemoveAllListeners();
         bet2Button.onClick.RemoveAllListeners();
@@ -101,28 +117,35 @@ public class PlacementManager : MonoBehaviour
 
     private void PlaceBet(int amount)
     {
-        betAmount = amount;
-
-        if (playerLife >MIN_LIFE && betAmount == 1)
+        if (amount > 0)
         {
-            playerLife -= amount;
+            // ベット額を1増やす
+            currentBetAmount += 1;
 
-            Debug.Log($"Betting {amount} life!");
-            UpdateLifeUI();
-            bettingPanel.SetActive(false);
-            // 次のフェーズへ
+            if (playerLife >= 1) // 1ライフ以上あればベット可能
+            {
+                playerLife -= 1; // 1ずつライフを減らす
+                Debug.Log($"Betting {currentBetAmount} life!");
+                UpdateLifeUI();
+                UpdateCallButtonText();
+            }
+            else
+            {
+                Debug.LogWarning("ライフが足りないためベットできません！");
+                currentBetAmount -= 1; // ベット額を元に戻す
+            }
         }
-        else if (playerLife < MAX_LIFE && betAmount == -1)
+        else if (amount < 0)
         {
-            playerLife -= amount;
-
-            Debug.Log($"Betting {amount} life!");
-            UpdateLifeUI();
-            bettingPanel.SetActive(false);
-        }
-        else
-        {
-            Debug.LogWarning("ライフが足りないためベットできません！");
+            // ベット額を1減らす
+            if (currentBetAmount > 1) // 最小ベット額は1
+            {
+                currentBetAmount -= 1;
+                playerLife += 1; // ライフを1戻す
+                Debug.Log($"Reducing bet to {currentBetAmount} life!");
+                UpdateLifeUI();
+                UpdateCallButtonText();
+            }
         }
     }
 
