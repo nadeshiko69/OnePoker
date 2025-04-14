@@ -36,11 +36,18 @@ public class PlacementManager : MonoBehaviour
     public Button callButton;
     public TextMeshProUGUI callButtonText;
 
+    private bool opponentCalled = false;
+    private bool cardsRevealed = false;
+
+    // オープンのUI
+    public GameObject openPanel; 
+
     void Start()
     {
         UpdateLifeUI();
         confirmationPanel.SetActive(false);
         bettingPanel.SetActive(false);
+        openPanel.SetActive(false);
         randomChoiceCard = FindObjectOfType<RandomChoiceCard>();
 
         yesButton.onClick.AddListener(ConfirmPlacement);
@@ -110,9 +117,11 @@ public class PlacementManager : MonoBehaviour
 
         bet1Button.onClick.RemoveAllListeners();
         bet2Button.onClick.RemoveAllListeners();
+        callButton.onClick.RemoveAllListeners();
 
         bet1Button.onClick.AddListener(() => PlaceBet(1));
         bet2Button.onClick.AddListener(() => PlaceBet(-1));
+        callButton.onClick.AddListener(() => StartCoroutine(HandleCall()));
     }
 
     private void PlaceBet(int amount)
@@ -146,6 +155,56 @@ public class PlacementManager : MonoBehaviour
                 UpdateLifeUI();
                 UpdateCallButtonText();
             }
+        }
+    }
+
+    private IEnumerator HandleCall()
+    {
+        // プレイヤーがコール
+        Debug.Log($"Player calls with {currentBetAmount} life!");
+        bettingPanel.SetActive(false);
+        UpdateCallButtonText();
+
+        yield return new WaitForSeconds(1f);
+
+        // CPUがコール
+        Debug.Log("Opponent calls!");
+        opponentCalled = true;
+
+        yield return new WaitForSeconds(1f);
+
+        // オープンのUIを表示しカードオープン
+        openPanel.SetActive(true);
+        yield return new WaitForSeconds(1f);
+        openPanel.SetActive(false);
+        RevealCards();
+    }
+
+    private void RevealCards()
+    {
+        if (!cardsRevealed)
+        {
+            // プレイヤーのカードを表向きにする
+            if (currentCard != null)
+            {
+                CardDisplay playerCardDisplay = currentCard.GetComponent<CardDisplay>();
+                if (playerCardDisplay != null)
+                {
+                    playerCardDisplay.SetCard(true);
+                }
+            }
+
+            // 相手のカードを表向きにする
+            if (opponentCard != null)
+            {
+                CardDisplay opponentCardDisplay = opponentCard.GetComponent<CardDisplay>();
+                if (opponentCardDisplay != null)
+                {
+                    opponentCardDisplay.SetCard(true);
+                }
+            }
+
+            cardsRevealed = true;
         }
     }
 
@@ -225,6 +284,10 @@ public class PlacementManager : MonoBehaviour
         currentCard = null;
         currentZone = null;
         confirmationPanel.SetActive(false);
+        opponentCalled = false;
+        cardsRevealed = false;
+        currentBetAmount = 0;
+        UpdateCallButtonText();
 
         // リスナーをリセット
         yesButton.onClick.RemoveAllListeners();
