@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
+using System.Collections.Generic;
 
 public class PlacementManager : MonoBehaviour
 {
@@ -17,6 +18,9 @@ public class PlacementManager : MonoBehaviour
     private bool opponent_setCard = false;
     public GameObject opponentCard;
     public DropZone opponentZone;
+
+    // プレイヤーのカードを保持
+    private List<GameObject> playerCards = new List<GameObject>();
 
     // 両者カードを配置したらベット開始
     private bool bothCardsPlaced = false;
@@ -40,7 +44,8 @@ public class PlacementManager : MonoBehaviour
     private bool cardsRevealed = false;
 
     // オープンのUI
-    public GameObject openPanel; 
+    public GameObject openPanel;
+    private ResultViewManager resultViewManager;
 
     void Start()
     {
@@ -49,6 +54,7 @@ public class PlacementManager : MonoBehaviour
         bettingPanel.SetActive(false);
         openPanel.SetActive(false);
         randomChoiceCard = FindObjectOfType<RandomChoiceCard>();
+        resultViewManager = FindObjectOfType<ResultViewManager>();
 
         yesButton.onClick.AddListener(ConfirmPlacement);
         noButton.onClick.AddListener(CancelPlacement);
@@ -187,12 +193,15 @@ public class PlacementManager : MonoBehaviour
         if (!cardsRevealed)
         {
             // プレイヤーのカードを表向きにする
-            if (currentCard != null)
+            foreach (GameObject card in playerCards)
             {
-                CardDisplay playerCardDisplay = currentCard.GetComponent<CardDisplay>();
-                if (playerCardDisplay != null)
+                if (card != null)
                 {
-                    playerCardDisplay.SetCard(true);
+                    CardDisplay playerCardDisplay = card.GetComponent<CardDisplay>();
+                    if (playerCardDisplay != null)
+                    {
+                        playerCardDisplay.SetCard(true);
+                    }
                 }
             }
 
@@ -207,7 +216,44 @@ public class PlacementManager : MonoBehaviour
             }
 
             cardsRevealed = true;
+
+            // 勝敗判定を表示
+            if (randomChoiceCard != null)
+            {
+                // resultViewManagerが見つからない場合は再取得を試みる
+                if (resultViewManager == null)
+                {
+                    resultViewManager = FindObjectOfType<ResultViewManager>();
+                    if (resultViewManager == null)
+                    {
+                        Debug.LogError("ResultViewManager not found in the scene!");
+                        return;
+                    }
+                }
+                StartCoroutine(ShowResultWithDelay(randomChoiceCard));
+            }
+            else
+            {
+                Debug.LogError("RandomChoiceCard not found!");
+            }
         }
+    }
+
+    private IEnumerator ShowResultWithDelay(RandomChoiceCard randomChoiceCard)
+    {
+        if (resultViewManager == null || randomChoiceCard == null)
+        {
+            Debug.LogError("Required components are missing for showing results!");
+            yield break;
+        }
+
+        // 1秒待ってから結果を表示
+        yield return new WaitForSeconds(1f);
+        resultViewManager.ShowResult(randomChoiceCard.PlayerCardValue, randomChoiceCard.OpponentCardValue);
+
+        // 3秒後に結果表示を消す
+        yield return new WaitForSeconds(3f);
+        resultViewManager.HideResult();
     }
 
     public void ShowConfirmation(GameObject card, DropZone zone)
@@ -235,6 +281,10 @@ public class PlacementManager : MonoBehaviour
         Debug.Log("currentZone: " + currentZone);
         currentCard.transform.position = currentZone.transform.position;
         confirmationPanel.SetActive(false);
+
+        // プレイヤーのカードをリストに追加
+        playerCards.Add(currentCard);
+
         ResetState();
         StartCoroutine(SetOpponentCardFlag());
     }
@@ -294,5 +344,8 @@ public class PlacementManager : MonoBehaviour
         // リスナーをリセット
         yesButton.onClick.RemoveAllListeners();
         noButton.onClick.RemoveAllListeners();
+
+        // ゲーム終了時にカードリストをクリア
+        playerCards.Clear();
     }
 }

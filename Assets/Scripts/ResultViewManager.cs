@@ -1,44 +1,83 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 
 public class ResultViewManager : MonoBehaviour
 {
-    public GameObject cellPrefab; // セルのプレハブ
-    public RectTransform resultView; // GridLayoutGroup を持つコンテナ
-    
-    private int rows = 3;  // 行数
-    private int cols = 16; // 列数
+    public GameObject resultPanel;
+    public TextMeshProUGUI resultText;
+
+    private readonly string[] cardRanks = { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
 
     void Start()
     {
-        GenerateTable();
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(false);
+        }
     }
 
-    void GenerateTable()
+    // 勝敗判定を行い結果を表示
+    public void ShowResult(int playerCardValue, int opponentCardValue)
     {
-        // 既存のセルを削除
-        foreach (Transform child in resultView)
+        if (resultPanel != null && resultText != null)
         {
-            Destroy(child.gameObject);
+            resultPanel.SetActive(true);
+            
+            // 同値の場合はDRAW
+            if (playerCardValue == opponentCardValue)
+            {
+                resultText.text = "DRAW";
+                resultText.color = Color.white;
+                Debug.Log($"Draw! Both players have {cardRanks[playerCardValue]}");
+                return;
+            }
+
+            bool playerWins = IsWinner(playerCardValue, opponentCardValue);
+            
+            if (playerWins)
+            {
+                resultText.text = "YOU WIN!";
+                resultText.color = Color.red;
+                Debug.Log($"Player wins with {cardRanks[playerCardValue]} vs {cardRanks[opponentCardValue]}");
+            }
+            else
+            {
+                resultText.text = "YOU LOSE...";
+                resultText.color = Color.blue;
+                Debug.Log($"Opponent wins with {cardRanks[opponentCardValue]} vs {cardRanks[playerCardValue]}");
+            }
+        }
+    }
+
+    // 特殊な勝敗判定ロジック
+    private bool IsWinner(int playerValue, int opponentValue)
+    {
+        // 同値の場合は引き分け（この関数は同値チェック後に呼ばれる）
+        if (playerValue == opponentValue)
+        {
+            return false;
         }
 
-        // セルを動的に生成
-        for (int i = 0; i < cols; i++) // 列を先に回す
+        // 2(index:0)とA(index:12)の特殊ケース
+        if (playerValue == 0 && opponentValue == 12) // プレイヤーの2がAに勝つ
         {
-            for (int j = 0; j < rows; j++) // 行を回す
-            {
-                GameObject cell = Instantiate(cellPrefab, resultView, false);
+            return true;
+        }
+        if (playerValue == 12 && opponentValue == 0) // 相手の2が自分のAに勝つ
+        {
+            return false;
+        }
 
-                // TextMeshProUGUI コンポーネントを取得
-                TextMeshProUGUI textComponent = cell.GetComponent<TextMeshProUGUI>();
-                if (textComponent != null)
-                {
-                    textComponent.text = $"({j},{i})";
-                }
-            }
+        // 通常の比較（大きい方が勝ち）
+        return playerValue > opponentValue;
+    }
+
+    // 結果表示を非表示にする
+    public void HideResult()
+    {
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(false);
         }
     }
 }
