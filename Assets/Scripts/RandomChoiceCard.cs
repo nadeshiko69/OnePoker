@@ -60,14 +60,25 @@ public class RandomChoiceCard : MonoBehaviour
     {
         var (idNumber, Mark, Number) = PopCard();
 
-        if (resultText == playerUI1 || resultText == playerUI2){
+        if (resultText == playerUI1)
+        {
             DisplayUI(resultText, idNumber);
             cardPrefab.SetCard(true);
             DisplayCardUI(playerCardNumber1, playerCardMark1, idNumber, Mark, Number);
+            Debug.Log($"Player Card 1: {Number}{marks[Mark]}");
         }
-        else{
+        else if (resultText == playerUI2)
+        {
+            DisplayUI(resultText, idNumber);
+            cardPrefab.SetCard(true);
+            DisplayCardUI(playerCardNumber2, playerCardMark2, idNumber, Mark, Number);
+            Debug.Log($"Player Card 2: {Number}{marks[Mark]}");
+        }
+        else
+        {
             DisplayUI(resultText, idNumber);
             cardPrefab.SetCard(false);
+            Debug.Log($"Opponent Card: {Number}{marks[Mark]} (face down)");
         }
     }
 
