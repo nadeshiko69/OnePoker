@@ -3648,6 +3648,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   resultPanel: {fileID: 2007954557}
   resultText: {fileID: 1207794368}
+  playerResultRow: {fileID: 1310564195}
+  opponentResultRow: {fileID: 1156179391}
 --- !u!1 &841840391
 GameObject:
   m_ObjectHideFlags: 0
