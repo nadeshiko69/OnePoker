@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Linq;
+using System.Collections.Generic;
 
 public class ResultViewManager : MonoBehaviour
 {
@@ -29,31 +30,123 @@ public class ResultViewManager : MonoBehaviour
         InitializeResultTable();
     }
 
-    private void InitializeResultTable()
+    private GameObject CreateCell(string name, Transform parent)
     {
-        if (playerResultRow == null || opponentResultRow == null)
+        var cell = new GameObject(name);
+        cell.transform.SetParent(parent, false);
+
+        // 必要なコンポーネントを追加
+        var rectTransform = cell.AddComponent<RectTransform>();
+        var canvasRenderer = cell.AddComponent<CanvasRenderer>();
+        var tmp = cell.AddComponent<TextMeshProUGUI>();
+
+        // RectTransformの設定
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.sizeDelta = new Vector2(30, 30);
+        rectTransform.localPosition = Vector3.zero;
+        rectTransform.localScale = Vector3.one;
+
+        // TextMeshProUGUIの基本設定
+        if (resultText != null && resultText.font != null)
         {
-            Debug.LogError("Result rows not assigned!");
+            tmp.font = resultText.font;
+            tmp.fontSize = 20;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = normalColor;
+            tmp.raycastTarget = true;
+            tmp.text = "-";
+        }
+        else
+        {
+            Debug.LogError($"Reference text or font is null when creating cell {name}");
+        }
+
+        return cell;
+    }
+
+    private void InitializeResultTable()
+    {       
+        if (resultPanel == null || resultText == null || playerResultRow == null || opponentResultRow == null)
+        {
+            Debug.LogError("Required references are not set in the inspector!");
             return;
         }
 
-        // 数字のセルを取得（NameCellを除外）
-        playerCells = playerResultRow.GetComponentsInChildren<TextMeshProUGUI>()
-            .Where(cell => cell.gameObject.name != "NameCell")
-            .ToArray();
-        opponentCells = opponentResultRow.GetComponentsInChildren<TextMeshProUGUI>()
-            .Where(cell => cell.gameObject.name != "NameCell")
-            .ToArray();
+        try
+        {
+            // 子オブジェクトを直接取得
+            var playerChildren = new List<GameObject>();
+            var opponentChildren = new List<GameObject>();
 
-        Debug.Log($"Found {playerCells.Length} player cells and {opponentCells.Length} opponent cells");
+            for (int i = 1; i <= 15; i++)
+            {
+                var playerChild = playerResultRow.Find(i.ToString())?.gameObject;
+                var opponentChild = opponentResultRow.Find(i.ToString())?.gameObject;
 
-        // セルの初期化
-        ResetResults();
+                if (playerChild != null)
+                {
+                    var tmp = playerChild.GetComponent<TextMeshProUGUI>();
+                    if (tmp == null)
+                    {
+                        // 既存のセルにTextMeshProUGUIがない場合は削除して新規作成
+                        GameObject.Destroy(playerChild);
+                        playerChild = CreateCell(i.ToString(), playerResultRow);
+                    }
+                    playerChildren.Add(playerChild);
+                }
+                else
+                {
+                    // プレイヤーセルが見つからない場合は新規作成
+                    playerChild = CreateCell(i.ToString(), playerResultRow);
+                    playerChildren.Add(playerChild);
+                }
+
+                if (opponentChild != null)
+                {
+                    var tmp = opponentChild.GetComponent<TextMeshProUGUI>();
+                    if (tmp == null)
+                    {
+                        // 既存のセルにTextMeshProUGUIがない場合は削除して新規作成
+                        GameObject.Destroy(opponentChild);
+                        opponentChild = CreateCell(i.ToString(), opponentResultRow);
+                    }
+                    opponentChildren.Add(opponentChild);
+                }
+                else
+                {
+                    // 相手セルが見つからない場合は新規作成
+                    opponentChild = CreateCell(i.ToString(), opponentResultRow);
+                    opponentChildren.Add(opponentChild);
+                }
+            }
+
+            // 配列を初期化
+            playerCells = new TextMeshProUGUI[playerChildren.Count];
+            opponentCells = new TextMeshProUGUI[opponentChildren.Count];
+
+            // セルの参照を設定
+            for (int i = 0; i < playerChildren.Count; i++)
+            {
+                playerCells[i] = playerChildren[i].GetComponent<TextMeshProUGUI>();
+            }
+
+            for (int i = 0; i < opponentChildren.Count; i++)
+            {
+                opponentCells[i] = opponentChildren[i].GetComponent<TextMeshProUGUI>();
+            }
+
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error during result table initialization: {e.Message}\n{e.StackTrace}");
+        }
     }
 
     // 勝敗判定を行い結果を表示
     public void ShowResult(int playerCardValue, int opponentCardValue)
-    {
+    {    
         if (resultPanel != null && resultText != null)
         {
             resultPanel.SetActive(true);
@@ -64,7 +157,6 @@ public class ResultViewManager : MonoBehaviour
                 resultText.text = "DRAW";
                 resultText.color = Color.white;
                 UpdateResultTable(playerCardValue, opponentCardValue, true);
-                Debug.Log($"Draw! Both players have {cardRanks[playerCardValue]}");
                 return;
             }
 
@@ -75,14 +167,12 @@ public class ResultViewManager : MonoBehaviour
                 resultText.text = "YOU WIN!";
                 resultText.color = Color.red;
                 UpdateResultTable(playerCardValue, opponentCardValue, false, true);
-                Debug.Log($"Player wins with {cardRanks[playerCardValue]} vs {cardRanks[opponentCardValue]}");
             }
             else
             {
                 resultText.text = "YOU LOSE...";
                 resultText.color = Color.blue;
                 UpdateResultTable(playerCardValue, opponentCardValue, false, false);
-                Debug.Log($"Opponent wins with {cardRanks[opponentCardValue]} vs {cardRanks[playerCardValue]}");
             }
         }
     }
@@ -99,18 +189,15 @@ public class ResultViewManager : MonoBehaviour
 
         if (currentRound >= playerCells.Length || currentRound >= opponentCells.Length)
         {
-            Debug.LogWarning($"No more cells available for results! Current round: {currentRound}");
             return;
         }
 
-        Debug.Log($"Updating round {currentRound + 1} with Player: {cardRanks[playerCardValue]}, Opponent: {cardRanks[opponentCardValue]}");
-
+        
         // プレイヤーのカードを表示
         if (playerCells[currentRound] != null)
         {
             playerCells[currentRound].text = cardRanks[playerCardValue];
             playerCells[currentRound].color = isDraw ? normalColor : (playerWins ? winColor : normalColor);
-            Debug.Log($"Updated player cell {currentRound} with {cardRanks[playerCardValue]}");
         }
         else
         {
@@ -122,7 +209,6 @@ public class ResultViewManager : MonoBehaviour
         {
             opponentCells[currentRound].text = cardRanks[opponentCardValue];
             opponentCells[currentRound].color = isDraw ? normalColor : (playerWins ? normalColor : winColor);
-            Debug.Log($"Updated opponent cell {currentRound} with {cardRanks[opponentCardValue]}");
         }
         else
         {
