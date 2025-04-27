@@ -11,6 +11,12 @@ public class CardDisplay : MonoBehaviour
     public Sprite backSprite;
 
     private bool isFaceUp = true; // 表向きかどうか
+    private int cardValue1;
+    private int cardValue2;
+    private readonly string[] cardRanks = { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
+    private readonly string[] marks = { "♦", "♥", "♠", "♣" };
+    private readonly Color redColor = new Color(1f, 0.2f, 0.2f);    // 文字色　赤
+    private readonly Color blackColor = new Color(0.1f, 0.1f, 0.1f); // 文字色　黒
 
     // カードを設定
     public void SetCard(bool faceUp)
@@ -22,6 +28,22 @@ public class CardDisplay : MonoBehaviour
             cardImage.sprite = frontSprite;
             numberText.enabled = true;
             markText.enabled = true;
+
+            // カードの数字とマークを表示
+            if (numberText != null && markText != null)
+            {
+                // カードの値を表示（例：cardValue1を使用）
+                int mark = cardValue1 / 13;  // マーク（0-3: ダイヤ、ハート、スペード、クラブ）
+                string number = cardRanks[cardValue1 % 13];
+
+                numberText.text = number;
+                markText.text = marks[mark];
+
+                // マークの色を設定
+                Color textColor = (mark == 0 || mark == 1) ? redColor : blackColor;
+                numberText.color = textColor;
+                markText.color = textColor;
+            }
         }
         else
         {
@@ -35,5 +57,12 @@ public class CardDisplay : MonoBehaviour
     public void FlipCard()
     {
         SetCard(!isFaceUp);
+    }
+
+    public void SetCardInfo(int value1, int value2)
+    {
+        cardValue1 = value1;
+        cardValue2 = value2;
+        Debug.Log($"Card info set - Value1: {cardValue1}, Value2: {cardValue2}");
     }
 }

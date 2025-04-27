@@ -34,11 +34,13 @@ public class RandomChoiceCard : MonoBehaviour
 
     // カードの数字を保持
     private int playerCardValue;
-    private int opponentCardValue;
+    private int opponentCardValue1;  // 相手の1枚目のカード
+    private int opponentCardValue2;  // 相手の2枚目のカード
 
     // カードの値を外部から取得するためのプロパティ
     public int PlayerCardValue => playerCardValue;
-    public int OpponentCardValue => opponentCardValue;
+    public int OpponentCardValue1 => opponentCardValue1;
+    public int OpponentCardValue2 => opponentCardValue2;
 
     void Start()
     {
@@ -69,35 +71,37 @@ public class RandomChoiceCard : MonoBehaviour
 
     public void DrawCard(TextMeshProUGUI resultText, CardDisplay cardPrefab)
     {
-        var (idNumber, Mark, Number) = PopCard();
+        var (cardValue, Mark, Number) = PopCard();
+        Debug.Log($"DrawCard - Before assignment: cardValue={cardValue}, Number={Number}, Mark={marks[Mark]}");
 
         if (resultText == playerUI1)
         {
-            DisplayUI(resultText, idNumber);
+            DisplayUI(resultText, cardValue);
             cardPrefab.SetCard(true);
-            DisplayCardUI(playerCardNumber1, playerCardMark1, idNumber, Mark, Number);
-            playerCardValue = idNumber;
-            Debug.Log($"Player Card 1: {Number}{marks[Mark]} (value: {idNumber})");
+            DisplayCardUI(playerCardNumber1, playerCardMark1, cardValue, Mark, Number);
+            playerCardValue = cardValue;
+            Debug.Log($"Player Card 1 set: Value={playerCardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == playerUI2)
         {
-            DisplayUI(resultText, idNumber);
+            DisplayUI(resultText, cardValue);
             cardPrefab.SetCard(true);
-            DisplayCardUI(playerCardNumber2, playerCardMark2, idNumber, Mark, Number);
-            Debug.Log($"Player Card 2: {Number}{marks[Mark]} (value: {idNumber})");
+            DisplayCardUI(playerCardNumber2, playerCardMark2, cardValue, Mark, Number);
+            Debug.Log($"Player Card 2: Value={cardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == opponentUI1)
         {
-            DisplayUI(resultText, idNumber);
+            DisplayUI(resultText, cardValue);
             cardPrefab.SetCard(false);
-            opponentCardValue = idNumber;
-            Debug.Log($"Opponent Card 1: {Number}{marks[Mark]} (value: {idNumber})");
+            opponentCardValue1 = cardValue;  // 1枚目の値を保存
+            Debug.Log($"Opponent Card 1 set: Value={opponentCardValue1}, Display={Number}{marks[Mark]}");
         }
-        else
+        else if (resultText == opponentUI2)
         {
-            DisplayUI(resultText, idNumber);
+            DisplayUI(resultText, cardValue);
             cardPrefab.SetCard(false);
-            Debug.Log($"Opponent Card 2: {Number}{marks[Mark]} (value: {idNumber})");
+            opponentCardValue2 = cardValue;  // 2枚目の値を保存
+            Debug.Log($"Opponent Card 2 set: Value={opponentCardValue2}, Display={Number}{marks[Mark]}");
         }
     }
 
@@ -108,12 +112,12 @@ public class RandomChoiceCard : MonoBehaviour
         {
             resultPanel.SetActive(true);
             
-            if (playerCardValue > opponentCardValue)
+            if (playerCardValue > opponentCardValue1 && playerCardValue > opponentCardValue2)
             {
                 resultText.text = "YOU WIN!";
                 resultText.color = Color.red;
             }
-            else if (playerCardValue < opponentCardValue)
+            else if (playerCardValue < opponentCardValue1 && playerCardValue < opponentCardValue2)
             {
                 resultText.text = "YOU LOSE...";
                 resultText.color = Color.blue;
@@ -124,7 +128,7 @@ public class RandomChoiceCard : MonoBehaviour
                 resultText.color = Color.white;
             }
 
-            Debug.Log($"Battle Result - Player: {playerCardValue} vs Opponent: {opponentCardValue}");
+            Debug.Log($"Battle Result - Player: {playerCardValue} vs Opponent: {opponentCardValue1}, {opponentCardValue2}");
         }
     }
 

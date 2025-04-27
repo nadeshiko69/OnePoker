@@ -249,7 +249,7 @@ public class PlacementManager : MonoBehaviour
 
         // 1秒待ってから結果を表示
         yield return new WaitForSeconds(1f);
-        resultViewManager.ShowResult(randomChoiceCard.PlayerCardValue, randomChoiceCard.OpponentCardValue);
+        resultViewManager.ShowResult(randomChoiceCard.PlayerCardValue, randomChoiceCard.OpponentCardValue1);
 
         // 3秒後に結果表示を消す
         yield return new WaitForSeconds(3f);
@@ -305,6 +305,16 @@ public class PlacementManager : MonoBehaviour
             if (cardDisplay != null)
             {
                 cardDisplay.SetCard(false);
+                
+                // RandomChoiceCardからカード情報を取得して設定
+                if (randomChoiceCard != null)
+                {
+                    // カードの情報を設定
+                    cardDisplay.SetCardInfo(
+                        randomChoiceCard.OpponentCardValue1,
+                        randomChoiceCard.OpponentCardValue2
+                    );
+                }
             }
         }
         else
