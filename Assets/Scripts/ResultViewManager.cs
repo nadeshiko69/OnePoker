@@ -161,7 +161,7 @@ public class ResultViewManager : MonoBehaviour
             }
 
             bool playerWins = IsWinner(playerCardValue, opponentCardValue);
-            
+            Debug.Log("playerWins: " + playerWins);
             if (playerWins)
             {
                 resultText.text = "YOU WIN!";
@@ -196,6 +196,7 @@ public class ResultViewManager : MonoBehaviour
         // プレイヤーのカードを表示
         if (playerCells[currentRound] != null)
         {
+            Debug.Log("playerCardValue: " + playerCardValue);   
             playerCells[currentRound].text = cardRanks[playerCardValue];
             playerCells[currentRound].color = isDraw ? normalColor : (playerWins ? winColor : normalColor);
         }
@@ -207,6 +208,7 @@ public class ResultViewManager : MonoBehaviour
         // 相手のカードを表示
         if (opponentCells[currentRound] != null)
         {
+            Debug.Log("opponentCardValue: " + opponentCardValue);
             opponentCells[currentRound].text = cardRanks[opponentCardValue];
             opponentCells[currentRound].color = isDraw ? normalColor : (playerWins ? normalColor : winColor);
         }

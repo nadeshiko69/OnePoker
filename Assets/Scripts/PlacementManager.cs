@@ -249,11 +249,33 @@ public class PlacementManager : MonoBehaviour
 
         // 1秒待ってから結果を表示
         yield return new WaitForSeconds(1f);
-        resultViewManager.ShowResult(randomChoiceCard.PlayerCardValue, randomChoiceCard.OpponentCardValue1);
+
+        // 最後に配置したカードの値を取得
+        if (playerCards.Count > 0)
+        {
+            GameObject lastPlacedCard = playerCards[playerCards.Count - 1];
+            CardDisplay cardDisplay = lastPlacedCard.GetComponent<CardDisplay>();
+            if (cardDisplay != null)
+            {
+                int playerCardValue = cardDisplay.CardValue1;
+                resultViewManager.ShowResult(playerCardValue, randomChoiceCard.OpponentCardValue1);
+            }
+            else
+            {
+                Debug.LogError("CardDisplay component not found on the last placed card!");
+            }
+        }
+        else
+        {
+            Debug.LogError("No player cards found!");
+        }
 
         // 3秒後に結果表示を消す
         yield return new WaitForSeconds(3f);
         resultViewManager.HideResult();
+        
+        // 結果表示後にカードリストをクリア
+        ClearPlayerCards();
     }
 
     public void ShowConfirmation(GameObject card, DropZone zone)
@@ -285,7 +307,18 @@ public class PlacementManager : MonoBehaviour
         // プレイヤーのカードをリストに追加
         playerCards.Add(currentCard);
 
+        // カードの値を設定
+        CardDisplay cardDisplay = currentCard.GetComponent<CardDisplay>();
+        if (cardDisplay != null && randomChoiceCard != null)
+        {
+            cardDisplay.SetCardInfo(randomChoiceCard.PlayerCardValue);
+        }
+
+        // 状態をリセット（currentCardは保持）
+        GameObject tempCard = currentCard;
         ResetState();
+        currentCard = tempCard;
+
         StartCoroutine(SetOpponentCardFlag());
     }
 
@@ -311,8 +344,7 @@ public class PlacementManager : MonoBehaviour
                 {
                     // カードの情報を設定
                     cardDisplay.SetCardInfo(
-                        randomChoiceCard.OpponentCardValue1,
-                        randomChoiceCard.OpponentCardValue2
+                        randomChoiceCard.OpponentCardValue1
                     );
                 }
             }
@@ -354,8 +386,11 @@ public class PlacementManager : MonoBehaviour
         // リスナーをリセット
         yesButton.onClick.RemoveAllListeners();
         noButton.onClick.RemoveAllListeners();
+    }
 
-        // ゲーム終了時にカードリストをクリア
+    // ゲーム終了時にカードリストをクリア
+    public void ClearPlayerCards()
+    {
         playerCards.Clear();
     }
 }

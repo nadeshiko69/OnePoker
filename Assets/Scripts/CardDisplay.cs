@@ -12,11 +12,13 @@ public class CardDisplay : MonoBehaviour
 
     private bool isFaceUp = true; // 表向きかどうか
     private int cardValue1;
-    private int cardValue2;
     private readonly string[] cardRanks = { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
     private readonly string[] marks = { "♦", "♥", "♠", "♣" };
     private readonly Color redColor = new Color(1f, 0.2f, 0.2f);    // 文字色　赤
     private readonly Color blackColor = new Color(0.1f, 0.1f, 0.1f); // 文字色　黒
+
+    // カードの値を取得するためのプロパティ
+    public int CardValue1 => cardValue1;
 
     // カードを設定
     public void SetCard(bool faceUp)
@@ -59,10 +61,9 @@ public class CardDisplay : MonoBehaviour
         SetCard(!isFaceUp);
     }
 
-    public void SetCardInfo(int value1, int value2)
+    public void SetCardInfo(int value1)
     {
         cardValue1 = value1;
-        cardValue2 = value2;
-        Debug.Log($"Card info set - Value1: {cardValue1}, Value2: {cardValue2}");
+        Debug.Log($"Card info set - Value1: {cardValue1}");
     }
 }

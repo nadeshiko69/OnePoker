@@ -87,7 +87,8 @@ public class RandomChoiceCard : MonoBehaviour
             DisplayUI(resultText, cardValue);
             cardPrefab.SetCard(true);
             DisplayCardUI(playerCardNumber2, playerCardMark2, cardValue, Mark, Number);
-            Debug.Log($"Player Card 2: Value={cardValue}, Display={Number}{marks[Mark]}");
+            playerCardValue = cardValue;  // 2枚目のカードの値を保存
+            Debug.Log($"Player Card 2 set: Value={playerCardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == opponentUI1)
         {
