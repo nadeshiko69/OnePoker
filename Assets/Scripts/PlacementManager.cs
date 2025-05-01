@@ -270,12 +270,18 @@ public class PlacementManager : MonoBehaviour
             Debug.LogError("No player cards found!");
         }
 
+        // ライフの更新
+        UpdateLife(playerCardValue, randomChoiceCard.OpponentCardValue1);
+        
         // 3秒後に結果表示を消す
         yield return new WaitForSeconds(3f);
         resultViewManager.HideResult();
         
         // 結果表示後にカードリストをクリア
         ClearPlayerCards();
+        
+        // 次のラウンドへ
+        ProceedToNextRound();
     }
 
     public void ShowConfirmation(GameObject card, DropZone zone)
@@ -392,5 +398,49 @@ public class PlacementManager : MonoBehaviour
     public void ClearPlayerCards()
     {
         playerCards.Clear();
+    }
+
+    // 1回の勝負が終わった後に残ライフを更新する
+    private void UpdateLife(int playerValue, int opponentValue)
+    {
+        if (resultViewManager.isWinner(playerValue, opponentValue))
+        {
+            opponentLife = opponentLife - currentBetAmount;
+        }
+        else
+        {
+            playerLife = playerLife - currentBetAmount;
+        }
+        // 引き分けの場合はライフは減らない
+        
+        UpdateLifeUI();
+    }
+
+    private bool IsGameOver()
+    {
+        return playerLife <= 0 || opponentLife <= 0;
+    }
+
+    private void ProceedToNextRound()
+    {
+        if (IsGameOver())
+        {
+            // ゲーム終了処理
+            ShowGameOver();
+        }
+        else
+        {
+            // 次のラウンドの準備
+            ResetState();
+            // カードの補充処理
+            // 必要に応じてUIの更新
+        }
+    }
+
+    private void ShowGameOver()
+    {
+        // ゲーム終了メッセージの表示
+        // リプレイオプションの表示
+        // スコアの表示など
     }
 }
