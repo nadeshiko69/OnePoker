@@ -4,7 +4,7 @@ using System.Collections;
 using TMPro;
 using System.Collections.Generic;
 
-public class PlacementManager : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
     public GameObject confirmationPanel;
     public Button yesButton;

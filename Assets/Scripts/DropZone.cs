@@ -21,7 +21,7 @@ public class DropZone : MonoBehaviour, IDropHandler
                     draggable.transform.localPosition = Vector3.zero;
 
                     // ドロップ確認パネルを表示
-                    FindObjectOfType<PlacementManager>().ShowConfirmation(droppedObj, this);
+                    FindObjectOfType<GameManager>().ShowConfirmation(droppedObj, this);
                 }
             }
         }
