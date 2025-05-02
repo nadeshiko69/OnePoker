@@ -46,6 +46,18 @@ public class MatchManager : MonoBehaviour
         UpdateLifeUI();
     }
 
+    void Update()
+    {
+        // マッチを終了したら、マッチを終了する
+        if (IsMatchOver())
+        {
+            ShowGameOver();
+        }
+
+        // まだ終わっていない場合、Gameが終了したら次のGameを開始する
+
+    }
+
     private void UpdateLifeUI()
     {
         if (playerLifeText != null)
