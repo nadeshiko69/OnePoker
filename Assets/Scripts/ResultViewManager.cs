@@ -221,7 +221,7 @@ public class ResultViewManager : MonoBehaviour
     }
 
     // 特殊な勝敗判定ロジック
-    private bool IsWinner(int playerValue, int opponentValue)
+    public bool IsWinner(int playerValue, int opponentValue)
     {
         // 同値の場合は引き分け（この関数は同値チェック後に呼ばれる）
         if (playerValue == opponentValue)

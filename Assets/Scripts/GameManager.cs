@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
 
     // プレイヤーのカードを保持
     private List<GameObject> playerCards = new List<GameObject>();
-
+    
     // 両者カードを配置したらベット開始
     private bool bothCardsPlaced = false;
 
@@ -47,6 +47,9 @@ public class GameManager : MonoBehaviour
     public GameObject openPanel;
     private ResultViewManager resultViewManager;
 
+    // MatchManagerへの参照
+    private MatchManager matchManager;
+
     void Start()
     {
         UpdateLifeUI();
@@ -55,6 +58,7 @@ public class GameManager : MonoBehaviour
         openPanel.SetActive(false);
         randomChoiceCard = FindObjectOfType<RandomChoiceCard>();
         resultViewManager = FindObjectOfType<ResultViewManager>();
+        matchManager = FindObjectOfType<MatchManager>();
 
         yesButton.onClick.AddListener(ConfirmPlacement);
         noButton.onClick.AddListener(CancelPlacement);
@@ -137,9 +141,9 @@ public class GameManager : MonoBehaviour
             // ベット額を1増やす
             currentBetAmount += 1;
 
-            if (playerLife >= 1) // 1ライフ以上あればベット可能
+            if (matchManager.PlayerLife >= 1) // 1ライフ以上あればベット可能
             {
-                playerLife -= 1; // 1ずつライフを減らす
+                matchManager.UpdatePlayerLife(-1); // 1ずつライフを減らす
                 Debug.Log($"Betting {currentBetAmount} life!");
                 UpdateLifeUI();
                 UpdateCallButtonText();
@@ -156,7 +160,7 @@ public class GameManager : MonoBehaviour
             if (currentBetAmount > 1) // 最小ベット額は1
             {
                 currentBetAmount -= 1;
-                playerLife += 1; // ライフを1戻す
+                matchManager.UpdatePlayerLife(1); // ライフを1戻す
                 Debug.Log($"Reducing bet to {currentBetAmount} life!");
                 UpdateLifeUI();
                 UpdateCallButtonText();
@@ -176,8 +180,7 @@ public class GameManager : MonoBehaviour
         // CPUがコール
         Debug.Log("Opponent calls!");
         opponentCalled = true;
-        opponentLife -= currentBetAmount; // 相手のライフを減らす
-        UpdateLifeUI();
+        matchManager.UpdateOpponentLife(-currentBetAmount); // 相手のライフを減らす
 
         yield return new WaitForSeconds(1f);
 
@@ -220,7 +223,6 @@ public class GameManager : MonoBehaviour
             // 勝敗判定を表示
             if (randomChoiceCard != null)
             {
-                // resultViewManagerが見つからない場合は再取得を試みる
                 if (resultViewManager == null)
                 {
                     resultViewManager = FindObjectOfType<ResultViewManager>();
@@ -247,10 +249,8 @@ public class GameManager : MonoBehaviour
             yield break;
         }
 
-        // 1秒待ってから結果を表示
         yield return new WaitForSeconds(1f);
 
-        // 最後に配置したカードの値を取得
         if (playerCards.Count > 0)
         {
             GameObject lastPlacedCard = playerCards[playerCards.Count - 1];
@@ -258,7 +258,12 @@ public class GameManager : MonoBehaviour
             if (cardDisplay != null)
             {
                 int playerCardValue = cardDisplay.CardValue1;
-                resultViewManager.ShowResult(playerCardValue, randomChoiceCard.OpponentCardValue1);
+                int opponentCardValue = randomChoiceCard.OpponentCardValue1;
+                Debug.Log($"Showing result - Player: {playerCardValue}, Opponent: {opponentCardValue}");
+                resultViewManager.ShowResult(playerCardValue, opponentCardValue);
+                
+                // ライフの更新
+                UpdateLife(playerCardValue, opponentCardValue);
             }
             else
             {
@@ -269,13 +274,34 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError("No player cards found!");
         }
-
-        // 3秒後に結果表示を消す
+        
         yield return new WaitForSeconds(3f);
         resultViewManager.HideResult();
         
         // 結果表示後にカードリストをクリア
         ClearPlayerCards();
+        
+        // Game終了を通知
+        matchManager.OnGameComplete();
+    }
+
+    // ゲーム終了時にカードリストをクリア
+    public void ClearPlayerCards()
+    {
+        playerCards.Clear();
+    }
+
+    // 1回の勝負が終わった後に残ライフを更新する
+    private void UpdateLife(int playerValue, int opponentValue)
+    {
+        if (resultViewManager.IsWinner(playerValue, opponentValue))
+        {
+            matchManager.UpdateOpponentLife(-currentBetAmount);
+        }
+        else
+        {
+            matchManager.UpdatePlayerLife(-currentBetAmount);
+        }
     }
 
     public void ShowConfirmation(GameObject card, DropZone zone)
@@ -298,9 +324,6 @@ public class GameManager : MonoBehaviour
 
     private void ConfirmPlacement()
     {
-        Debug.Log("ConfirmPlacement called");
-        Debug.Log("currentCard: " + currentCard);
-        Debug.Log("currentZone: " + currentZone);
         currentCard.transform.position = currentZone.transform.position;
         confirmationPanel.SetActive(false);
 
@@ -324,10 +347,6 @@ public class GameManager : MonoBehaviour
 
     public void PlaceOpponentCard(GameObject card, DropZone zone)
     {
-        Debug.Log("PlaceOpponentCard called");
-        Debug.Log("currentCard: " + card);
-        Debug.Log("currentZone: " + zone);
-
         if (card != null && zone != null)
         {
             // カードをゾーンの位置に移動
@@ -339,13 +358,9 @@ public class GameManager : MonoBehaviour
             {
                 cardDisplay.SetCard(false);
                 
-                // RandomChoiceCardからカード情報を取得して設定
                 if (randomChoiceCard != null)
                 {
-                    // カードの情報を設定
-                    cardDisplay.SetCardInfo(
-                        randomChoiceCard.OpponentCardValue1
-                    );
+                    cardDisplay.SetCardInfo(randomChoiceCard.OpponentCardValue1);
                 }
             }
         }
@@ -354,7 +369,6 @@ public class GameManager : MonoBehaviour
             Debug.LogError("Card or zone is null!");
         }
 
-        // 1秒待機後にベットフェーズに移行する
         StartCoroutine(SetBettingPhase());
     }
 
@@ -386,11 +400,5 @@ public class GameManager : MonoBehaviour
         // リスナーをリセット
         yesButton.onClick.RemoveAllListeners();
         noButton.onClick.RemoveAllListeners();
-    }
-
-    // ゲーム終了時にカードリストをクリア
-    public void ClearPlayerCards()
-    {
-        playerCards.Clear();
     }
 }
