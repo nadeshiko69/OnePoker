@@ -23,7 +23,7 @@ public class MatchManager : MonoBehaviour
 
     // 参照
     private GameManager gameManager;
-    private RandomChoiceCard randomChoiceCard;
+    private DeckManager deckManager;
 
     public int PlayerLife => playerLife;
     public int OpponentLife => opponentLife;
@@ -35,7 +35,7 @@ public class MatchManager : MonoBehaviour
     void Start()
     {
         gameManager = FindObjectOfType<GameManager>();
-        randomChoiceCard = FindObjectOfType<RandomChoiceCard>();
+        deckManager = FindObjectOfType<DeckManager>();
         
         if (gameOverPanel != null)
         {

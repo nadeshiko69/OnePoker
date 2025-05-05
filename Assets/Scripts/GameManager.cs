@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
 
     private GameObject currentCard;
     private DropZone currentZone;
-    private RandomChoiceCard randomChoiceCard;
+    private DeckManager deckManager;
 
     // For Debug ; 相手のカードを自動で配置
     private bool opponent_setCard = false;
@@ -50,7 +50,7 @@ public class GameManager : MonoBehaviour
         confirmationPanel.SetActive(false);
         bettingPanel.SetActive(false);
         openPanel.SetActive(false);
-        randomChoiceCard = FindObjectOfType<RandomChoiceCard>();
+        deckManager = FindObjectOfType<DeckManager>();
         resultViewManager = FindObjectOfType<ResultViewManager>();
         matchManager = FindObjectOfType<MatchManager>();
 
@@ -195,6 +195,8 @@ public class GameManager : MonoBehaviour
         if (!cardsRevealed)
         {
             // プレイヤーのカードを表向きにする
+            Debug.Log("RevealCards called");
+            Debug.Log("playerCards: " + playerCards);
             foreach (GameObject card in playerCards)
             {
                 if (card != null)
@@ -220,7 +222,7 @@ public class GameManager : MonoBehaviour
             cardsRevealed = true;
 
             // 勝敗判定を表示
-            if (randomChoiceCard != null)
+            if (deckManager != null)
             {
                 if (resultViewManager == null)
                 {
@@ -231,18 +233,18 @@ public class GameManager : MonoBehaviour
                         return;
                     }
                 }
-                StartCoroutine(ShowResultWithDelay(randomChoiceCard));
+                StartCoroutine(ShowResultWithDelay(deckManager));
             }
             else
             {
-                Debug.LogError("RandomChoiceCard not found!");
+                Debug.LogError("deckManager not found!");
             }
         }
     }
 
-    private IEnumerator ShowResultWithDelay(RandomChoiceCard randomChoiceCard)
+    private IEnumerator ShowResultWithDelay(DeckManager deckManager)
     {
-        if (resultViewManager == null || randomChoiceCard == null)
+        if (resultViewManager == null || deckManager == null)
         {
             Debug.LogError("Required components are missing for showing results!");
             yield break;
@@ -257,7 +259,7 @@ public class GameManager : MonoBehaviour
             if (cardDisplay != null)
             {
                 int playerCardValue = cardDisplay.CardValue1;
-                int opponentCardValue = randomChoiceCard.OpponentCardValue1;
+                int opponentCardValue = deckManager.OpponentCardValue1;
                 Debug.Log($"Showing result - Player: {playerCardValue}, Opponent: {opponentCardValue}");
                 resultViewManager.ShowResult(playerCardValue, opponentCardValue);
                 
@@ -345,9 +347,9 @@ public class GameManager : MonoBehaviour
 
         // カードの値を設定
         CardDisplay cardDisplay = currentCard.GetComponent<CardDisplay>();
-        if (cardDisplay != null && randomChoiceCard != null)
+        if (cardDisplay != null && deckManager != null)
         {
-            cardDisplay.SetCardInfo(randomChoiceCard.PlayerCardValue);
+            cardDisplay.SetCardInfo(deckManager.PlayerCardValue);
         }
 
         // 状態をリセット（currentCardは保持）
@@ -374,9 +376,9 @@ public class GameManager : MonoBehaviour
             {
                 cardDisplay.SetCard(false);
                 
-                if (randomChoiceCard != null)
+                if (deckManager != null)
                 {
-                    cardDisplay.SetCardInfo(randomChoiceCard.OpponentCardValue1);
+                    cardDisplay.SetCardInfo(deckManager.OpponentCardValue1);
                 }
             }
         }

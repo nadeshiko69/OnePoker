@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using TMPro;
 
-public class RandomChoiceCard : MonoBehaviour
+public class DeckManager : MonoBehaviour
 {
     private List<int> shuffledCard;
     public IReadOnlyList<int> ShuffledCard => shuffledCard;

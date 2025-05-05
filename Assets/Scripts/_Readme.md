@@ -1,7 +1,7 @@
 ## ゲーム開始から1ラウンドの流れ
 1. ゲーム開始（GameManager.Start()）
     - UIや各種パネル（確認パネル、ベットパネル、オープンパネル）を非表示にする。
-    - RandomChoiceCardとResultViewManagerのインスタンスを取得。
+    - DeckManagerとResultViewManagerのインスタンスを取得。
     - ボタンのリスナーをセット。
 2. プレイヤーがカードをセット
     - プレイヤーがカードをドロップゾーンにドラッグ＆ドロップすると、ShowConfirmation(card, zone)が呼ばれる。
@@ -15,7 +15,7 @@
 4. 相手（CPU）がカードをセット
     - PlaceOpponentCard(opponentCard, opponentZone)が呼ばれる。
     - 相手カードをゾーンに移動し、裏面表示。
-    - RandomChoiceCardからカードの値を取得し、SetCardInfoでCardDisplayにセット。
+    - DeckManagerからカードの値を取得し、SetCardInfoでCardDisplayにセット。
 5. 両者カードが揃ったらベットフェーズ
     - bothCardsPlacedがtrueになり、ShowBettingUI()が呼ばれる。
     - ベットパネルを表示し、ベットボタンのリスナーをセット。
@@ -40,7 +40,7 @@
     - ゲーム全体の進行管理（カード配置、ベット、勝敗判定、ラウンド管理）
 - CardDisplay.cs
     - カード1枚の見た目・値の管理（表裏切り替え、数字・マーク表示、値の保持）
-- RandomChoiceCard.cs
+- DeckManager.cs
     - 山札の管理、カードのシャッフル・配布、カードの値の決定
 - ResultViewManager.cs
     - 勝敗結果の表示、結果表の更新
