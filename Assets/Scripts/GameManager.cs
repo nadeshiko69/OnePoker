@@ -29,14 +29,9 @@ public class GameManager : MonoBehaviour
     public GameObject bettingPanel;
     public TextMeshProUGUI playerLifeText;
     public TextMeshProUGUI opponentLifeText;
-    private int MAX_LIFE = 20;
-    private int MIN_LIFE = 0;
-    private int playerLife = 20;
-    private int opponentLife = 20;
     private int currentBetAmount = 0;
     public Button bet1Button;
     public Button bet2Button;
-    
     public Button callButton;
     public TextMeshProUGUI callButtonText;
 
@@ -52,7 +47,6 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        UpdateLifeUI();
         confirmationPanel.SetActive(false);
         bettingPanel.SetActive(false);
         openPanel.SetActive(false);
@@ -104,8 +98,14 @@ public class GameManager : MonoBehaviour
 
     private void UpdateLifeUI()
     {
-        playerLifeText.text = "Life: " + playerLife;
-        opponentLifeText.text = "Life: " + opponentLife;
+        if (playerLifeText != null)
+        {
+            playerLifeText.text = $"Life: {matchManager.PlayerLife}";
+        }
+        if (opponentLifeText != null)
+        {
+            opponentLifeText.text = $"Life: {matchManager.OpponentLife}";
+        }
     }
 
     private void UpdateCallButtonText()
@@ -139,10 +139,9 @@ public class GameManager : MonoBehaviour
         if (amount > 0)
         {
             // ベット額を1増やす
-            currentBetAmount += 1;
-
             if (matchManager.PlayerLife >= 1) // 1ライフ以上あればベット可能
             {
+                currentBetAmount += 1;
                 matchManager.UpdatePlayerLife(-1); // 1ずつライフを減らす
                 Debug.Log($"Betting {currentBetAmount} life!");
                 UpdateLifeUI();
@@ -151,7 +150,6 @@ public class GameManager : MonoBehaviour
             else
             {
                 Debug.LogWarning("ライフが足りないためベットできません！");
-                currentBetAmount -= 1; // ベット額を元に戻す
             }
         }
         else if (amount < 0)
@@ -180,7 +178,8 @@ public class GameManager : MonoBehaviour
         // CPUがコール
         Debug.Log("Opponent calls!");
         opponentCalled = true;
-        matchManager.UpdateOpponentLife(-currentBetAmount); // 相手のライフを減らす
+        //　CPUのライフを更新する
+        matchManager.UpdateOpponentLife(-currentBetAmount);
 
         yield return new WaitForSeconds(1f);
 
@@ -294,14 +293,29 @@ public class GameManager : MonoBehaviour
     // 1回の勝負が終わった後に残ライフを更新する
     private void UpdateLife(int playerValue, int opponentValue)
     {
-        if (resultViewManager.IsWinner(playerValue, opponentValue))
+        Debug.Log($"Before result - Player Life: {matchManager.PlayerLife}, Opponent Life: {matchManager.OpponentLife}, Bet: {currentBetAmount}");
+
+        if (playerValue == opponentValue)
         {
-            matchManager.UpdateOpponentLife(-currentBetAmount);
+            // 引き分けの場合は両者のライフを元に戻す
+            matchManager.UpdatePlayerLife(currentBetAmount);
+            matchManager.UpdateOpponentLife(currentBetAmount);
+            Debug.Log("Draw - Returning bets");
+        }
+        else if (resultViewManager.IsWinner(playerValue, opponentValue))
+        {
+            // プレイヤーの勝利
+            matchManager.UpdatePlayerLife(currentBetAmount*2);
+            Debug.Log($"Player wins - Player gains opponent's bet: {currentBetAmount*2}");
         }
         else
         {
-            matchManager.UpdatePlayerLife(-currentBetAmount);
+            // 相手の勝利
+            matchManager.UpdateOpponentLife(currentBetAmount*2);
+            Debug.Log($"CPU wins - CPU gains player's bet: {currentBetAmount*2}");
         }
+
+        Debug.Log($"After result - Player Life: {matchManager.PlayerLife}, Opponent Life: {matchManager.OpponentLife}");
     }
 
     public void ShowConfirmation(GameObject card, DropZone zone)

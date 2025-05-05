@@ -7,10 +7,10 @@ public class MatchManager : MonoBehaviour
     // ライフ関連
     public TextMeshProUGUI playerLifeText;
     public TextMeshProUGUI opponentLifeText;
-    private const int MAX_LIFE = 20;
+    private const int MAX_LIFE = 40;
     private const int MIN_LIFE = 0;
-    private int playerLife = MAX_LIFE;
-    private int opponentLife = MAX_LIFE;
+    private int playerLife = 20;  // 初期ライフを20に変更
+    private int opponentLife = 20;  // 初期ライフを20に変更
 
     // ゲーム回数管理
     private const int MAX_GAMES = 15;
@@ -48,7 +48,7 @@ public class MatchManager : MonoBehaviour
 
     void Update()
     {
-        // マッチを終了したら、マッチを終了する
+        // マッチの終了条件を確認
         if (IsMatchOver())
         {
             ShowGameOver();
@@ -88,10 +88,16 @@ public class MatchManager : MonoBehaviour
     public void OnGameComplete()
     {
         currentGameCount++;
-        CheckMatchEnd();
+        Debug.Log($"Game {currentGameCount} completed. Player Life: {playerLife}, Opponent Life: {opponentLife}");
 
-        if (!IsMatchOver())
+        // マッチの終了条件を確認
+        if (IsMatchOver())
         {
+            ShowGameOver();
+        }
+        else
+        {
+            // 次のゲームの準備
             PrepareNextGame();
         }
     }
@@ -166,8 +172,8 @@ public class MatchManager : MonoBehaviour
     public void RestartMatch()
     {
         // 全ての値を初期状態に戻す
-        playerLife = MAX_LIFE;
-        opponentLife = MAX_LIFE;
+        playerLife = 20;  // 初期ライフを20に変更
+        opponentLife = 20;  // 初期ライフを20に変更
         currentGameCount = 0;
         
         UpdateLifeUI();
