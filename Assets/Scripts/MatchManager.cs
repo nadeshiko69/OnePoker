@@ -28,6 +28,10 @@ public class MatchManager : MonoBehaviour
     public int PlayerLife => playerLife;
     public int OpponentLife => opponentLife;
 
+    // DropZone関連
+    public DropZone playerDropZone;   // Inspectorでアタッチ
+    public DropZone opponentDropZone; // Inspectorでアタッチ
+
     void Start()
     {
         gameManager = FindObjectOfType<GameManager>();
@@ -44,18 +48,6 @@ public class MatchManager : MonoBehaviour
         }
 
         UpdateLifeUI();
-    }
-
-    void Update()
-    {
-        // マッチの終了条件を確認
-        if (IsMatchOver())
-        {
-            ShowGameOver();
-        }
-
-        // まだ終わっていない場合、Gameが終了したら次のGameを開始する
-
     }
 
     private void UpdateLifeUI()
@@ -148,25 +140,16 @@ public class MatchManager : MonoBehaviour
 
     private void PrepareNextGame()
     {
-        // カードをシャッフル
-        if (randomChoiceCard != null)
-        {
-            randomChoiceCard.ShuffleCard();
-        }
-        else
-        {
-            Debug.LogError("RandomChoiceCard not found!");
-        }
+        Debug.Log("PrepareNextGame called");
+        // DropZoneを初期化
+        if (playerDropZone != null) playerDropZone.ResetZoneVisual();
+        else Debug.Log("playerDropZone is null");
+        if (opponentDropZone != null) opponentDropZone.ResetZoneVisual();
+        else Debug.Log("opponentDropZone is null");
 
-        // 画面のリセット
-        if (gameManager != null)
-        {
-            gameManager.ClearPlayerCards();
-        }
-        else
-        {
-            Debug.LogError("GameManager not found!");
-        }
+        // 空いた手札を補充
+
+        // GameManagerの起動
     }
 
     public void RestartMatch()

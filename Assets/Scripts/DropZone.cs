@@ -1,9 +1,21 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class DropZone : MonoBehaviour, IDropHandler
 {
     public bool isPlayerZone = true;
+    public Image zoneImage; // Inspectorでアタッチ
+    private Color defaultColor;
+
+    void Start()
+    {
+        if (zoneImage != null)
+        {
+            defaultColor = zoneImage.color;
+        }
+    }
+
     public void OnDrop(PointerEventData eventData)
     {
         GameObject droppedObj = eventData.pointerDrag;
@@ -24,6 +36,24 @@ public class DropZone : MonoBehaviour, IDropHandler
                     FindObjectOfType<GameManager>().ShowConfirmation(droppedObj, this);
                 }
             }
+        }
+    }
+
+    // デフォルト画像や色に戻す
+    public void ResetZoneVisual()
+    {
+        Debug.Log("ResetZoneVisual called");
+        if (zoneImage != null)
+        {
+            zoneImage.color = defaultColor;
+            zoneImage.sprite = null; // 必要ならスプライトもリセット
+        }
+        else Debug.Log("zoneImage is null");
+
+        // DropZoneの子オブジェクト（カード）を全て削除
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
         }
     }
 }

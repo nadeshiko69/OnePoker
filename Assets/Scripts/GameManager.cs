@@ -277,10 +277,9 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(3f);
         resultViewManager.HideResult();
         
-        // 結果表示後にカードリストをクリア
-        ClearPlayerCards();
-        
-        // Game終了を通知
+        // // 結果表示後にカードリストをクリア
+        // ClearPlayerCards();
+
         matchManager.OnGameComplete();
     }
 
@@ -363,8 +362,11 @@ public class GameManager : MonoBehaviour
     {
         if (card != null && zone != null)
         {
-            // カードをゾーンの位置に移動
-            card.transform.position = zone.transform.position;
+            // カードをDropZoneの子にする（親子関係をセット）
+            card.transform.SetParent(zone.transform);
+
+            // カードの位置を整える（中央揃え）
+            card.transform.localPosition = Vector3.zero;
 
             // カードの裏面を表示
             CardDisplay cardDisplay = card.GetComponent<CardDisplay>();
