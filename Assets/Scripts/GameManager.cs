@@ -197,18 +197,7 @@ public class GameManager : MonoBehaviour
             // プレイヤーのカードを表向きにする
             Debug.Log("RevealCards called");
             Debug.Log("playerCards: " + playerCards);
-            foreach (GameObject card in playerCards)
-            {
-                if (card != null)
-                {
-                    CardDisplay playerCardDisplay = card.GetComponent<CardDisplay>();
-                    if (playerCardDisplay != null)
-                    {
-                        playerCardDisplay.SetCard(true);
-                    }
-                }
-            }
-
+            // プレイヤーのカードはすでに表向きなのでSetCard不要
             // 相手のカードを表向きにする
             if (opponentCard != null)
             {
