@@ -349,7 +349,7 @@ public class GameManager : MonoBehaviour
         CardDisplay cardDisplay = currentCard.GetComponent<CardDisplay>();
         if (cardDisplay != null && deckManager != null)
         {
-            cardDisplay.SetCardInfo(deckManager.PlayerCardValue);
+            cardDisplay.SetCardInfo(cardDisplay.CardValue1);
         }
 
         // 状態をリセット（currentCardは保持）
@@ -378,7 +378,7 @@ public class GameManager : MonoBehaviour
                 
                 if (deckManager != null)
                 {
-                    cardDisplay.SetCardInfo(deckManager.OpponentCardValue1);
+                    cardDisplay.SetCardInfo(deckManager.OpponentCardValue1); // TODO ; 強制的に1枚目にしているので後ほど修正
                 }
             }
         }

@@ -42,6 +42,14 @@ public class DeckManager : MonoBehaviour
     public int OpponentCardValue1 => opponentCardValue1;
     public int OpponentCardValue2 => opponentCardValue2;
 
+    public GameObject cardPrefab;
+    public GameObject playerDropZone;
+
+    public Transform playerCard1Anchor;
+    public Transform playerCard2Anchor;
+    public Transform opponentCard1Anchor;
+    public Transform opponentCard2Anchor;
+
     void Start()
     {
         shuffledCard = Enumerable.Range(0, 51).ToList();
@@ -103,6 +111,92 @@ public class DeckManager : MonoBehaviour
             cardPrefab.SetCard(false);
             opponentCardValue2 = cardValue;  // 2枚目の値を保存
             Debug.Log($"Opponent Card 2 set: Value={opponentCardValue2}, Display={Number}{marks[Mark]}");
+        }
+    }
+
+    public void RefillCards()
+    {
+        Debug.Log("RefillCard called");
+        // Debug.Log("playerCard1.isActiveAndEnabled: " + playerCard1.isActiveAndEnabled);
+        // Debug.Log("playerCard2.isActiveAndEnabled: " + playerCard2.isActiveAndEnabled);
+        // Debug.Log("opponentCard1.isActiveAndEnabled: " + opponentCard1.isActiveAndEnabled);
+        // Debug.Log("opponentCard2.isActiveAndEnabled: " + opponentCard2.isActiveAndEnabled);
+
+        // // プレイヤーの手札補充
+        // if(!playerCard1.isActiveAndEnabled) DrawCard(playerUI1, playerCard1);
+        // if(!playerCard2.isActiveAndEnabled) DrawCard(playerUI2, playerCard2);
+
+        // // 相手の手札補充
+        // if(!opponentCard1.isActiveAndEnabled) DrawCard(opponentUI1, opponentCard1);
+        // if(!opponentCard2.isActiveAndEnabled) DrawCard(opponentUI2, opponentCard2);
+        
+        // if (playerCard1 == null || !playerCard1.isActiveAndEnabled)
+        // {
+        //     var obj = Instantiate(cardPrefab, playerDropZone.transform);
+        //     playerCard1 = obj.GetComponent<CardDisplay>();
+        //     playerCard1.transform.localPosition = playerCard1InitialPos;
+        // }
+        // if (playerCard2 == null || !playerCard2.isActiveAndEnabled)
+        // {
+        //     var obj = Instantiate(cardPrefab, playerDropZone.transform);
+        //     playerCard2 = obj.GetComponent<CardDisplay>();
+        //     playerCard2.transform.localPosition = playerCard2InitialPos;
+        // }
+        if (!playerCard1.isActiveAndEnabled)
+        {
+            Debug.Log("playerCard1 is null");
+            var obj = Instantiate(cardPrefab, playerCard1Anchor);
+            var rect = obj.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = new Vector3(3f, 3f, 1f);
+            }
+            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+            playerCard1 = obj.GetComponent<CardDisplay>();
+            DrawCard(playerUI1, playerCard1);
+        }
+        if (!playerCard2.isActiveAndEnabled)
+        {
+            Debug.Log("playerCard2 is null");
+            var obj = Instantiate(cardPrefab, playerCard2Anchor);
+            var rect = obj.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = new Vector3(3f, 3f, 1f);
+            }
+            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+            playerCard2 = obj.GetComponent<CardDisplay>();
+            DrawCard(playerUI2, playerCard2);
+        }
+        if (!opponentCard1.isActiveAndEnabled)
+        {
+            Debug.Log("opponentCard1 is null");
+            var obj = Instantiate(cardPrefab, opponentCard1Anchor);
+            var rect = obj.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = new Vector3(3f, 3f, 1f);
+            }
+            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+            opponentCard1 = obj.GetComponent<CardDisplay>();
+            DrawCard(opponentUI1, opponentCard1);
+        }
+        if (!opponentCard2.isActiveAndEnabled)
+        {
+            Debug.Log("opponentCard2 is null");
+            var obj = Instantiate(cardPrefab, opponentCard2Anchor);
+            var rect = obj.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = new Vector3(3f, 3f, 1f);
+            }
+            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+            opponentCard2 = obj.GetComponent<CardDisplay>();
+            DrawCard(opponentUI2, opponentCard2);
         }
     }
 

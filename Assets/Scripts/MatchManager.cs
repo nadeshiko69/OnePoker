@@ -148,7 +148,7 @@ public class MatchManager : MonoBehaviour
         else Debug.Log("opponentDropZone is null");
 
         // 空いた手札を補充
-
+        deckManager.RefillCards();
         // GameManagerの起動
     }
 
