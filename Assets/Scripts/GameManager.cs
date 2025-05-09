@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
     public DropZone opponentZone;
 
     // プレイヤーのカードを保持
-    private List<GameObject> playerCards = new List<GameObject>();
+    private GameObject SetPlayerCard;
     
     // 両者カードを配置したらベット開始
     private bool bothCardsPlaced = false;
@@ -196,7 +196,6 @@ public class GameManager : MonoBehaviour
         {
             // プレイヤーのカードを表向きにする
             Debug.Log("RevealCards called");
-            Debug.Log("playerCards: " + playerCards);
             // プレイヤーのカードはすでに表向きなのでSetCard不要
             // 相手のカードを表向きにする
             if (opponentCard != null)
@@ -241,24 +240,13 @@ public class GameManager : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        if (playerCards.Count > 0)
+        if (SetPlayerCard != null)
         {
-            GameObject lastPlacedCard = playerCards[playerCards.Count - 1];
-            CardDisplay cardDisplay = lastPlacedCard.GetComponent<CardDisplay>();
-            if (cardDisplay != null)
-            {
-                int playerCardValue = cardDisplay.CardValue1;
-                int opponentCardValue = deckManager.OpponentCardValue1;
-                Debug.Log($"Showing result - Player: {playerCardValue}, Opponent: {opponentCardValue}");
-                resultViewManager.ShowResult(playerCardValue, opponentCardValue);
-                
-                // ライフの更新
-                UpdateLife(playerCardValue, opponentCardValue);
-            }
-            else
-            {
-                Debug.LogError("CardDisplay component not found on the last placed card!");
-            }
+            int playerCardValue = SetPlayerCard.GetComponent<CardDisplay>().CardValue;
+            int opponentCardValue = deckManager.OpponentCardValue1;
+            Debug.Log($"Showing result - Player: {playerCardValue}, Opponent: {opponentCardValue}");
+            resultViewManager.ShowResult(playerCardValue, opponentCardValue);
+            UpdateLife(playerCardValue, opponentCardValue);
         }
         else
         {
@@ -267,17 +255,8 @@ public class GameManager : MonoBehaviour
         
         yield return new WaitForSeconds(3f);
         resultViewManager.HideResult();
-        
-        // // 結果表示後にカードリストをクリア
-        // ClearPlayerCards();
 
         matchManager.OnGameComplete();
-    }
-
-    // ゲーム終了時にカードリストをクリア
-    public void ClearPlayerCards()
-    {
-        playerCards.Clear();
     }
 
     // 1回の勝負が終わった後に残ライフを更新する
@@ -332,14 +311,10 @@ public class GameManager : MonoBehaviour
         confirmationPanel.SetActive(false);
 
         // プレイヤーのカードをリストに追加
-        playerCards.Add(currentCard);
+        SetPlayerCard = currentCard;
 
         // カードの値を設定
         CardDisplay cardDisplay = currentCard.GetComponent<CardDisplay>();
-        if (cardDisplay != null && deckManager != null)
-        {
-            cardDisplay.SetCardInfo(cardDisplay.CardValue1);
-        }
 
         // 状態をリセット（currentCardは保持）
         GameObject tempCard = currentCard;
@@ -364,11 +339,6 @@ public class GameManager : MonoBehaviour
             if (cardDisplay != null)
             {
                 cardDisplay.SetCard(false);
-                
-                if (deckManager != null)
-                {
-                    cardDisplay.SetCardInfo(deckManager.OpponentCardValue1); // TODO ; 強制的に1枚目にしているので後ほど修正
-                }
             }
         }
         else
