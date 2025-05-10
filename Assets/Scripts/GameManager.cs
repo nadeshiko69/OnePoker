@@ -6,11 +6,13 @@ using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
-    private GameObject currentCard;
-    private DropZone currentZone;
+    private MatchManager matchManager;
     private DeckManager deckManager;
     private ResultViewManager resultViewManager;
     private PanelManager panelManager;
+
+    private GameObject currentCard;
+    private DropZone currentZone;
 
     // For Debug ; 相手のカードを自動で配置
     private bool opponent_setCard = false;
@@ -33,8 +35,6 @@ public class GameManager : MonoBehaviour
     private bool OpponentCalled = false;
     private bool cardsRevealed = false;
 
-    // MatchManagerへの参照
-    private MatchManager matchManager;
 
     void Start()
     {
