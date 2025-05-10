@@ -14,10 +14,6 @@ public class DeckManager : MonoBehaviour
     public TextMeshProUGUI opponentUI1;
     public TextMeshProUGUI opponentUI2;
 
-    // 勝敗表示用のUI
-    public GameObject resultPanel;
-    public TextMeshProUGUI resultText;
-
     public CardDisplay playerCard1;
     public CardDisplay playerCard2;
     public CardDisplay opponentCard1;
@@ -33,12 +29,10 @@ public class DeckManager : MonoBehaviour
     private readonly Color blackColor = new Color(0.1f, 0.1f, 0.1f);    // 文字色　黒
 
     // カードの数字を保持
-    private int playerCardValue;
     private int opponentCardValue1;  // 相手の1枚目のカード
     private int opponentCardValue2;  // 相手の2枚目のカード
 
     // カードの値を外部から取得するためのプロパティ
-    public int PlayerCardValue => playerCardValue;
     public int OpponentCardValue1 => opponentCardValue1;
     public int OpponentCardValue2 => opponentCardValue2;
 
@@ -60,11 +54,6 @@ public class DeckManager : MonoBehaviour
         DrawCard(playerUI2, playerCard2);
         DrawCard(opponentUI1, opponentCard1);
         DrawCard(opponentUI2, opponentCard2);
-
-        if (resultPanel != null)
-        {
-            resultPanel.SetActive(false);
-        }
     }
 
     // カードをシャッフルする
@@ -84,30 +73,28 @@ public class DeckManager : MonoBehaviour
 
         if (resultText == playerUI1)
         {
-            DisplayUI(resultText, cardValue);
+            DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(true);
             DisplayCardUI(playerCardNumber1, playerCardMark1, cardValue, Mark, Number);
-            playerCardValue = cardValue;
-            Debug.Log($"Player Card 1 set: Value={playerCardValue}, Display={Number}{marks[Mark]}");
+            Debug.Log($"Player Card 1 set: Value={playerCardNumber1}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == playerUI2)
         {
-            DisplayUI(resultText, cardValue);
+            DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(true);
-            DisplayCardUI(playerCardNumber2, playerCardMark2, cardValue, Mark, Number);
-            playerCardValue = cardValue;  // 2枚目のカードの値を保存
-            Debug.Log($"Player Card 2 set: Value={playerCardValue}, Display={Number}{marks[Mark]}");
+            DisplayCardUI(playerCardNumber2, playerCardMark2, cardValue, Mark, Number);// 2枚目のカードの値を保存
+            Debug.Log($"Player Card 2 set: Value={playerCardNumber2}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == opponentUI1)
         {
-            DisplayUI(resultText, cardValue);
+            DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(false);
             opponentCardValue1 = cardValue;  // 1枚目の値を保存
             Debug.Log($"Opponent Card 1 set: Value={opponentCardValue1}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == opponentUI2)
         {
-            DisplayUI(resultText, cardValue);
+            DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(false);
             opponentCardValue2 = cardValue;  // 2枚目の値を保存
             Debug.Log($"Opponent Card 2 set: Value={opponentCardValue2}, Display={Number}{marks[Mark]}");
@@ -117,31 +104,6 @@ public class DeckManager : MonoBehaviour
     public void RefillCards()
     {
         Debug.Log("RefillCard called");
-        // Debug.Log("playerCard1.isActiveAndEnabled: " + playerCard1.isActiveAndEnabled);
-        // Debug.Log("playerCard2.isActiveAndEnabled: " + playerCard2.isActiveAndEnabled);
-        // Debug.Log("opponentCard1.isActiveAndEnabled: " + opponentCard1.isActiveAndEnabled);
-        // Debug.Log("opponentCard2.isActiveAndEnabled: " + opponentCard2.isActiveAndEnabled);
-
-        // // プレイヤーの手札補充
-        // if(!playerCard1.isActiveAndEnabled) DrawCard(playerUI1, playerCard1);
-        // if(!playerCard2.isActiveAndEnabled) DrawCard(playerUI2, playerCard2);
-
-        // // 相手の手札補充
-        // if(!opponentCard1.isActiveAndEnabled) DrawCard(opponentUI1, opponentCard1);
-        // if(!opponentCard2.isActiveAndEnabled) DrawCard(opponentUI2, opponentCard2);
-        
-        // if (playerCard1 == null || !playerCard1.isActiveAndEnabled)
-        // {
-        //     var obj = Instantiate(cardPrefab, playerDropZone.transform);
-        //     playerCard1 = obj.GetComponent<CardDisplay>();
-        //     playerCard1.transform.localPosition = playerCard1InitialPos;
-        // }
-        // if (playerCard2 == null || !playerCard2.isActiveAndEnabled)
-        // {
-        //     var obj = Instantiate(cardPrefab, playerDropZone.transform);
-        //     playerCard2 = obj.GetComponent<CardDisplay>();
-        //     playerCard2.transform.localPosition = playerCard2InitialPos;
-        // }
         if (!playerCard1.isActiveAndEnabled)
         {
             Debug.Log("playerCard1 is null");
@@ -200,42 +162,6 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    // 勝敗判定を行い結果を表示
-    public void ShowResult()
-    {
-        if (resultPanel != null && resultText != null)
-        {
-            resultPanel.SetActive(true);
-            
-            if (playerCardValue > opponentCardValue1 && playerCardValue > opponentCardValue2)
-            {
-                resultText.text = "YOU WIN!";
-                resultText.color = Color.red;
-            }
-            else if (playerCardValue < opponentCardValue1 && playerCardValue < opponentCardValue2)
-            {
-                resultText.text = "YOU LOSE...";
-                resultText.color = Color.blue;
-            }
-            else
-            {
-                resultText.text = "DRAW";
-                resultText.color = Color.white;
-            }
-
-            Debug.Log($"Battle Result - Player: {playerCardValue} vs Opponent: {opponentCardValue1}, {opponentCardValue2}");
-        }
-    }
-
-    // 結果表示を非表示にする
-    public void HideResult()
-    {
-        if (resultPanel != null)
-        {
-            resultPanel.SetActive(false);
-        }
-    }
-
     // 山札からカードを引いて、そのカードのID、マーク、数字を返す
     public (int idNumber, int Mark, string Number) PopCard()
     {
@@ -258,7 +184,7 @@ public class DeckManager : MonoBehaviour
     }
 
     // カードを1枚引いて、DOWN/UPをUIに表示
-    public void DisplayUI(TextMeshProUGUI resultText, int idNumber)
+    public void DisplayUpDownUI(TextMeshProUGUI resultText, int idNumber)
     {
         // var (idNumber, _, _) = PopCard(); // Markは使わないので無視 `_`
 
@@ -272,7 +198,7 @@ public class DeckManager : MonoBehaviour
             Debug.LogWarning("resultText is null");
         }
 
-        Debug.Log($"DisplayUI: {resultText.text}");
+        Debug.Log($"DisplayUpDownUI: {resultText.text}");
     }
 
     // カードの数字とマークを表示

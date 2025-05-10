@@ -19,11 +19,27 @@ public class DropZone : MonoBehaviour, IDropHandler
     public void OnDrop(PointerEventData eventData)
     {
         GameObject droppedObj = eventData.pointerDrag;
+        GameObject playerCard = null;
         if (isPlayerZone)
         {
             if (droppedObj != null)
             {
-                CardDraggable draggable = droppedObj.GetComponent<CardDraggable>();
+                Debug.Log("droppedObj: " + droppedObj);
+                if(droppedObj == GameObject.Find("Player_Card1"))
+                {
+                    Debug.Log(GameObject.Find("Player_Card1"));
+                    Debug.Log("Value: " + GameObject.Find("Player_Card1").GetComponent<CardDisplay>().CardValue);
+                    Debug.Log("Player_Card1");
+                    playerCard = GameObject.Find("Player_Card1");
+                }
+                else if(droppedObj == GameObject.Find("Player_Card2"))
+                {
+                    Debug.Log("Value: " + GameObject.Find("Player_Card2").GetComponent<CardDisplay>().CardValue);
+                    Debug.Log("Player_Card2");
+                    playerCard = GameObject.Find("Player_Card2");
+                }
+
+                CardDraggable draggable = playerCard.GetComponent<CardDraggable>();
                 if (draggable != null)
                 {
                     // ドラッグ対象のカードをこのDropZoneの子にする
@@ -33,7 +49,7 @@ public class DropZone : MonoBehaviour, IDropHandler
                     draggable.transform.localPosition = Vector3.zero;
 
                     // ドロップ確認パネルを表示
-                    FindObjectOfType<GameManager>().ShowConfirmation(droppedObj, this);
+                    FindObjectOfType<GameManager>().ShowConfirmation(playerCard, this);
                 }
             }
         }

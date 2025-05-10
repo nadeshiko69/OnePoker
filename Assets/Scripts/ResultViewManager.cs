@@ -6,9 +6,6 @@ using System.Collections.Generic;
 
 public class ResultViewManager : MonoBehaviour
 {
-    public GameObject resultPanel;
-    public TextMeshProUGUI resultText;
-
     // 結果表示用のテーブル
     public Transform playerResultRow;    // プレイヤーの結果を表示する行
     public Transform opponentResultRow;  // 相手の結果を表示する行
@@ -22,10 +19,7 @@ public class ResultViewManager : MonoBehaviour
 
     void Start()
     {
-        if (resultPanel != null)
-        {
-            resultPanel.SetActive(false);
-        }
+
 
         InitializeResultTable();
     }
@@ -48,27 +42,12 @@ public class ResultViewManager : MonoBehaviour
         rectTransform.localPosition = Vector3.zero;
         rectTransform.localScale = Vector3.one;
 
-        // TextMeshProUGUIの基本設定
-        if (resultText != null && resultText.font != null)
-        {
-            tmp.font = resultText.font;
-            tmp.fontSize = 20;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color = normalColor;
-            tmp.raycastTarget = true;
-            tmp.text = "-";
-        }
-        else
-        {
-            Debug.LogError($"Reference text or font is null when creating cell {name}");
-        }
-
         return cell;
     }
 
     private void InitializeResultTable()
     {       
-        if (resultPanel == null || resultText == null || playerResultRow == null || opponentResultRow == null)
+        if (playerResultRow == null || opponentResultRow == null)
         {
             Debug.LogError("Required references are not set in the inspector!");
             return;
@@ -147,33 +126,22 @@ public class ResultViewManager : MonoBehaviour
     // 勝敗判定を行い結果を表示
     public void ShowResult(int playerCardValue, int opponentCardValue)
     {    
-        if (resultPanel != null && resultText != null)
+        // 同値の場合はDRAW
+        if (playerCardValue == opponentCardValue)
         {
-            resultPanel.SetActive(true);
-            
-            // 同値の場合はDRAW
-            if (playerCardValue == opponentCardValue)
-            {
-                resultText.text = "DRAW";
-                resultText.color = Color.white;
-                UpdateResultTable(playerCardValue, opponentCardValue, true);
-                return;
-            }
+            UpdateResultTable(playerCardValue, opponentCardValue, true);
+            return;
+        }
 
-            bool playerWins = IsWinner(playerCardValue, opponentCardValue);
-            Debug.Log("playerWins: " + playerWins);
-            if (playerWins)
-            {
-                resultText.text = "YOU WIN!";
-                resultText.color = Color.red;
-                UpdateResultTable(playerCardValue, opponentCardValue, false, true);
-            }
-            else
-            {
-                resultText.text = "YOU LOSE...";
-                resultText.color = Color.blue;
-                UpdateResultTable(playerCardValue, opponentCardValue, false, false);
-            }
+        bool playerWins = IsWinner(playerCardValue, opponentCardValue);
+        Debug.Log("playerWins: " + playerWins);
+        if (playerWins)
+        {
+            UpdateResultTable(playerCardValue, opponentCardValue, false, true);
+        }
+        else
+        {
+            UpdateResultTable(playerCardValue, opponentCardValue, false, false);
         }
     }
 
@@ -265,15 +233,6 @@ public class ResultViewManager : MonoBehaviour
                     opponentCells[i].color = normalColor;
                 }
             }
-        }
-    }
-
-    // 結果表示を非表示にする
-    public void HideResult()
-    {
-        if (resultPanel != null)
-        {
-            resultPanel.SetActive(false);
         }
     }
 }

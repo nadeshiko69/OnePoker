@@ -6,13 +6,11 @@ using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
-    public GameObject confirmationPanel;
-    public Button yesButton;
-    public Button noButton;
-
     private GameObject currentCard;
     private DropZone currentZone;
     private DeckManager deckManager;
+    private ResultViewManager resultViewManager;
+    private PanelManager panelManager;
 
     // For Debug ; 相手のカードを自動で配置
     private bool opponent_setCard = false;
@@ -21,44 +19,32 @@ public class GameManager : MonoBehaviour
 
     // プレイヤーのカードを保持
     private GameObject SetPlayerCard;
+    private GameObject SetOpponentCard;
     
     // 両者カードを配置したらベット開始
     private bool bothCardsPlaced = false;
 
     // ベットフェーズ用のUI
-    public GameObject bettingPanel;
     public TextMeshProUGUI playerLifeText;
     public TextMeshProUGUI opponentLifeText;
     private int currentBetAmount = 0;
-    public Button bet1Button;
-    public Button bet2Button;
-    public Button callButton;
-    public TextMeshProUGUI callButtonText;
+    public int CurrentBetAmount => currentBetAmount;
 
-    private bool opponentCalled = false;
+    public bool OpponentCalled = false;
     private bool cardsRevealed = false;
-
-    // オープンのUI
-    public GameObject openPanel;
-    private ResultViewManager resultViewManager;
 
     // MatchManagerへの参照
     private MatchManager matchManager;
 
     void Start()
     {
-        confirmationPanel.SetActive(false);
-        bettingPanel.SetActive(false);
-        openPanel.SetActive(false);
         deckManager = FindObjectOfType<DeckManager>();
         resultViewManager = FindObjectOfType<ResultViewManager>();
         matchManager = FindObjectOfType<MatchManager>();
-
-        yesButton.onClick.AddListener(ConfirmPlacement);
-        noButton.onClick.AddListener(CancelPlacement);
+        panelManager = FindObjectOfType<PanelManager>();
 
         // Callボタンの初期テキストを設定
-        UpdateCallButtonText();
+        panelManager.UpdateCallButtonText();
     }
 
     void Update()
@@ -73,15 +59,9 @@ public class GameManager : MonoBehaviour
         {
             // ベット開始
             Debug.Log("ベット開始");
-            ShowBettingUI();
+            panelManager.ShowBettingUI();
             bothCardsPlaced = false;
         }
-    }
-
-    private IEnumerator HideBettingUI()
-    {
-        yield return new WaitForSeconds(1f);
-        bettingPanel.SetActive(false);
     }
 
     private IEnumerator SetOpponentCardFlag()
@@ -108,33 +88,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void UpdateCallButtonText()
-    {
-        if (callButtonText != null)
-        {
-            string action = currentBetAmount >= 2 ? "Raise" : "Call";
-            callButtonText.text = $"{action} ({currentBetAmount})";
-        }
-    }
-
-    private void ShowBettingUI()
-    {
-        bettingPanel.SetActive(true);
-        StartCoroutine(HideBettingUI());
-
-        // ベット開始時に自動で1をベット
-        PlaceBet(1);
-
-        bet1Button.onClick.RemoveAllListeners();
-        bet2Button.onClick.RemoveAllListeners();
-        callButton.onClick.RemoveAllListeners();
-
-        bet1Button.onClick.AddListener(() => PlaceBet(1));
-        bet2Button.onClick.AddListener(() => PlaceBet(-1));
-        callButton.onClick.AddListener(() => StartCoroutine(HandleCall()));
-    }
-
-    private void PlaceBet(int amount)
+    public void PlaceBet(int amount)
     {
         if (amount > 0)
         {
@@ -145,7 +99,7 @@ public class GameManager : MonoBehaviour
                 matchManager.UpdatePlayerLife(-1); // 1ずつライフを減らす
                 Debug.Log($"Betting {currentBetAmount} life!");
                 UpdateLifeUI();
-                UpdateCallButtonText();
+                panelManager.UpdateCallButtonText();
             }
             else
             {
@@ -161,36 +115,12 @@ public class GameManager : MonoBehaviour
                 matchManager.UpdatePlayerLife(1); // ライフを1戻す
                 Debug.Log($"Reducing bet to {currentBetAmount} life!");
                 UpdateLifeUI();
-                UpdateCallButtonText();
+                panelManager.UpdateCallButtonText();
             }
         }
     }
 
-    private IEnumerator HandleCall()
-    {
-        // プレイヤーがコール
-        Debug.Log($"Player calls with {currentBetAmount} life!");
-        bettingPanel.SetActive(false);
-        UpdateCallButtonText();
-
-        yield return new WaitForSeconds(1f);
-
-        // CPUがコール
-        Debug.Log("Opponent calls!");
-        opponentCalled = true;
-        //　CPUのライフを更新する
-        matchManager.UpdateOpponentLife(-currentBetAmount);
-
-        yield return new WaitForSeconds(1f);
-
-        // オープンのUIを表示しカードオープン
-        openPanel.SetActive(true);
-        yield return new WaitForSeconds(1f);
-        openPanel.SetActive(false);
-        RevealCards();
-    }
-
-    private void RevealCards()
+    public void RevealCards()
     {
         if (!cardsRevealed)
         {
@@ -245,6 +175,7 @@ public class GameManager : MonoBehaviour
             int playerCardValue = SetPlayerCard.GetComponent<CardDisplay>().CardValue;
             int opponentCardValue = deckManager.OpponentCardValue1;
             Debug.Log($"Showing result - Player: {playerCardValue}, Opponent: {opponentCardValue}");
+            panelManager.ShowResult(playerCardValue, opponentCardValue);
             resultViewManager.ShowResult(playerCardValue, opponentCardValue);
             UpdateLife(playerCardValue, opponentCardValue);
         }
@@ -254,7 +185,7 @@ public class GameManager : MonoBehaviour
         }
         
         yield return new WaitForSeconds(3f);
-        resultViewManager.HideResult();
+        panelManager.HidePanel(panelManager.resultPanel);
 
         matchManager.OnGameComplete();
     }
@@ -290,36 +221,34 @@ public class GameManager : MonoBehaviour
     public void ShowConfirmation(GameObject card, DropZone zone)
     {
         Debug.Log("ShowConfirmation called");
-        Debug.Log("card: " + card);
-        Debug.Log("zone: " + zone);
-
+        Debug.Log("number: " + card.GetComponent<CardDisplay>().CardValue);
         currentCard = card;
         currentZone = zone;
-        confirmationPanel.SetActive(true);
+        panelManager.confirmationPanel.SetActive(true);
 
         // リスナーの多重登録防止
-        yesButton.onClick.RemoveAllListeners();
-        noButton.onClick.RemoveAllListeners();
+        panelManager.yesButton.onClick.RemoveAllListeners();
+        panelManager.noButton.onClick.RemoveAllListeners();
 
-        yesButton.onClick.AddListener(ConfirmPlacement);
-        noButton.onClick.AddListener(CancelPlacement);
+        panelManager.yesButton.onClick.AddListener(ConfirmPlacement);
+        panelManager.noButton.onClick.AddListener(CancelPlacement);
     }
 
-    private void ConfirmPlacement()
+    public void ConfirmPlacement()
     {
         currentCard.transform.position = currentZone.transform.position;
-        confirmationPanel.SetActive(false);
+        panelManager.confirmationPanel.SetActive(false);
 
         // プレイヤーのカードをリストに追加
         SetPlayerCard = currentCard;
 
         // カードの値を設定
-        CardDisplay cardDisplay = currentCard.GetComponent<CardDisplay>();
+        CardDisplay cardDisplay = SetPlayerCard.GetComponent<CardDisplay>();
 
         // 状態をリセット（currentCardは保持）
-        GameObject tempCard = currentCard;
+        GameObject tempCard = SetPlayerCard;
         ResetState();
-        currentCard = tempCard;
+        SetPlayerCard = tempCard;
 
         StartCoroutine(SetOpponentCardFlag());
     }
@@ -349,7 +278,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(SetBettingPhase());
     }
 
-    private void CancelPlacement()
+    public void CancelPlacement()
     {
         // カードを元の位置に戻す
         var drag = currentCard.GetComponent<CardDraggable>();
@@ -360,7 +289,7 @@ public class GameManager : MonoBehaviour
         }
         
         // パネル非表示 & 状態クリア
-        confirmationPanel.SetActive(false);
+        panelManager.confirmationPanel.SetActive(false);
         ResetState();
     }
 
@@ -368,14 +297,14 @@ public class GameManager : MonoBehaviour
     {
         currentCard = null;
         currentZone = null;
-        confirmationPanel.SetActive(false);
-        opponentCalled = false;
+        panelManager.confirmationPanel.SetActive(false);
+        OpponentCalled = false;
         cardsRevealed = false;
         currentBetAmount = 0;
-        UpdateCallButtonText();
+        panelManager.UpdateCallButtonText();
 
         // リスナーをリセット
-        yesButton.onClick.RemoveAllListeners();
-        noButton.onClick.RemoveAllListeners();
+        panelManager.yesButton.onClick.RemoveAllListeners();
+        panelManager.noButton.onClick.RemoveAllListeners();
     }
 }
