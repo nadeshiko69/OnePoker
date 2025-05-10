@@ -123,7 +123,7 @@ public class PanelManager : MonoBehaviour
 
         // CPUがコール
         Debug.Log("Opponent calls!");
-        gameManager.OpponentCalled = true;
+        gameManager.SetOpponentCalled(true);
         //　CPUのライフを更新する
         matchManager.UpdateOpponentLife(-gameManager.CurrentBetAmount);
 

@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
     private int currentBetAmount = 0;
     public int CurrentBetAmount => currentBetAmount;
 
-    public bool OpponentCalled = false;
+    private bool OpponentCalled = false;
     private bool cardsRevealed = false;
 
     // MatchManagerへの参照
@@ -291,6 +291,11 @@ public class GameManager : MonoBehaviour
         // パネル非表示 & 状態クリア
         panelManager.confirmationPanel.SetActive(false);
         ResetState();
+    }
+
+    public void SetOpponentCalled(bool called)
+    {
+        OpponentCalled = called;
     }
 
     private void ResetState()
