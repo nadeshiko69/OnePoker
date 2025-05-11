@@ -11,17 +11,17 @@ public class GameManager : MonoBehaviour
     private ResultViewManager resultViewManager;
     private PanelManager panelManager;
 
-    private GameObject currentCard;
+    private CardDisplay currentCard;
     private DropZone currentZone;
 
     // For Debug ; 相手のカードを自動で配置
     private bool opponent_setCard = false;
-    public GameObject opponentCard;
+    public CardDisplay opponentCard;
     public DropZone opponentZone;
 
     // プレイヤーのカードを保持
-    private GameObject SetPlayerCard;
-    private GameObject SetOpponentCard;
+    private CardDisplay SetPlayerCard;
+    private CardDisplay SetOpponentCard;
     
     // 両者カードを配置したらベット開始
     private bool bothCardsPlaced = false;
@@ -169,10 +169,10 @@ public class GameManager : MonoBehaviour
         if (SetPlayerCard != null)
         {
             int playerCardValue = SetPlayerCard.GetComponent<CardDisplay>().CardValue;
-            int opponentCardValue = deckManager.OpponentCardValue1;
+            int opponentCardValue = SetOpponentCard.GetComponent<CardDisplay>().CardValue;
             Debug.Log($"Showing result - Player: {playerCardValue}, Opponent: {opponentCardValue}");
-            panelManager.ShowResult(playerCardValue, opponentCardValue);
-            resultViewManager.ShowResult(playerCardValue, opponentCardValue);
+            panelManager.ShowResultPanel(playerCardValue, opponentCardValue);
+            resultViewManager.ShowResultTable(playerCardValue, opponentCardValue);
             UpdateLife(playerCardValue, opponentCardValue);
         }
         else
@@ -214,7 +214,7 @@ public class GameManager : MonoBehaviour
         Debug.Log($"After result - Player Life: {matchManager.PlayerLife}, Opponent Life: {matchManager.OpponentLife}");
     }
 
-    public void ShowConfirmation(GameObject card, DropZone zone)
+    public void ShowConfirmation(CardDisplay card, DropZone zone)
     {
         Debug.Log("ShowConfirmation called");
         Debug.Log("number: " + card.GetComponent<CardDisplay>().CardValue);
@@ -242,7 +242,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(SetOpponentCardFlag());
     }
 
-    public void PlaceOpponentCard(GameObject card, DropZone zone)
+    public void PlaceOpponentCard(CardDisplay card, DropZone zone)
     {
         if (card != null && zone != null)
         {
@@ -258,6 +258,7 @@ public class GameManager : MonoBehaviour
             {
                 cardDisplay.SetCard(false);
             }
+            SetOpponentCard = card;
         }
         else
         {

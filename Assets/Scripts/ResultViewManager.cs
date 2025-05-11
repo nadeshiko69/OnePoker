@@ -124,7 +124,7 @@ public class ResultViewManager : MonoBehaviour
     }
 
     // 勝敗判定を行い結果を表示
-    public void ShowResult(int playerCardValue, int opponentCardValue)
+    public void ShowResultTable(int playerCardValue, int opponentCardValue)
     {    
         // 同値の場合はDRAW
         if (playerCardValue == opponentCardValue)

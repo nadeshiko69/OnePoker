@@ -28,14 +28,6 @@ public class DeckManager : MonoBehaviour
     private readonly Color redColor = new Color(1f, 0.2f, 0.2f);        // 文字色　赤
     private readonly Color blackColor = new Color(0.1f, 0.1f, 0.1f);    // 文字色　黒
 
-    // カードの数字を保持
-    private int opponentCardValue1;  // 相手の1枚目のカード
-    private int opponentCardValue2;  // 相手の2枚目のカード
-
-    // カードの値を外部から取得するためのプロパティ
-    public int OpponentCardValue1 => opponentCardValue1;
-    public int OpponentCardValue2 => opponentCardValue2;
-
     public GameObject cardPrefab;
     public GameObject playerDropZone;
 
@@ -76,28 +68,30 @@ public class DeckManager : MonoBehaviour
             DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(true);
             DisplayCardUI(playerCardNumber1, playerCardMark1, cardValue, Mark, Number);
-            Debug.Log($"Player Card 1 set: Value={playerCardNumber1}, Display={Number}{marks[Mark]}");
+            playerCard1.SetCardValue(cardValue);
+            Debug.Log($"Player Card 1 set: Value={playerCard1.CardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == playerUI2)
         {
             DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(true);
-            DisplayCardUI(playerCardNumber2, playerCardMark2, cardValue, Mark, Number);// 2枚目のカードの値を保存
-            Debug.Log($"Player Card 2 set: Value={playerCardNumber2}, Display={Number}{marks[Mark]}");
+            DisplayCardUI(playerCardNumber2, playerCardMark2, cardValue, Mark, Number);
+            playerCard2.SetCardValue(cardValue);
+            Debug.Log($"Player Card 2 set: Value={playerCard2.CardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == opponentUI1)
         {
             DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(false);
-            opponentCardValue1 = cardValue;  // 1枚目の値を保存
-            Debug.Log($"Opponent Card 1 set: Value={opponentCardValue1}, Display={Number}{marks[Mark]}");
+            opponentCard1.SetCardValue(cardValue);
+            Debug.Log($"Opponent Card 1 set: Value={opponentCard1.CardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == opponentUI2)
         {
             DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(false);
-            opponentCardValue2 = cardValue;  // 2枚目の値を保存
-            Debug.Log($"Opponent Card 2 set: Value={opponentCardValue2}, Display={Number}{marks[Mark]}");
+            opponentCard2.SetCardValue(cardValue);
+            Debug.Log($"Opponent Card 2 set: Value={opponentCard2.CardValue}, Display={Number}{marks[Mark]}");
         }
     }
 

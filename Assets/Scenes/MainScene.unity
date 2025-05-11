@@ -1207,11 +1207,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 233535101}
   m_CullTransparentMesh: 1
---- !u!1 &280802850 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8622914166395771307, guid: 4c3356f803bb4c54490226619374d4f7, type: 3}
-  m_PrefabInstance: {fileID: 2289755}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &346422640 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8622914166395771307, guid: 4c3356f803bb4c54490226619374d4f7, type: 3}
@@ -1753,7 +1748,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9868f7b4e4b4bc4ab6175c8d3c4ff86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  opponentCard: {fileID: 280802850}
+  opponentCard: {fileID: 1656881563}
   opponentZone: {fileID: 1887968400}
   playerLifeText: {fileID: 819376135}
   opponentLifeText: {fileID: 2024170839}
@@ -7627,7 +7622,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3573624355274126565, guid: 4c3356f803bb4c54490226619374d4f7, type: 3}
   m_PrefabInstance: {fileID: 2289755}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 280802850}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74fc87dd07b4bdc47aab2ff3ba652b46, type: 3}

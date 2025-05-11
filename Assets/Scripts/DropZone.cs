@@ -4,12 +4,16 @@ using UnityEngine.UI;
 
 public class DropZone : MonoBehaviour, IDropHandler
 {
+    private DeckManager deckManager;
+
     public bool isPlayerZone = true;
     public Image zoneImage; // Inspectorでアタッチ
     private Color defaultColor;
 
     void Start()
     {
+        deckManager = FindObjectOfType<DeckManager>();
+
         if (zoneImage != null)
         {
             defaultColor = zoneImage.color;
@@ -19,24 +23,21 @@ public class DropZone : MonoBehaviour, IDropHandler
     public void OnDrop(PointerEventData eventData)
     {
         GameObject droppedObj = eventData.pointerDrag;
-        GameObject playerCard = null;
+        CardDisplay playerCard = null;
         if (isPlayerZone)
         {
             if (droppedObj != null)
             {
                 Debug.Log("droppedObj: " + droppedObj);
-                if(droppedObj == GameObject.Find("Player_Card1"))
+                if(droppedObj == deckManager.playerCard1.gameObject)
                 {
-                    Debug.Log(GameObject.Find("Player_Card1"));
-                    Debug.Log("Value: " + GameObject.Find("Player_Card1").GetComponent<CardDisplay>().CardValue);
-                    Debug.Log("Player_Card1");
-                    playerCard = GameObject.Find("Player_Card1");
+                    Debug.Log("Value: " + deckManager.playerCard1.GetComponent<CardDisplay>().CardValue);
+                    playerCard = deckManager.playerCard1;
                 }
-                else if(droppedObj == GameObject.Find("Player_Card2"))
+                else if(droppedObj == deckManager.playerCard2.gameObject)
                 {
-                    Debug.Log("Value: " + GameObject.Find("Player_Card2").GetComponent<CardDisplay>().CardValue);
-                    Debug.Log("Player_Card2");
-                    playerCard = GameObject.Find("Player_Card2");
+                    Debug.Log("Value: " + deckManager.playerCard2.GetComponent<CardDisplay>().CardValue);
+                    playerCard = deckManager.playerCard2;
                 }
 
                 CardDraggable draggable = playerCard.GetComponent<CardDraggable>();

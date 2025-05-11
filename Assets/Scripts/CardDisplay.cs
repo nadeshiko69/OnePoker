@@ -20,6 +20,11 @@ public class CardDisplay : MonoBehaviour
     // カードの値を取得するためのプロパティ
     public int CardValue => cardValue;
 
+    public void SetCardValue(int value)
+    {
+        cardValue = value;
+    }
+
     // カードを設定
     public void SetCard(bool faceUp)
     {

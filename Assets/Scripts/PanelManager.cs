@@ -61,7 +61,7 @@ public class PanelManager : MonoBehaviour
     }
 
     // 勝敗判定を行い結果を表示
-    public void ShowResult(int SetPlayerCard, int SetOpponentCard)
+    public void ShowResultPanel(int SetPlayerCard, int SetOpponentCard)
     {
         if (resultPanel != null && resultText != null)
         {
