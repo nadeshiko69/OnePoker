@@ -42,9 +42,6 @@ public class GameManager : MonoBehaviour
         resultViewManager = FindObjectOfType<ResultViewManager>();
         matchManager = FindObjectOfType<MatchManager>();
         panelManager = FindObjectOfType<PanelManager>();
-
-        // Callボタンの初期テキストを設定
-        panelManager.UpdateCallButtonText();
     }
 
     void Update()
