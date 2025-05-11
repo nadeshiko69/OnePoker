@@ -54,7 +54,6 @@ public class GameManager : MonoBehaviour
 
         if (bothCardsPlaced)
         {
-            // ベット開始
             Debug.Log("ベット開始");
             panelManager.ShowBettingUI();
             bothCardsPlaced = false;
@@ -239,14 +238,7 @@ public class GameManager : MonoBehaviour
         // プレイヤーのカードをリストに追加
         SetPlayerCard = currentCard;
 
-        // カードの値を設定
-        CardDisplay cardDisplay = SetPlayerCard.GetComponent<CardDisplay>();
-
-        // 状態をリセット（currentCardは保持）
-        GameObject tempCard = SetPlayerCard;
         ResetState();
-        SetPlayerCard = tempCard;
-
         StartCoroutine(SetOpponentCardFlag());
     }
 
