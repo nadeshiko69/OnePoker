@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using TMPro;
 
-public class RandomChoiceCard : MonoBehaviour
+public class DeckManager : MonoBehaviour
 {
     private List<int> shuffledCard;
     public IReadOnlyList<int> ShuffledCard => shuffledCard;
@@ -13,10 +13,6 @@ public class RandomChoiceCard : MonoBehaviour
     public TextMeshProUGUI playerUI2;
     public TextMeshProUGUI opponentUI1;
     public TextMeshProUGUI opponentUI2;
-
-    // 勝敗表示用のUI
-    public GameObject resultPanel;
-    public TextMeshProUGUI resultText;
 
     public CardDisplay playerCard1;
     public CardDisplay playerCard2;
@@ -32,15 +28,13 @@ public class RandomChoiceCard : MonoBehaviour
     private readonly Color redColor = new Color(1f, 0.2f, 0.2f);        // 文字色　赤
     private readonly Color blackColor = new Color(0.1f, 0.1f, 0.1f);    // 文字色　黒
 
-    // カードの数字を保持
-    private int playerCardValue;
-    private int opponentCardValue1;  // 相手の1枚目のカード
-    private int opponentCardValue2;  // 相手の2枚目のカード
+    public GameObject cardPrefab;
+    public GameObject playerDropZone;
 
-    // カードの値を外部から取得するためのプロパティ
-    public int PlayerCardValue => playerCardValue;
-    public int OpponentCardValue1 => opponentCardValue1;
-    public int OpponentCardValue2 => opponentCardValue2;
+    public Transform playerCard1Anchor;
+    public Transform playerCard2Anchor;
+    public Transform opponentCard1Anchor;
+    public Transform opponentCard2Anchor;
 
     void Start()
     {
@@ -52,11 +46,6 @@ public class RandomChoiceCard : MonoBehaviour
         DrawCard(playerUI2, playerCard2);
         DrawCard(opponentUI1, opponentCard1);
         DrawCard(opponentUI2, opponentCard2);
-
-        if (resultPanel != null)
-        {
-            resultPanel.SetActive(false);
-        }
     }
 
     // カードをシャッフルする
@@ -76,69 +65,94 @@ public class RandomChoiceCard : MonoBehaviour
 
         if (resultText == playerUI1)
         {
-            DisplayUI(resultText, cardValue);
+            DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(true);
             DisplayCardUI(playerCardNumber1, playerCardMark1, cardValue, Mark, Number);
-            playerCardValue = cardValue;
-            Debug.Log($"Player Card 1 set: Value={playerCardValue}, Display={Number}{marks[Mark]}");
+            playerCard1.SetCardValue(cardValue);
+            Debug.Log($"Player Card 1 set: Value={playerCard1.CardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == playerUI2)
         {
-            DisplayUI(resultText, cardValue);
+            DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(true);
             DisplayCardUI(playerCardNumber2, playerCardMark2, cardValue, Mark, Number);
-            playerCardValue = cardValue;  // 2枚目のカードの値を保存
-            Debug.Log($"Player Card 2 set: Value={playerCardValue}, Display={Number}{marks[Mark]}");
+            playerCard2.SetCardValue(cardValue);
+            Debug.Log($"Player Card 2 set: Value={playerCard2.CardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == opponentUI1)
         {
-            DisplayUI(resultText, cardValue);
+            DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(false);
-            opponentCardValue1 = cardValue;  // 1枚目の値を保存
-            Debug.Log($"Opponent Card 1 set: Value={opponentCardValue1}, Display={Number}{marks[Mark]}");
+            opponentCard1.SetCardValue(cardValue);
+            Debug.Log($"Opponent Card 1 set: Value={opponentCard1.CardValue}, Display={Number}{marks[Mark]}");
         }
         else if (resultText == opponentUI2)
         {
-            DisplayUI(resultText, cardValue);
+            DisplayUpDownUI(resultText, cardValue);
             cardPrefab.SetCard(false);
-            opponentCardValue2 = cardValue;  // 2枚目の値を保存
-            Debug.Log($"Opponent Card 2 set: Value={opponentCardValue2}, Display={Number}{marks[Mark]}");
+            opponentCard2.SetCardValue(cardValue);
+            Debug.Log($"Opponent Card 2 set: Value={opponentCard2.CardValue}, Display={Number}{marks[Mark]}");
         }
     }
 
-    // 勝敗判定を行い結果を表示
-    public void ShowResult()
+    public void RefillCards()
     {
-        if (resultPanel != null && resultText != null)
+        Debug.Log("RefillCard called");
+        if (!playerCard1.isActiveAndEnabled)
         {
-            resultPanel.SetActive(true);
-            
-            if (playerCardValue > opponentCardValue1 && playerCardValue > opponentCardValue2)
+            Debug.Log("playerCard1 is null");
+            var obj = Instantiate(cardPrefab, playerCard1Anchor);
+            var rect = obj.GetComponent<RectTransform>();
+            if (rect != null)
             {
-                resultText.text = "YOU WIN!";
-                resultText.color = Color.red;
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = new Vector3(3f, 3f, 1f);
             }
-            else if (playerCardValue < opponentCardValue1 && playerCardValue < opponentCardValue2)
-            {
-                resultText.text = "YOU LOSE...";
-                resultText.color = Color.blue;
-            }
-            else
-            {
-                resultText.text = "DRAW";
-                resultText.color = Color.white;
-            }
-
-            Debug.Log($"Battle Result - Player: {playerCardValue} vs Opponent: {opponentCardValue1}, {opponentCardValue2}");
+            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+            playerCard1 = obj.GetComponent<CardDisplay>();
+            DrawCard(playerUI1, playerCard1);
         }
-    }
-
-    // 結果表示を非表示にする
-    public void HideResult()
-    {
-        if (resultPanel != null)
+        if (!playerCard2.isActiveAndEnabled)
         {
-            resultPanel.SetActive(false);
+            Debug.Log("playerCard2 is null");
+            var obj = Instantiate(cardPrefab, playerCard2Anchor);
+            var rect = obj.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = new Vector3(3f, 3f, 1f);
+            }
+            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+            playerCard2 = obj.GetComponent<CardDisplay>();
+            DrawCard(playerUI2, playerCard2);
+        }
+        if (!opponentCard1.isActiveAndEnabled)
+        {
+            Debug.Log("opponentCard1 is null");
+            var obj = Instantiate(cardPrefab, opponentCard1Anchor);
+            var rect = obj.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = new Vector3(3f, 3f, 1f);
+            }
+            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+            opponentCard1 = obj.GetComponent<CardDisplay>();
+            DrawCard(opponentUI1, opponentCard1);
+        }
+        if (!opponentCard2.isActiveAndEnabled)
+        {
+            Debug.Log("opponentCard2 is null");
+            var obj = Instantiate(cardPrefab, opponentCard2Anchor);
+            var rect = obj.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = new Vector3(3f, 3f, 1f);
+            }
+            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+            opponentCard2 = obj.GetComponent<CardDisplay>();
+            DrawCard(opponentUI2, opponentCard2);
         }
     }
 
@@ -164,7 +178,7 @@ public class RandomChoiceCard : MonoBehaviour
     }
 
     // カードを1枚引いて、DOWN/UPをUIに表示
-    public void DisplayUI(TextMeshProUGUI resultText, int idNumber)
+    public void DisplayUpDownUI(TextMeshProUGUI resultText, int idNumber)
     {
         // var (idNumber, _, _) = PopCard(); // Markは使わないので無視 `_`
 
@@ -178,7 +192,7 @@ public class RandomChoiceCard : MonoBehaviour
             Debug.LogWarning("resultText is null");
         }
 
-        Debug.Log($"DisplayUI: {resultText.text}");
+        Debug.Log($"DisplayUpDownUI: {resultText.text}");
     }
 
     // カードの数字とマークを表示
