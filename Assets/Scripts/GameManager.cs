@@ -35,6 +35,8 @@ public class GameManager : MonoBehaviour
     private bool OpponentCalled = false;
     private bool cardsRevealed = false;
 
+    private bool checkGameOver = false;
+    public bool CheckGameOver => checkGameOver;
 
     void Start()
     {
@@ -212,6 +214,8 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.Log($"After result - Player Life: {matchManager.PlayerLife}, Opponent Life: {matchManager.OpponentLife}");
+
+        checkGameOver = true;
     }
 
     public void ShowConfirmation(CardDisplay card, DropZone zone)

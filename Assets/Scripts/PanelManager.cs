@@ -16,6 +16,7 @@ public class PanelManager : MonoBehaviour
     public Button betMinusButton;
     public Button callButton;
     public TextMeshProUGUI callButtonText;
+    public Button dropButton;
     
     // オープンのUI
     public GameObject openPanel;
@@ -54,10 +55,12 @@ public class PanelManager : MonoBehaviour
         betPlusButton.onClick.RemoveAllListeners();
         betMinusButton.onClick.RemoveAllListeners();
         callButton.onClick.RemoveAllListeners();
+        dropButton.onClick.RemoveAllListeners();
 
         betPlusButton.onClick.AddListener(() => gameManager.PlaceBet(1));
         betMinusButton.onClick.AddListener(() => gameManager.PlaceBet(-1));
         callButton.onClick.AddListener(() => StartCoroutine(HandleCall()));
+        dropButton.onClick.AddListener(() => StartCoroutine(HandleDrop()));
     }
 
     // 勝敗判定を行い結果を表示
@@ -133,6 +136,12 @@ public class PanelManager : MonoBehaviour
         openPanel.SetActive(true);
         yield return new WaitForSeconds(1f);
         openPanel.SetActive(false);
+        gameManager.RevealCards();
+    }
+
+    private IEnumerator HandleDrop(){
+        bettingPanel.SetActive(false);
+        yield return new WaitForSeconds(1f);
         gameManager.RevealCards();
     }
 }

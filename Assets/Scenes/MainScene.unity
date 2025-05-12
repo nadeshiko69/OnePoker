@@ -4840,6 +4840,7 @@ MonoBehaviour:
   betMinusButton: {fileID: 648925866}
   callButton: {fileID: 1181839475}
   callButtonText: {fileID: 628725802}
+  dropButton: {fileID: 1908348655}
   openPanel: {fileID: 1139368100}
   resultPanel: {fileID: 2007954557}
   resultText: {fileID: 1207794368}

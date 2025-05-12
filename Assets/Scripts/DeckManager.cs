@@ -95,55 +95,35 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    public void RefillCards()
+    public void RefillCardsToNextGame()
     {
         Debug.Log("RefillCard called");
         if (!playerCard1.isActiveAndEnabled)
         {
             Debug.Log("playerCard1 is null");
-            var obj = Instantiate(cardPrefab, playerCard1Anchor);
-            var rect = obj.GetComponent<RectTransform>();
-            if (rect != null)
-            {
-                rect.anchoredPosition = Vector2.zero;
-                rect.localScale = new Vector3(3f, 3f, 1f);
-            }
-            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
-            playerCard1 = obj.GetComponent<CardDisplay>();
-            DrawCard(playerUI1, playerCard1);
+            RefillCard(playerCard1, playerUI1, cardPrefab, playerCard1Anchor);
         }
-        if (!playerCard2.isActiveAndEnabled)
+        else if (!playerCard2.isActiveAndEnabled)
         {
             Debug.Log("playerCard2 is null");
-            var obj = Instantiate(cardPrefab, playerCard2Anchor);
-            var rect = obj.GetComponent<RectTransform>();
-            if (rect != null)
-            {
-                rect.anchoredPosition = Vector2.zero;
-                rect.localScale = new Vector3(3f, 3f, 1f);
-            }
-            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
-            playerCard2 = obj.GetComponent<CardDisplay>();
-            DrawCard(playerUI2, playerCard2);
+            RefillCard(playerCard2, playerUI2, cardPrefab, playerCard2Anchor);
         }
+
         if (!opponentCard1.isActiveAndEnabled)
         {
             Debug.Log("opponentCard1 is null");
-            var obj = Instantiate(cardPrefab, opponentCard1Anchor);
-            var rect = obj.GetComponent<RectTransform>();
-            if (rect != null)
-            {
-                rect.anchoredPosition = Vector2.zero;
-                rect.localScale = new Vector3(3f, 3f, 1f);
-            }
-            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
-            opponentCard1 = obj.GetComponent<CardDisplay>();
-            DrawCard(opponentUI1, opponentCard1);
+            RefillCard(opponentCard1, opponentUI1, cardPrefab, opponentCard1Anchor);
         }
-        if (!opponentCard2.isActiveAndEnabled)
+        else if (!opponentCard2.isActiveAndEnabled)
         {
             Debug.Log("opponentCard2 is null");
-            var obj = Instantiate(cardPrefab, opponentCard2Anchor);
+            RefillCard(opponentCard2, opponentUI2, cardPrefab, opponentCard2Anchor);
+        }
+    }
+
+    private void RefillCard(CardDisplay card, TextMeshProUGUI UI, GameObject cardPrefab, Transform anchor)
+    {
+            var obj = Instantiate(cardPrefab, anchor);
             var rect = obj.GetComponent<RectTransform>();
             if (rect != null)
             {
@@ -151,9 +131,8 @@ public class DeckManager : MonoBehaviour
                 rect.localScale = new Vector3(3f, 3f, 1f);
             }
             obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
-            opponentCard2 = obj.GetComponent<CardDisplay>();
-            DrawCard(opponentUI2, opponentCard2);
-        }
+            card = obj.GetComponent<CardDisplay>();
+            DrawCard(UI, card);
     }
 
     // 山札からカードを引いて、そのカードのID、マーク、数字を返す

@@ -50,6 +50,13 @@ public class MatchManager : MonoBehaviour
         UpdateLifeUI();
     }
 
+    void Update(){
+        // 1game終了するごとに状況を更新
+        if(gameManager.CheckGameOver){
+            ProcessGameOver();
+        }
+    }
+
     private void UpdateLifeUI()
     {
         if (playerLifeText != null)
@@ -148,7 +155,7 @@ public class MatchManager : MonoBehaviour
         else Debug.Log("opponentDropZone is null");
 
         // 空いた手札を補充
-        deckManager.RefillCards();
+        deckManager.RefillCardsToNextGame();
         // GameManagerの起動
     }
 
@@ -168,5 +175,9 @@ public class MatchManager : MonoBehaviour
 
         // 新しいマッチを開始
         PrepareNextGame();
+    }
+
+    void ProcessGameOver(){
+    
     }
 } 
