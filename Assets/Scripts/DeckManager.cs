@@ -93,46 +93,51 @@ public class DeckManager : MonoBehaviour
             opponentCard2.SetCardValue(cardValue);
             Debug.Log($"Opponent Card 2 set: Value={opponentCard2.CardValue}, Display={Number}{marks[Mark]}");
         }
+        else
+        {
+            Debug.LogWarning("resultText is null " + resultText);
+        }
     }
 
     public void RefillCardsToNextGame()
     {
-        Debug.Log("RefillCard called");
+        Debug.Log("RefillCardsToNextGame called");
         if (!playerCard1.isActiveAndEnabled)
         {
             Debug.Log("playerCard1 is null");
-            RefillCard(playerCard1, playerUI1, cardPrefab, playerCard1Anchor);
+            RefillCard(playerCard1, playerUI1, cardPrefab, playerCard1Anchor, "Player_Card1");
         }
         else if (!playerCard2.isActiveAndEnabled)
         {
             Debug.Log("playerCard2 is null");
-            RefillCard(playerCard2, playerUI2, cardPrefab, playerCard2Anchor);
+            RefillCard(playerCard2, playerUI2, cardPrefab, playerCard2Anchor, "Player_Card2");
         }
 
         if (!opponentCard1.isActiveAndEnabled)
         {
             Debug.Log("opponentCard1 is null");
-            RefillCard(opponentCard1, opponentUI1, cardPrefab, opponentCard1Anchor);
+            RefillCard(opponentCard1, opponentUI1, cardPrefab, opponentCard1Anchor, "Opponent_Card1");
         }
         else if (!opponentCard2.isActiveAndEnabled)
         {
             Debug.Log("opponentCard2 is null");
-            RefillCard(opponentCard2, opponentUI2, cardPrefab, opponentCard2Anchor);
+            RefillCard(opponentCard2, opponentUI2, cardPrefab, opponentCard2Anchor, "Opponent_Card2");
         }
     }
 
-    private void RefillCard(CardDisplay card, TextMeshProUGUI UI, GameObject cardPrefab, Transform anchor)
+    private void RefillCard(CardDisplay card, TextMeshProUGUI UI, GameObject cardPrefab, Transform anchor, string instanceName)
     {
-            var obj = Instantiate(cardPrefab, anchor);
-            var rect = obj.GetComponent<RectTransform>();
-            if (rect != null)
-            {
-                rect.anchoredPosition = Vector2.zero;
-                rect.localScale = new Vector3(3f, 3f, 1f);
-            }
-            obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
-            card = obj.GetComponent<CardDisplay>();
-            DrawCard(UI, card);
+        var obj = Instantiate(cardPrefab, anchor);
+        obj.name = instanceName;
+        var rect = obj.GetComponent<RectTransform>();
+        if (rect != null)
+        {
+            rect.anchoredPosition = Vector2.zero;
+            rect.localScale = new Vector3(3f, 3f, 1f);
+        }
+        obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+        card = obj.GetComponent<CardDisplay>();
+        DrawCard(UI, card);
     }
 
     // 山札からカードを引いて、そのカードのID、マーク、数字を返す

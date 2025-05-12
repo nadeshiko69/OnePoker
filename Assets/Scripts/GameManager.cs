@@ -74,6 +74,10 @@ public class GameManager : MonoBehaviour
         bothCardsPlaced = true;
     }
 
+    public void SetCheckGameOver(bool check){
+        checkGameOver = check;
+    }
+
     private void UpdateLifeUI()
     {
         if (playerLifeText != null)
