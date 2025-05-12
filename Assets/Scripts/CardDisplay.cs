@@ -59,12 +59,4 @@ public class CardDisplay : MonoBehaviour
             markText.enabled = false;
         }
     }
-
-    // 裏返す
-    public void FlipCard()
-    {
-        SetCard(!isFaceUp);
-    }
-
-
 }

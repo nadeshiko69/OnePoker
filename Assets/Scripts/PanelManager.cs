@@ -21,6 +21,9 @@ public class PanelManager : MonoBehaviour
     // オープンのUI
     public GameObject openPanel;
 
+    // ドロップのUI
+    public GameObject dropPanel;
+
     // 勝敗表示用のUI
     public GameObject resultPanel;
     public TextMeshProUGUI resultText;
@@ -39,6 +42,7 @@ public class PanelManager : MonoBehaviour
         if (confirmationPanel != null) confirmationPanel.SetActive(false);
         if (bettingPanel != null) bettingPanel.SetActive(false);
         if (openPanel != null) openPanel.SetActive(false);
+        if (dropPanel != null) dropPanel.SetActive(false);
 
         yesButton.onClick.AddListener(gameManager.ConfirmPlacement);
         noButton.onClick.AddListener(gameManager.CancelPlacement);
@@ -140,8 +144,20 @@ public class PanelManager : MonoBehaviour
     }
 
     private IEnumerator HandleDrop(){
+        // ドロップのUIを表示
         bettingPanel.SetActive(false);
+        dropPanel.SetActive(true);
         yield return new WaitForSeconds(1f);
-        gameManager.RevealCards();
+        dropPanel.SetActive(false);
+
+        // 負けUIの表示（相手のDropを考慮して後々修正）
+        resultPanel.SetActive(true);
+        resultText.text = "YOU LOSE...";
+        resultText.color = Color.blue;
+        yield return new WaitForSeconds(1f);
+        resultPanel.SetActive(false);
+
+        // 相手勝ちとしてライフ更新
+        matchManager.UpdateOpponentLife(gameManager.CurrentBetAmount);
     }
 }
