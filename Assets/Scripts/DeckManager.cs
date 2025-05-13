@@ -60,6 +60,7 @@ public class DeckManager : MonoBehaviour
 
     public void DrawCard(TextMeshProUGUI resultText, CardDisplay cardPrefab)
     {
+        Debug.Log("DrawCard called: resultText=" + resultText?.name + ", root=" + resultText?.transform.root.name);
         var (cardValue, Mark, Number) = PopCard();
         Debug.Log($"DrawCard - Before assignment: cardValue={cardValue}, Number={Number}, Mark={marks[Mark]}");
 
@@ -105,39 +106,53 @@ public class DeckManager : MonoBehaviour
         if (!playerCard1.isActiveAndEnabled)
         {
             Debug.Log("playerCard1 is null");
-            RefillCard(playerCard1, playerUI1, cardPrefab, playerCard1Anchor, "Player_Card1");
+            playerCard1 = RefillCard(playerCard1, cardPrefab, playerCard1Anchor, "Player_Card1", 1);
+            DrawCard(playerUI1, playerCard1);
         }
-        else if (!playerCard2.isActiveAndEnabled)
+        if (!playerCard2.isActiveAndEnabled)
         {
             Debug.Log("playerCard2 is null");
-            RefillCard(playerCard2, playerUI2, cardPrefab, playerCard2Anchor, "Player_Card2");
+            playerCard2 = RefillCard(playerCard2, cardPrefab, playerCard2Anchor, "Player_Card2", 2);
+            DrawCard(playerUI2, playerCard2);
         }
-
         if (!opponentCard1.isActiveAndEnabled)
         {
             Debug.Log("opponentCard1 is null");
-            RefillCard(opponentCard1, opponentUI1, cardPrefab, opponentCard1Anchor, "Opponent_Card1");
+            opponentCard1 = RefillCard(opponentCard1, cardPrefab, opponentCard1Anchor, "Opponent_Card1", -1);
+            DrawCard(opponentUI1, opponentCard1);
         }
-        else if (!opponentCard2.isActiveAndEnabled)
+        if (!opponentCard2.isActiveAndEnabled)
         {
             Debug.Log("opponentCard2 is null");
-            RefillCard(opponentCard2, opponentUI2, cardPrefab, opponentCard2Anchor, "Opponent_Card2");
+            opponentCard2 = RefillCard(opponentCard2, cardPrefab, opponentCard2Anchor, "Opponent_Card2", -1);
+            DrawCard(opponentUI2, opponentCard2);
         }
     }
 
-    private void RefillCard(CardDisplay card, TextMeshProUGUI UI, GameObject cardPrefab, Transform anchor, string instanceName)
+    private CardDisplay RefillCard(CardDisplay card, GameObject cardPrefab, Transform anchor, string instanceName, int cardIndex)
     {
         var obj = Instantiate(cardPrefab, anchor);
         obj.name = instanceName;
         var rect = obj.GetComponent<RectTransform>();
+        var numberText = obj.transform.Find("Number")?.GetComponent<TextMeshProUGUI>();
+        var markText = obj.transform.Find("Mark")?.GetComponent<TextMeshProUGUI>();
         if (rect != null)
         {
             rect.anchoredPosition = Vector2.zero;
             rect.localScale = new Vector3(3f, 3f, 1f);
         }
         obj.transform.localRotation = Quaternion.Euler(0f, -90f, 65f);
+
+        if (cardIndex == 1) {
+            playerCardNumber1 = numberText;
+            playerCardMark1 = markText;
+        } else if (cardIndex == 2) {
+            playerCardNumber2 = numberText;
+            playerCardMark2 = markText;
+        }
+
         card = obj.GetComponent<CardDisplay>();
-        DrawCard(UI, card);
+        return card;
     }
 
     // 山札からカードを引いて、そのカードのID、マーク、数字を返す
