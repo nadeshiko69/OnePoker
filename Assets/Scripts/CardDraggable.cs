@@ -14,7 +14,12 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     void Awake()
     {
+        // CanvasGroupが存在しない場合は追加
         canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -23,8 +28,11 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         originalPosition = transform.position;
         originalParent = transform.parent;
 
-        canvasGroup.alpha = 0.6f; // 透明度を下げる
-        canvasGroup.blocksRaycasts = false; // 他のオブジェクトがドロップを受けられるようにする
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 0.6f; // 透明度を下げる
+            canvasGroup.blocksRaycasts = false; // 他のオブジェクトがドロップを受けられるようにする
+        }
 
         // 親をCanvasに変更（ドラッグ時に他の UI の影響を受けないように）
         transform.SetParent(transform.root);
@@ -37,8 +45,11 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        canvasGroup.alpha = 1f;
-        canvasGroup.blocksRaycasts = true;
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 1f;
+            canvasGroup.blocksRaycasts = true;
+        }
 
         // 何もドロップしなかったら元の位置に戻す
         if (transform.parent == transform.root)

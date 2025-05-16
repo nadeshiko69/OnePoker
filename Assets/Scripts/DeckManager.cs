@@ -148,20 +148,18 @@ public class DeckManager : MonoBehaviour
             playerCardNumber1 = numberText;
             playerCardMark1 = markText;
             obj.AddComponent<CardDraggable>();
-            obj.AddComponent<CanvasGroup>();
+            var canvasGroup = obj.AddComponent<CanvasGroup>();
             var image = obj.GetComponent<Image>();
             if (image != null) image.raycastTarget = true;
-            var cg = obj.GetComponent<CanvasGroup>();
-            if (cg != null) cg.blocksRaycasts = true;
+            if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
         } else if (cardIndex == 2) {
             playerCardNumber2 = numberText;
             playerCardMark2 = markText;
             obj.AddComponent<CardDraggable>();
-            obj.AddComponent<CanvasGroup>();
+            var canvasGroup = obj.AddComponent<CanvasGroup>();
             var image = obj.GetComponent<Image>();
             if (image != null) image.raycastTarget = true;
-            var cg = obj.GetComponent<CanvasGroup>();
-            if (cg != null) cg.blocksRaycasts = true;
+            if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
         }
 
         card = obj.GetComponent<CardDisplay>();
