@@ -88,11 +88,11 @@ public class PanelManager : MonoBehaviour
         FakeOutSkillButton.onClick.RemoveAllListeners();
         CopySkillButton.onClick.RemoveAllListeners();
 
-        ScanSkillButton.onClick.AddListener(() => skillManager.ScanSkill());
-        ChangeSkillButton.onClick.AddListener(() => skillManager.ChangeSkill());
-        ObstructSkillButton.onClick.AddListener(() => skillManager.ObstructSkill());
-        FakeOutSkillButton.onClick.AddListener(() => skillManager.FakeOutSkill());
-        CopySkillButton.onClick.AddListener(() => skillManager.CopySkill());
+        ScanSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("Scan", DescriptionScanSkill));
+        ChangeSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("Change", DescriptionChangeSkill));
+        ObstructSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("Obstruct", DescriptionObstructSkill));
+        FakeOutSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("FakeOut", DescriptionFakeOutSkill));
+        CopySkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("Copy", DescriptionCopySkill));
 
         VisibleSkillButtons(true);
         VisibleBetButtons(false);
@@ -246,5 +246,13 @@ public class PanelManager : MonoBehaviour
 
         UseSkillButton.onClick.AddListener(() => skillManager.UseSkill(skillName));
         CancelSkillButton.onClick.AddListener(() => descriptionSkillPanel.SetActive(false));
+    }
+
+    public void SetSkillButtonInteractable(bool interactable)
+    {
+        ScanSkillButton.interactable = interactable;
+        ChangeSkillButton.interactable = interactable;
+        ObstructSkillButton.interactable = interactable;
+        FakeOutSkillButton.interactable = interactable;
     }
 }
