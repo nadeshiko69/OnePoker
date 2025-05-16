@@ -12,6 +12,24 @@ public class PanelManager : MonoBehaviour
     public Button FakeOutSkillButton;
     public Button CopySkillButton;
 
+    // スキル使用確認用のUI
+    public GameObject descriptionSkillPanel;
+    public TextMeshProUGUI skillNameText;
+    public TextMeshProUGUI skillDescriptionText;
+    public Button UseSkillButton;
+    public Button CancelSkillButton;
+
+    private string descriptionScanSkill = "相手の手札を\n1枚ランダムに確認できます。";
+    private string descriptionChangeSkill = "自分の手札を1枚捨て、\n山札から1枚引きます。";
+    private string descriptionObstructSkill = "次のターン、相手がスキルを\n使用できなくなります。";
+    private string descriptionFakeOutSkill = "相手にScanを使用したと\n通知しますが、実際に見ることは\nできません（ブラフ用）";
+    private string descriptionCopySkill = "前のターンに相手が使用した\nスキルを使用できます。";
+    public string DescriptionScanSkill => descriptionScanSkill;
+    public string DescriptionChangeSkill => descriptionChangeSkill;
+    public string DescriptionObstructSkill => descriptionObstructSkill;
+    public string DescriptionFakeOutSkill => descriptionFakeOutSkill;
+    public string DescriptionCopySkill => descriptionCopySkill;
+
     // セット確認用のUI
     public GameObject confirmationPanel;
     public Button yesButton;
@@ -52,6 +70,7 @@ public class PanelManager : MonoBehaviour
         if (bettingPanel != null) bettingPanel.SetActive(false);
         if (openPanel != null) openPanel.SetActive(false);
         if (dropPanel != null) dropPanel.SetActive(false);
+        if (descriptionSkillPanel != null) descriptionSkillPanel.SetActive(false);
 
         // ボタンUIの初期化
         yesButton.onClick.AddListener(gameManager.ConfirmPlacement);
@@ -215,5 +234,17 @@ public class PanelManager : MonoBehaviour
         if (ObstructSkillButton != null) ObstructSkillButton.gameObject.SetActive(visible);
         if (FakeOutSkillButton != null) FakeOutSkillButton.gameObject.SetActive(visible);
         if (CopySkillButton != null) CopySkillButton.gameObject.SetActive(visible);
-    }   
+    }
+
+    public void ShowDescriptionSkillPanel(string skillName, string skillDescription)
+    {
+        descriptionSkillPanel.SetActive(true);
+        skillNameText.text = skillName;
+        skillDescriptionText.text = skillDescription;
+        UseSkillButton.onClick.RemoveAllListeners();
+        CancelSkillButton.onClick.RemoveAllListeners();
+
+        UseSkillButton.onClick.AddListener(() => skillManager.UseSkill(skillName));
+        CancelSkillButton.onClick.AddListener(() => descriptionSkillPanel.SetActive(false));
+    }
 }
