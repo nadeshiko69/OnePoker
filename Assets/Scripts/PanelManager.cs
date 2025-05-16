@@ -46,6 +46,8 @@ public class PanelManager : MonoBehaviour
 
         yesButton.onClick.AddListener(gameManager.ConfirmPlacement);
         noButton.onClick.AddListener(gameManager.CancelPlacement);
+
+        SetBetButtonsInteractable(false);
     }
 
     public void ShowBettingUI()
@@ -65,6 +67,9 @@ public class PanelManager : MonoBehaviour
         betMinusButton.onClick.AddListener(() => gameManager.PlaceBet(-1));
         callButton.onClick.AddListener(() => StartCoroutine(HandleCall()));
         dropButton.onClick.AddListener(() => StartCoroutine(HandleDrop()));
+
+        // ベットフェーズでボタンを有効化
+        SetBetButtonsInteractable(true);
     }
 
     // 勝敗判定を行い結果を表示
@@ -92,6 +97,9 @@ public class PanelManager : MonoBehaviour
 
             Debug.Log($"Battle Result - Player: {SetPlayerCard} vs Opponent: {SetOpponentCard}");
         }
+
+        // 結果を表示したらボタンを無効化
+        SetBetButtonsInteractable(false);
     }
 
     public void UpdateCallButtonText()
@@ -161,5 +169,11 @@ public class PanelManager : MonoBehaviour
         matchManager.UpdateOpponentLife(gameManager.CurrentBetAmount);
         resultViewManager.UpdateResultTable(gameManager.SetPlayerCard.GetComponent<CardDisplay>().CardValue, gameManager.SetOpponentCard.GetComponent<CardDisplay>().CardValue, false, false);
         matchManager.OnGameComplete();
+    }
+
+    public void SetBetButtonsInteractable(bool interactable)
+    {
+        if (callButton != null) callButton.interactable = interactable;
+        if (dropButton != null) dropButton.interactable = interactable;
     }
 }
