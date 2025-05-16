@@ -19,15 +19,17 @@ public class ResultViewManager : MonoBehaviour
 
     void Start()
     {
-
-
         InitializeResultTable();
+        ResetResults();
     }
 
     private GameObject CreateCell(string name, Transform parent)
     {
         var cell = new GameObject(name);
         cell.transform.SetParent(parent, false);
+
+        // LayerをUI(5)に設定
+        cell.layer = 5;
 
         // 必要なコンポーネントを追加
         var rectTransform = cell.AddComponent<RectTransform>();
@@ -38,9 +40,15 @@ public class ResultViewManager : MonoBehaviour
         rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
         rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        rectTransform.sizeDelta = new Vector2(30, 30);
+        rectTransform.sizeDelta = new Vector2(55, 100);
         rectTransform.localPosition = Vector3.zero;
         rectTransform.localScale = Vector3.one;
+
+        // TextMeshProの設定
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.fontSize = 30;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.verticalAlignment = VerticalAlignmentOptions.Middle;
 
         return cell;
     }

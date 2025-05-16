@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
 
     // For Debug ; 相手のカードを自動で配置
     private bool opponent_setCard = false;
-    public CardDisplay opponentCard;
+    private CardDisplay opponentCard;
     public DropZone opponentZone;
 
     // プレイヤーのカードを保持
