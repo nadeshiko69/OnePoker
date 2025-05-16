@@ -5,6 +5,13 @@ using UnityEngine.UI;
 
 public class PanelManager : MonoBehaviour
 {
+    // スキルボタン
+    public Button ScanSkillButton;
+    public Button ChangeSkillButton;
+    public Button ObstructSkillButton;
+    public Button FakeOutSkillButton;
+    public Button CopySkillButton;
+
     // セット確認用のUI
     public GameObject confirmationPanel;
     public Button yesButton;
@@ -31,23 +38,45 @@ public class PanelManager : MonoBehaviour
     private ResultViewManager resultViewManager;
     private GameManager gameManager;
     private MatchManager matchManager;
+    private SkillManager skillManager;
 
     void Start()
     {
         resultViewManager = FindObjectOfType<ResultViewManager>();
         gameManager = FindObjectOfType<GameManager>();
         matchManager = FindObjectOfType<MatchManager>();
-        
+        skillManager = FindObjectOfType<SkillManager>();
+
         if (resultPanel != null) resultPanel.SetActive(false);
         if (confirmationPanel != null) confirmationPanel.SetActive(false);
         if (bettingPanel != null) bettingPanel.SetActive(false);
         if (openPanel != null) openPanel.SetActive(false);
         if (dropPanel != null) dropPanel.SetActive(false);
 
+        // ボタンUIの初期化
         yesButton.onClick.AddListener(gameManager.ConfirmPlacement);
         noButton.onClick.AddListener(gameManager.CancelPlacement);
+        
+        ShowSkillUI();
+    }
 
-        SetBetButtonsInteractable(false);
+    public void ShowSkillUI()
+    {
+        Debug.Log("ShowSkillUI called");
+        ScanSkillButton.onClick.RemoveAllListeners();
+        ChangeSkillButton.onClick.RemoveAllListeners();
+        ObstructSkillButton.onClick.RemoveAllListeners();
+        FakeOutSkillButton.onClick.RemoveAllListeners();
+        CopySkillButton.onClick.RemoveAllListeners();
+
+        ScanSkillButton.onClick.AddListener(() => skillManager.ScanSkill());
+        ChangeSkillButton.onClick.AddListener(() => skillManager.ChangeSkill());
+        ObstructSkillButton.onClick.AddListener(() => skillManager.ObstructSkill());
+        FakeOutSkillButton.onClick.AddListener(() => skillManager.FakeOutSkill());
+        CopySkillButton.onClick.AddListener(() => skillManager.CopySkill());
+
+        VisibleSkillButtons(true);
+        VisibleBetButtons(false);
     }
 
     public void ShowBettingUI()
@@ -68,8 +97,9 @@ public class PanelManager : MonoBehaviour
         callButton.onClick.AddListener(() => StartCoroutine(HandleCall()));
         dropButton.onClick.AddListener(() => StartCoroutine(HandleDrop()));
 
-        // ベットフェーズでボタンを有効化
-        SetBetButtonsInteractable(true);
+        // ベットフェーズでベットボタンを有効化
+        VisibleSkillButtons(false);
+        VisibleBetButtons(true);
     }
 
     // 勝敗判定を行い結果を表示
@@ -97,9 +127,6 @@ public class PanelManager : MonoBehaviour
 
             Debug.Log($"Battle Result - Player: {SetPlayerCard} vs Opponent: {SetOpponentCard}");
         }
-
-        // 結果を表示したらボタンを無効化
-        SetBetButtonsInteractable(false);
     }
 
     public void UpdateCallButtonText()
@@ -171,9 +198,22 @@ public class PanelManager : MonoBehaviour
         matchManager.OnGameComplete();
     }
 
-    public void SetBetButtonsInteractable(bool interactable)
+    // ベットボタンの表示/非表示
+    public void VisibleBetButtons(bool visible)
     {
-        if (callButton != null) callButton.interactable = interactable;
-        if (dropButton != null) dropButton.interactable = interactable;
+        if (callButton != null) callButton.gameObject.SetActive(visible);
+        if (dropButton != null) dropButton.gameObject.SetActive(visible);
+        if (betPlusButton != null) betPlusButton.gameObject.SetActive(visible);
+        if (betMinusButton != null) betMinusButton.gameObject.SetActive(visible);
     }
+
+    // スキルボタンの表示/非表示
+    public void VisibleSkillButtons(bool visible)
+    {
+        if (ScanSkillButton != null) ScanSkillButton.gameObject.SetActive(visible);
+        if (ChangeSkillButton != null) ChangeSkillButton.gameObject.SetActive(visible);
+        if (ObstructSkillButton != null) ObstructSkillButton.gameObject.SetActive(visible);
+        if (FakeOutSkillButton != null) FakeOutSkillButton.gameObject.SetActive(visible);
+        if (CopySkillButton != null) CopySkillButton.gameObject.SetActive(visible);
+    }   
 }

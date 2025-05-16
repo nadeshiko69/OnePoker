@@ -208,6 +208,9 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(3f);
         panelManager.HidePanel(panelManager.resultPanel);
 
+        // 結果を表示したらベットボタン→スキルボタン
+        panelManager.ShowSkillUI();
+
         matchManager.OnGameComplete();
     }
 
