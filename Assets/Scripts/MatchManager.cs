@@ -24,6 +24,7 @@ public class MatchManager : MonoBehaviour
     // 参照
     private GameManager gameManager;
     private DeckManager deckManager;
+    private ResultViewManager resultViewManager;
 
     public int PlayerLife => playerLife;
     public int OpponentLife => opponentLife;
@@ -36,6 +37,7 @@ public class MatchManager : MonoBehaviour
     {
         gameManager = FindObjectOfType<GameManager>();
         deckManager = FindObjectOfType<DeckManager>();
+        resultViewManager = FindObjectOfType<ResultViewManager>();
         
         if (gameOverPanel != null)
         {
@@ -173,6 +175,7 @@ public class MatchManager : MonoBehaviour
             gameOverPanel.SetActive(false);
         }
 
+        resultViewManager.ResetResults();
         // 新しいマッチを開始
         PrepareNextGame();
     }

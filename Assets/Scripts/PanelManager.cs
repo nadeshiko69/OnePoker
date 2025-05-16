@@ -159,5 +159,7 @@ public class PanelManager : MonoBehaviour
 
         // 相手勝ちとしてライフ更新
         matchManager.UpdateOpponentLife(gameManager.CurrentBetAmount);
+        resultViewManager.UpdateResultTable(gameManager.SetPlayerCard.GetComponent<CardDisplay>().CardValue, gameManager.SetOpponentCard.GetComponent<CardDisplay>().CardValue, false, false);
+        matchManager.OnGameComplete();
     }
 }

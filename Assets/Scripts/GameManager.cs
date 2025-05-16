@@ -20,8 +20,10 @@ public class GameManager : MonoBehaviour
     public DropZone opponentZone;
 
     // プレイヤーのカードを保持
-    private CardDisplay SetPlayerCard;
-    private CardDisplay SetOpponentCard;
+    private CardDisplay setPlayerCard;
+    private CardDisplay setOpponentCard;
+    public CardDisplay SetPlayerCard => setPlayerCard;
+    public CardDisplay SetOpponentCard => setOpponentCard;
     
     // 両者カードを配置したらベット開始
     private bool bothCardsPlaced = false;
@@ -189,10 +191,10 @@ public class GameManager : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        if (SetPlayerCard != null)
+        if (setPlayerCard != null)
         {
-            int playerCardValue = SetPlayerCard.GetComponent<CardDisplay>().CardValue;
-            int opponentCardValue = SetOpponentCard.GetComponent<CardDisplay>().CardValue;
+            int playerCardValue = setPlayerCard.GetComponent<CardDisplay>().CardValue;
+            int opponentCardValue = setOpponentCard.GetComponent<CardDisplay>().CardValue;
             Debug.Log($"Showing result - Player: {playerCardValue}, Opponent: {opponentCardValue}");
             panelManager.ShowResultPanel(playerCardValue, opponentCardValue);
             resultViewManager.ShowResultTable(playerCardValue, opponentCardValue);
@@ -261,7 +263,7 @@ public class GameManager : MonoBehaviour
         panelManager.confirmationPanel.SetActive(false);
 
         // プレイヤーのカードをリストに追加
-        SetPlayerCard = currentCard;
+        setPlayerCard = currentCard;
 
         ResetState();
         StartCoroutine(SetOpponentCardFlag());
@@ -283,7 +285,7 @@ public class GameManager : MonoBehaviour
             {
                 cardDisplay.SetCard(false);
             }
-            SetOpponentCard = card;
+            setOpponentCard = card;
         }
         else
         {

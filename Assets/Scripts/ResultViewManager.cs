@@ -154,7 +154,7 @@ public class ResultViewManager : MonoBehaviour
     }
 
     // 結果表を更新
-    private void UpdateResultTable(int playerCardValue, int opponentCardValue, bool isDraw, bool playerWins = false)
+    public void UpdateResultTable(int playerCardValue, int opponentCardValue, bool isDraw, bool playerWins = false)
     {
         if (playerCells == null || opponentCells == null)
         {
