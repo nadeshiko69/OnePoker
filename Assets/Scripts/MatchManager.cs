@@ -156,7 +156,7 @@ public class MatchManager : MonoBehaviour
 
         // 空いた手札を補充
         deckManager.RefillCardsToNextGame();
-        // GameManagerの起動
+        gameManager.ResetGame();
     }
 
     public void RestartMatch()

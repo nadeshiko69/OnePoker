@@ -50,6 +50,8 @@ public class GameManager : MonoBehaviour
     {
         if (opponent_setCard)
         {
+            // ランダムに相手のカードを選択
+            opponentCard = GetRandomOpponentCard();
             PlaceOpponentCard(opponentCard, opponentZone);
             opponent_setCard = false;
         }
@@ -60,6 +62,21 @@ public class GameManager : MonoBehaviour
             panelManager.ShowBettingUI();
             bothCardsPlaced = false;
         }
+    }
+
+    // 相手のカードをランダムに選択
+    private CardDisplay GetRandomOpponentCard()
+    {
+        int randomIndex = Random.Range(0, 2);
+        return randomIndex == 0 ? deckManager.opponentCard1 : deckManager.opponentCard2;
+    }
+
+    // 次のGameを開始する前に状態をリセット
+    public void ResetGame(){
+        checkGameOver = false;
+        bothCardsPlaced = false;
+        OpponentCalled = false;
+        cardsRevealed = false;   
     }
 
     private IEnumerator SetOpponentCardFlag()
