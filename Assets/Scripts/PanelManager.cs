@@ -90,11 +90,11 @@ public class PanelManager : MonoBehaviour
         FakeOutSkillButton.onClick.RemoveAllListeners();
         CopySkillButton.onClick.RemoveAllListeners();
 
-        ScanSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("Scan", DescriptionScanSkill));
-        ChangeSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("Change", DescriptionChangeSkill));
-        ObstructSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("Obstruct", DescriptionObstructSkill));
-        FakeOutSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("FakeOut", DescriptionFakeOutSkill));
-        CopySkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel("Copy", DescriptionCopySkill));
+        ScanSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(GameManager.SkillType.Scan, DescriptionScanSkill));
+        ChangeSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(GameManager.SkillType.Change, DescriptionChangeSkill));
+        ObstructSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(GameManager.SkillType.Obstruct, DescriptionObstructSkill));
+        FakeOutSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(GameManager.SkillType.FakeOut, DescriptionFakeOutSkill));
+        CopySkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(GameManager.SkillType.Copy, DescriptionCopySkill));
 
         VisibleSkillButtons(true);
         VisibleBetButtons(false);
@@ -217,6 +217,9 @@ public class PanelManager : MonoBehaviour
         // 相手勝ちとしてライフ更新
         matchManager.UpdateOpponentLife(gameManager.CurrentBetAmount);
         resultViewManager.UpdateResultTable(gameManager.SetPlayerCard.GetComponent<CardDisplay>().CardValue, gameManager.SetOpponentCard.GetComponent<CardDisplay>().CardValue, false, false);
+        
+        // 次のゲームへの遷移
+        yield return new WaitForSeconds(1f);
         matchManager.OnGameComplete();
     }
 
@@ -245,23 +248,24 @@ public class PanelManager : MonoBehaviour
         if (ChangeCard2Button != null) ChangeCard2Button.gameObject.SetActive(visible);
     }
 
-    public void ShowDescriptionSkillPanel(string skillName, string skillDescription)
+    public void ShowDescriptionSkillPanel(GameManager.SkillType skillType, string skillDescription)
     {
         descriptionSkillPanel.SetActive(true);
-        skillNameText.text = skillName;
+        skillNameText.text = skillType.ToString();
         skillDescriptionText.text = skillDescription;
         UseSkillButton.onClick.RemoveAllListeners();
         CancelSkillButton.onClick.RemoveAllListeners();
 
-        UseSkillButton.onClick.AddListener(() => skillManager.UseSkill(skillName));
+        UseSkillButton.onClick.AddListener(() => skillManager.UseSkill(skillType));
         CancelSkillButton.onClick.AddListener(() => descriptionSkillPanel.SetActive(false));
     }
 
     public void SetSkillButtonInteractable(bool interactable)
     {
-        ScanSkillButton.interactable = interactable;
-        ChangeSkillButton.interactable = interactable;
-        ObstructSkillButton.interactable = interactable;
-        FakeOutSkillButton.interactable = interactable;
+        if (gameManager.PlayerCanUseScanSkill) ScanSkillButton.interactable = interactable;
+        if (gameManager.PlayerCanUseChangeSkill) ChangeSkillButton.interactable = interactable;
+        if (gameManager.PlayerCanUseObstructSkill) ObstructSkillButton.interactable = interactable;
+        if (gameManager.PlayerCanUseFakeOutSkill) FakeOutSkillButton.interactable = interactable;
+        if (gameManager.PlayerCanUseCopySkill) CopySkillButton.interactable = interactable;
     }
 }

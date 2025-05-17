@@ -25,6 +25,7 @@ public class MatchManager : MonoBehaviour
     private GameManager gameManager;
     private DeckManager deckManager;
     private ResultViewManager resultViewManager;
+    private PanelManager panelManager;
 
     public int PlayerLife => playerLife;
     public int OpponentLife => opponentLife;
@@ -38,6 +39,7 @@ public class MatchManager : MonoBehaviour
         gameManager = FindObjectOfType<GameManager>();
         deckManager = FindObjectOfType<DeckManager>();
         resultViewManager = FindObjectOfType<ResultViewManager>();
+        panelManager = FindObjectOfType<PanelManager>();
         
         if (gameOverPanel != null)
         {
@@ -158,6 +160,9 @@ public class MatchManager : MonoBehaviour
 
         // 空いた手札を補充
         deckManager.RefillCardsToNextGame();
+        // ボタンをスキルボタンに変更
+        panelManager.VisibleBetButtons(false);
+        panelManager.VisibleSkillButtons(true);
         gameManager.ResetGame();
     }
 

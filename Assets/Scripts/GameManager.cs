@@ -24,7 +24,45 @@ public class GameManager : MonoBehaviour
     private CardDisplay setOpponentCard;
     public CardDisplay SetPlayerCard => setPlayerCard;
     public CardDisplay SetOpponentCard => setOpponentCard;
-    
+
+    // スキル使用可能フラグ
+    private bool playerCanUseScanSkill = true;
+    private bool playerCanUseChangeSkill = true;
+    private bool playerCanUseObstructSkill = true;
+    private bool playerCanUseFakeOutSkill = true;
+    private bool playerCanUseCopySkill = true;
+    public bool PlayerCanUseScanSkill => playerCanUseScanSkill;
+    public bool PlayerCanUseChangeSkill => playerCanUseChangeSkill;
+    public bool PlayerCanUseObstructSkill => playerCanUseObstructSkill;
+    public bool PlayerCanUseFakeOutSkill => playerCanUseFakeOutSkill;
+    public bool PlayerCanUseCopySkill => playerCanUseCopySkill;
+
+    private bool opponentCanUseScanSkill = true;
+    private bool opponentCanUseChangeSkill = true;
+    private bool opponentCanUseObstructSkill = true;
+    private bool opponentCanUseFakeOutSkill = true;
+    private bool opponentCanUseCopySkill = true;
+    public bool OpponentCanUseScanSkill => opponentCanUseScanSkill;
+    public bool OpponentCanUseChangeSkill => opponentCanUseChangeSkill;
+    public bool OpponentCanUseObstructSkill => opponentCanUseObstructSkill;
+    public bool OpponentCanUseFakeOutSkill => opponentCanUseFakeOutSkill;
+    public bool OpponentCanUseCopySkill => opponentCanUseCopySkill;
+
+    public enum SkillType
+    {
+        Scan,
+        Change,
+        Obstruct,
+        FakeOut,
+        Copy
+    }
+
+    public enum PlayerType
+    {
+        Player,
+        Opponent
+    }
+
     // 両者カードを配置したらベット開始
     private bool bothCardsPlaced = false;
 
@@ -79,6 +117,8 @@ public class GameManager : MonoBehaviour
         bothCardsPlaced = false;
         OpponentCalled = false;
         cardsRevealed = false;   
+
+        panelManager.SetSkillButtonInteractable(true);
     }
 
     private IEnumerator SetOpponentCardFlag()
@@ -95,6 +135,34 @@ public class GameManager : MonoBehaviour
 
     public void SetCheckGameOver(bool check){
         checkGameOver = check;
+    }
+
+
+    public void SetSkillAvailability(PlayerType player, SkillType skill, bool canUse)
+    {
+        switch (player)
+        {
+            case PlayerType.Player:
+                switch (skill)
+                {
+                    case SkillType.Scan: playerCanUseScanSkill = canUse; break;
+                    case SkillType.Change: playerCanUseChangeSkill = canUse; break;
+                    case SkillType.Obstruct: playerCanUseObstructSkill = canUse; break;
+                    case SkillType.FakeOut: playerCanUseFakeOutSkill = canUse; break;
+                    case SkillType.Copy: playerCanUseCopySkill = canUse; break;
+                }
+                break;
+            case PlayerType.Opponent:
+                switch (skill)
+                {
+                    case SkillType.Scan: opponentCanUseScanSkill = canUse; break;
+                    case SkillType.Change: opponentCanUseChangeSkill = canUse; break;
+                    case SkillType.Obstruct: opponentCanUseObstructSkill = canUse; break;
+                    case SkillType.FakeOut: opponentCanUseFakeOutSkill = canUse; break;
+                    case SkillType.Copy: opponentCanUseCopySkill = canUse; break;
+                }
+                break;
+        }
     }
 
     private void UpdateLifeUI()
