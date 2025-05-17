@@ -11,6 +11,8 @@ public class PanelManager : MonoBehaviour
     public Button ObstructSkillButton;
     public Button FakeOutSkillButton;
     public Button CopySkillButton;
+    public Button ChangeCard1Button;
+    public Button ChangeCard2Button;
 
     // スキル使用確認用のUI
     public GameObject descriptionSkillPanel;
@@ -96,6 +98,7 @@ public class PanelManager : MonoBehaviour
 
         VisibleSkillButtons(true);
         VisibleBetButtons(false);
+        VisibleChangeCardButtons(false);
     }
 
     public void ShowBettingUI()
@@ -234,6 +237,12 @@ public class PanelManager : MonoBehaviour
         if (ObstructSkillButton != null) ObstructSkillButton.gameObject.SetActive(visible);
         if (FakeOutSkillButton != null) FakeOutSkillButton.gameObject.SetActive(visible);
         if (CopySkillButton != null) CopySkillButton.gameObject.SetActive(visible);
+    }
+
+    public void VisibleChangeCardButtons(bool visible)
+    {
+        if (ChangeCard1Button != null) ChangeCard1Button.gameObject.SetActive(visible);
+        if (ChangeCard2Button != null) ChangeCard2Button.gameObject.SetActive(visible);
     }
 
     public void ShowDescriptionSkillPanel(string skillName, string skillDescription)

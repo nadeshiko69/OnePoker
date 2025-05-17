@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
 
 public class SkillManager : MonoBehaviour
 {
@@ -63,7 +64,20 @@ public class SkillManager : MonoBehaviour
     public void ChangeSkill()
     {
         Debug.Log("ChangeSkill called");
-        
+        panelManager.ShowDescriptionSkillPanel("Change", "交換するカードを選択してください。");
+        panelManager.VisibleChangeCardButtons(true);
+        panelManager.ChangeCard1Button.onClick.AddListener(() => OnCardSelected(deckManager.playerCard1, deckManager.playerUI1, "Player_Card1", 1));
+        panelManager.ChangeCard2Button.onClick.AddListener(() => OnCardSelected(deckManager.playerCard2, deckManager.playerUI2, "Player_Card2", 2));
+
+    }
+
+    public void OnCardSelected(CardDisplay card, TextMeshProUGUI resultText, string name, int cardIndex)
+    {
+        Debug.Log("OnCardSelected called");
+        panelManager.VisibleChangeCardButtons(false);
+
+        Destroy(card.gameObject);
+        deckManager.RefillPlayerCard();
     }
 
     public void ObstructSkill()

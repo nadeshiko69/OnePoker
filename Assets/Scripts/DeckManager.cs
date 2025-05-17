@@ -104,6 +104,11 @@ public class DeckManager : MonoBehaviour
     public void RefillCardsToNextGame()
     {
         Debug.Log("RefillCardsToNextGame called");
+        RefillPlayerCard();
+        RefillOpponentCard();
+    }
+
+    public void RefillPlayerCard(){
         if (!playerCard1.isActiveAndEnabled)
         {
             Debug.Log("playerCard1 is null");
@@ -116,7 +121,10 @@ public class DeckManager : MonoBehaviour
             playerCard2 = RefillCard(playerCard2, cardPrefab, playerCard2Anchor, "Player_Card2", 2);
             DrawCard(playerUI2, playerCard2);
         }
-        if (!opponentCard1.isActiveAndEnabled)
+    }
+
+    public void RefillOpponentCard(){
+                if (!opponentCard1.isActiveAndEnabled)
         {
             Debug.Log("opponentCard1 is null");
             opponentCard1 = RefillCard(opponentCard1, cardPrefab, opponentCard1Anchor, "Opponent_Card1", -1);
@@ -130,7 +138,7 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    private CardDisplay RefillCard(CardDisplay card, GameObject cardPrefab, Transform anchor, string instanceName, int cardIndex)
+    public CardDisplay RefillCard(CardDisplay card, GameObject cardPrefab, Transform anchor, string instanceName, int cardIndex)
     {
         var obj = Instantiate(cardPrefab, anchor);
         obj.name = instanceName;
