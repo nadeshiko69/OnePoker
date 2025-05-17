@@ -138,7 +138,7 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    public CardDisplay RefillCard(CardDisplay card, GameObject cardPrefab, Transform anchor, string instanceName, int cardIndex)
+    private CardDisplay RefillCard(CardDisplay card, GameObject cardPrefab, Transform anchor, string instanceName, int cardIndex)
     {
         var obj = Instantiate(cardPrefab, anchor);
         obj.name = instanceName;
