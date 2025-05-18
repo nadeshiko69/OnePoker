@@ -242,6 +242,12 @@ public class PanelManager : MonoBehaviour
         if (CopySkillButton != null) CopySkillButton.gameObject.SetActive(visible);
     }
 
+    public void VisibleSkillSelectButtons(bool visible)
+    {
+        if (UseSkillButton != null) UseSkillButton.gameObject.SetActive(visible);
+        if (CancelSkillButton != null) CancelSkillButton.gameObject.SetActive(visible);
+    }
+
     public void VisibleChangeCardButtons(bool visible)
     {
         if (ChangeCard1Button != null) ChangeCard1Button.gameObject.SetActive(visible);

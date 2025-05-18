@@ -19,11 +19,12 @@ public class SkillManager : MonoBehaviour
     public void UseSkill(GameManager.SkillType skillType)
     {
         Debug.Log("UseSkill called");
+        Debug.Log("skillType: " + skillType);
         switch (skillType)
         {
             case GameManager.SkillType.Scan: StartCoroutine(ScanSkill()); break;
             case GameManager.SkillType.Change: ChangeSkill(); break;
-            case GameManager.SkillType.Obstruct: ObstructSkill(); break;
+            case GameManager.SkillType.Obstruct: StartCoroutine(ObstructSkill()); break;
             case GameManager.SkillType.FakeOut: FakeOutSkill(); break;
             case GameManager.SkillType.Copy: CopySkill(); break;
         }
@@ -36,6 +37,11 @@ public class SkillManager : MonoBehaviour
         Debug.Log("ScanSkill called");
         panelManager.descriptionSkillPanel.SetActive(false);
 
+        // Scanを使用済に変更
+        panelManager.SetSkillButtonInteractable(false);
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Player, GameManager.SkillType.Scan, false);
+
+        // 5sec中にスキル追加できないよう、使用済にしてから相手のカードを表示
         int randomIndex = Random.Range(0, 2);
         CardDisplay opponentCard;
         if (randomIndex == 0){
@@ -61,10 +67,6 @@ public class SkillManager : MonoBehaviour
         else{
             Debug.LogError("opponentCard is null");
         }
-        
-        // Scanを使用済に変更
-        panelManager.SetSkillButtonInteractable(false);
-        gameManager.SetSkillAvailability(GameManager.PlayerType.Player, GameManager.SkillType.Scan, false);
    }
 
     public void ChangeSkill()
@@ -90,13 +92,20 @@ public class SkillManager : MonoBehaviour
         deckManager.RefillPlayerCard();
     }
 
-    public void ObstructSkill()
+    public IEnumerator ObstructSkill()
     {
         Debug.Log("ObstructSkill called");
+        panelManager.ShowDescriptionSkillPanel(GameManager.SkillType.Obstruct, "次のターンの相手のスキル使用を禁止しました。");
+        panelManager.VisibleSkillSelectButtons(false);
+        yield return new WaitForSeconds(5f);
+        panelManager.descriptionSkillPanel.SetActive(false);
+
+        // 相手のスキル使用を禁止
+
 
         // Obstructを使用済に変更
-        gameManager.SetSkillAvailability(GameManager.PlayerType.Player, GameManager.SkillType.Obstruct, false);
         panelManager.SetSkillButtonInteractable(false);
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Player, GameManager.SkillType.Obstruct, false);
     }
     
     public void FakeOutSkill()

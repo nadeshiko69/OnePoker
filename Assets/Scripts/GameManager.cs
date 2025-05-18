@@ -104,13 +104,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 相手のカードをランダムに選択
-    private CardDisplay GetRandomOpponentCard()
-    {
-        int randomIndex = Random.Range(0, 2);
-        return randomIndex == 0 ? deckManager.opponentCard1 : deckManager.opponentCard2;
-    }
-
     // 次のGameを開始する前に状態をリセット
     public void ResetGame(){
         checkGameOver = false;
@@ -399,5 +392,27 @@ public class GameManager : MonoBehaviour
         // リスナーをリセット
         panelManager.yesButton.onClick.RemoveAllListeners();
         panelManager.noButton.onClick.RemoveAllListeners();
+    }
+
+
+
+
+
+    //////////////////////////////////////
+    ////////// CPUのランダム要素 //////////
+    //////////////////////////////////////
+
+    // CPUのセットするカードをランダムに選択
+    private CardDisplay GetRandomOpponentCard()
+    {
+        int randomIndex = Random.Range(0, 2);
+        return randomIndex == 0 ? deckManager.opponentCard1 : deckManager.opponentCard2;
+    }
+
+    // CPUがターン中に使用するスキルをランダムに選択
+    private SkillType GetRandomSkill()
+    {
+        int randomIndex = Random.Range(0, 5);
+        return (SkillType)randomIndex;
     }
 }
