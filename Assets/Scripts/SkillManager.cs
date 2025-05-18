@@ -189,6 +189,7 @@ public class SkillManager : MonoBehaviour
     {
         Debug.Log("OpponentScanSkill called");
         // 対人用スキルのため実装不要
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Opponent, GameManager.SkillType.Scan, false);
     }
 
     public void OpponentChangeSkill()
@@ -196,22 +197,26 @@ public class SkillManager : MonoBehaviour
         Debug.Log("OpponentChangeSkill called");
         Destroy(deckManager.opponentCard1.gameObject);
         deckManager.RefillOpponentCard();
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Opponent, GameManager.SkillType.Change, false);
     }
 
     public void OpponentObstructSkill()
     {
         Debug.Log("OpponentObstructSkill called");
         isPlayerObstructed = true;
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Opponent, GameManager.SkillType.Obstruct, false);
     }
 
     public void OpponentFakeOutSkill()
     {
         Debug.Log("OpponentFakeOutSkill called");
         // 対人用スキルのため実装不要
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Opponent, GameManager.SkillType.FakeOut, false);
     }
 
     public void OpponentCopySkill()
     {
         Debug.Log("OpponentCopySkill called");
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Opponent, GameManager.SkillType.Copy, false);
     }
 }
