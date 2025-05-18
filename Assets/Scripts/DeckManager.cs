@@ -124,17 +124,23 @@ public class DeckManager : MonoBehaviour
     }
 
     public void RefillOpponentCard(){
-                if (!opponentCard1.isActiveAndEnabled)
+        if (!opponentCard1.isActiveAndEnabled)
         {
             Debug.Log("opponentCard1 is null");
             opponentCard1 = RefillCard(opponentCard1, cardPrefab, opponentCard1Anchor, "Opponent_Card1", -1);
             DrawCard(opponentUI1, opponentCard1);
+        }
+        else{
+            Debug.Log("opponentCard1 is not null");
         }
         if (!opponentCard2.isActiveAndEnabled)
         {
             Debug.Log("opponentCard2 is null");
             opponentCard2 = RefillCard(opponentCard2, cardPrefab, opponentCard2Anchor, "Opponent_Card2", -1);
             DrawCard(opponentUI2, opponentCard2);
+        }
+        else{
+            Debug.Log("opponentCard2 is not null");
         }
     }
 

@@ -32,6 +32,9 @@ public class PanelManager : MonoBehaviour
     public string DescriptionFakeOutSkill => descriptionFakeOutSkill;
     public string DescriptionCopySkill => descriptionCopySkill;
 
+    // プレイヤーがObstructスキルの被害を受けているか
+    public GameObject obstructPanel;
+
     // セット確認用のUI
     public GameObject confirmationPanel;
     public Button yesButton;
@@ -73,6 +76,7 @@ public class PanelManager : MonoBehaviour
         if (openPanel != null) openPanel.SetActive(false);
         if (dropPanel != null) dropPanel.SetActive(false);
         if (descriptionSkillPanel != null) descriptionSkillPanel.SetActive(false);
+        if (obstructPanel != null) obstructPanel.SetActive(false);
 
         // ボタンUIの初期化
         yesButton.onClick.AddListener(gameManager.ConfirmPlacement);
@@ -96,6 +100,10 @@ public class PanelManager : MonoBehaviour
         FakeOutSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(GameManager.SkillType.FakeOut, DescriptionFakeOutSkill));
         CopySkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(GameManager.SkillType.Copy, DescriptionCopySkill));
 
+        // プレイヤーがObstructスキルの被害を受けている場合はPanelを表示する
+        if(skillManager.IsPlayerObstructed)obstructPanel.SetActive(true);
+        skillManager.SetPlayerObstructed(false);
+
         VisibleSkillButtons(true);
         VisibleBetButtons(false);
         VisibleChangeCardButtons(false);
@@ -118,6 +126,9 @@ public class PanelManager : MonoBehaviour
         betMinusButton.onClick.AddListener(() => gameManager.PlaceBet(-1));
         callButton.onClick.AddListener(() => StartCoroutine(HandleCall()));
         dropButton.onClick.AddListener(() => StartCoroutine(HandleDrop()));
+
+        // ObstructスキルのPanel出てたら消す
+        if (obstructPanel != null) obstructPanel.SetActive(false);
 
         // ベットフェーズでベットボタンを有効化
         VisibleSkillButtons(false);
@@ -268,10 +279,21 @@ public class PanelManager : MonoBehaviour
 
     public void SetSkillButtonInteractable(bool interactable)
     {
-        if (gameManager.PlayerCanUseScanSkill) ScanSkillButton.interactable = interactable;
-        if (gameManager.PlayerCanUseChangeSkill) ChangeSkillButton.interactable = interactable;
-        if (gameManager.PlayerCanUseObstructSkill) ObstructSkillButton.interactable = interactable;
-        if (gameManager.PlayerCanUseFakeOutSkill) FakeOutSkillButton.interactable = interactable;
-        if (gameManager.PlayerCanUseCopySkill) CopySkillButton.interactable = interactable;
+        if (!skillManager.IsPlayerObstructed)
+        {
+            if (gameManager.PlayerCanUseScanSkill) ScanSkillButton.interactable = interactable;
+            if (gameManager.PlayerCanUseChangeSkill) ChangeSkillButton.interactable = interactable;
+            if (gameManager.PlayerCanUseObstructSkill) ObstructSkillButton.interactable = interactable;
+            if (gameManager.PlayerCanUseFakeOutSkill) FakeOutSkillButton.interactable = interactable;
+            if (gameManager.PlayerCanUseCopySkill) CopySkillButton.interactable = interactable;
+        }
+        else
+        {
+            ScanSkillButton.interactable = false;
+            ChangeSkillButton.interactable = false; 
+            ObstructSkillButton.interactable = false;
+            FakeOutSkillButton.interactable = false;
+            CopySkillButton.interactable = false;
+        }
     }
 }

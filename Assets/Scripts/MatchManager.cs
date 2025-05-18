@@ -26,6 +26,7 @@ public class MatchManager : MonoBehaviour
     private DeckManager deckManager;
     private ResultViewManager resultViewManager;
     private PanelManager panelManager;
+    private SkillManager skillManager;
 
     public int PlayerLife => playerLife;
     public int OpponentLife => opponentLife;
@@ -40,7 +41,8 @@ public class MatchManager : MonoBehaviour
         deckManager = FindObjectOfType<DeckManager>();
         resultViewManager = FindObjectOfType<ResultViewManager>();
         panelManager = FindObjectOfType<PanelManager>();
-        
+        skillManager = FindObjectOfType<SkillManager>();
+
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(false);
@@ -164,6 +166,9 @@ public class MatchManager : MonoBehaviour
         panelManager.VisibleBetButtons(false);
         panelManager.VisibleSkillButtons(true);
         gameManager.ResetGame();
+
+        // CPUのスキルを使用
+        skillManager.UseOpponentSkill();
     }
 
     public void RestartMatch()

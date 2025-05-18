@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     private DeckManager deckManager;
     private ResultViewManager resultViewManager;
     private PanelManager panelManager;
+    private SkillManager skillManager;
 
     private CardDisplay currentCard;
     private DropZone currentZone;
@@ -54,7 +55,8 @@ public class GameManager : MonoBehaviour
         Change,
         Obstruct,
         FakeOut,
-        Copy
+        Copy,
+        None
     }
 
     public enum PlayerType
@@ -84,6 +86,7 @@ public class GameManager : MonoBehaviour
         resultViewManager = FindObjectOfType<ResultViewManager>();
         matchManager = FindObjectOfType<MatchManager>();
         panelManager = FindObjectOfType<PanelManager>();
+        skillManager = FindObjectOfType<SkillManager>();
     }
 
     void Update()
@@ -407,12 +410,5 @@ public class GameManager : MonoBehaviour
     {
         int randomIndex = Random.Range(0, 2);
         return randomIndex == 0 ? deckManager.opponentCard1 : deckManager.opponentCard2;
-    }
-
-    // CPUがターン中に使用するスキルをランダムに選択
-    private SkillType GetRandomSkill()
-    {
-        int randomIndex = Random.Range(0, 5);
-        return (SkillType)randomIndex;
     }
 }
