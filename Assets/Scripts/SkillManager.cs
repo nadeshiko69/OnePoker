@@ -106,7 +106,7 @@ public class SkillManager : MonoBehaviour
         panelManager.descriptionSkillPanel.SetActive(false);
 
         // 相手のスキル使用を禁止
-
+        isOpponentObstructed = true;
 
         // Obstructを使用済に変更
         panelManager.SetSkillButtonInteractable(false);
@@ -162,14 +162,20 @@ public class SkillManager : MonoBehaviour
         }
 
         Debug.Log("skillType: " + skillType);
-        switch (skillType)
-        {
-            case GameManager.SkillType.Scan: if(gameManager.OpponentCanUseScanSkill)OpponentScanSkill(); break;
-            case GameManager.SkillType.Change: if(gameManager.OpponentCanUseChangeSkill)OpponentChangeSkill(); break;
-            case GameManager.SkillType.Obstruct: if(gameManager.OpponentCanUseObstructSkill)OpponentObstructSkill(); break;
-            case GameManager.SkillType.FakeOut: if(gameManager.OpponentCanUseFakeOutSkill)OpponentFakeOutSkill(); break;
-            case GameManager.SkillType.Copy: if(gameManager.OpponentCanUseCopySkill)OpponentCopySkill(); break;
-            case GameManager.SkillType.None: Debug.Log("None"); break;
+        if (!isOpponentObstructed){
+            switch (skillType)
+            {
+                case GameManager.SkillType.Scan: if(gameManager.OpponentCanUseScanSkill)OpponentScanSkill(); break;
+                case GameManager.SkillType.Change: if(gameManager.OpponentCanUseChangeSkill)OpponentChangeSkill(); break;
+                case GameManager.SkillType.Obstruct: if(gameManager.OpponentCanUseObstructSkill)OpponentObstructSkill(); break;
+                case GameManager.SkillType.FakeOut: if(gameManager.OpponentCanUseFakeOutSkill)OpponentFakeOutSkill(); break;
+                case GameManager.SkillType.Copy: if(gameManager.OpponentCanUseCopySkill)OpponentCopySkill(); break;
+                case GameManager.SkillType.None: Debug.Log("None"); break;
+            }
+        }
+        else{
+            Debug.Log("CPU Obstructed");
+            isOpponentObstructed = false;
         }
 
         // テスト用
