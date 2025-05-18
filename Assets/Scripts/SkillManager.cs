@@ -14,6 +14,9 @@ public class SkillManager : MonoBehaviour
     private bool isOpponentObstructed = false;
     public bool IsOpponentObstructed => isOpponentObstructed;
 
+    public void SetPlayerObstructed(bool obstructed){isPlayerObstructed = obstructed;}
+    public void SetOpponentObstructed(bool obstructed){isOpponentObstructed = obstructed;}
+
     void Start()
     {
         panelManager = FindObjectOfType<PanelManager>();
@@ -77,14 +80,14 @@ public class SkillManager : MonoBehaviour
     public void ChangeSkill()
     {
         Debug.Log("ChangeSkill called");
+        // Changeを使用済に変更
+        panelManager.SetSkillButtonInteractable(false);
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Player, GameManager.SkillType.Change, false);
+
         panelManager.ShowDescriptionSkillPanel(GameManager.SkillType.Change, "交換するカードを選択してください。");
         panelManager.VisibleChangeCardButtons(true);
         panelManager.ChangeCard1Button.onClick.AddListener(() => OnCardSelected(deckManager.playerCard1, "Player_Card1", 1));
         panelManager.ChangeCard2Button.onClick.AddListener(() => OnCardSelected(deckManager.playerCard2, "Player_Card2", 2));
-
-        // Changeを使用済に変更
-        panelManager.SetSkillButtonInteractable(false);
-        gameManager.SetSkillAvailability(GameManager.PlayerType.Player, GameManager.SkillType.Change, false);
     }
 
     public void OnCardSelected(CardDisplay card, string name, int cardIndex)
@@ -100,6 +103,10 @@ public class SkillManager : MonoBehaviour
     public IEnumerator ObstructSkill()
     {
         Debug.Log("ObstructSkill called");
+        // Obstructを使用済に変更
+        panelManager.SetSkillButtonInteractable(false);
+        gameManager.SetSkillAvailability(GameManager.PlayerType.Player, GameManager.SkillType.Obstruct, false);
+
         panelManager.ShowDescriptionSkillPanel(GameManager.SkillType.Obstruct, "次のターンの相手のスキル使用を禁止しました。");
         panelManager.VisibleSkillSelectButtons(false);
         yield return new WaitForSeconds(5f);
@@ -107,20 +114,6 @@ public class SkillManager : MonoBehaviour
 
         // 相手のスキル使用を禁止
         isOpponentObstructed = true;
-
-        // Obstructを使用済に変更
-        panelManager.SetSkillButtonInteractable(false);
-        gameManager.SetSkillAvailability(GameManager.PlayerType.Player, GameManager.SkillType.Obstruct, false);
-    }
-
-    public void SetPlayerObstructed(bool obstructed)
-    {
-        isPlayerObstructed = obstructed;
-    }
-
-    public void SetOpponentObstructed(bool obstructed)
-    {
-        isOpponentObstructed = obstructed;
     }
     
     public void FakeOutSkill()

@@ -104,7 +104,9 @@ public class PanelManager : MonoBehaviour
         if(skillManager.IsPlayerObstructed)obstructPanel.SetActive(true);
         skillManager.SetPlayerObstructed(false);
 
+        SetSkillButtonInteractable(true);
         VisibleSkillButtons(true);
+        SetBettingButtonInteractable(true);
         VisibleBetButtons(false);
         VisibleChangeCardButtons(false);
     }
@@ -131,7 +133,9 @@ public class PanelManager : MonoBehaviour
         if (obstructPanel != null) obstructPanel.SetActive(false);
 
         // ベットフェーズでベットボタンを有効化
+        SetSkillButtonInteractable(true);
         VisibleSkillButtons(false);
+        SetBettingButtonInteractable(true);
         VisibleBetButtons(true);
     }
 
@@ -194,6 +198,9 @@ public class PanelManager : MonoBehaviour
         bettingPanel.SetActive(false);
         UpdateCallButtonText();
 
+        // Callが決定した時点でボタンを非活性にする
+        SetBettingButtonInteractable(false);
+
         yield return new WaitForSeconds(1f);
 
         // CPUがコール
@@ -212,6 +219,9 @@ public class PanelManager : MonoBehaviour
     }
 
     private IEnumerator HandleDrop(){
+        // Dropが決定した時点でボタンを非活性にする
+        SetBettingButtonInteractable(false);
+
         // ドロップのUIを表示
         bettingPanel.SetActive(false);
         dropPanel.SetActive(true);
@@ -295,5 +305,13 @@ public class PanelManager : MonoBehaviour
             FakeOutSkillButton.interactable = false;
             CopySkillButton.interactable = false;
         }
+    }
+
+    public void SetBettingButtonInteractable(bool interactable)
+    {
+        if (betPlusButton != null) betPlusButton.interactable = interactable;
+        if (betMinusButton != null) betMinusButton.interactable = interactable;
+        if (callButton != null) callButton.interactable = interactable;
+        if (dropButton != null) dropButton.interactable = interactable;
     }
 }
