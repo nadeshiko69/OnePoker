@@ -72,3 +72,8 @@
             - 相手勝利：相手にプレイヤーのベット分を加算
     - MatchManager.cs の UpdatePlayerLife / UpdateOpponentLife メソッド
         - 実際のライフ値を加算・減算し、UIを更新する。
+
+
+
+## AWS設計資料
+https://docs.google.com/presentation/d/11BzcPCrT2RC9s70V3ebVwqdKuTp-__NGOIOvgq1i_Ek/edit?usp=sharing
