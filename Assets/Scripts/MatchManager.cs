@@ -56,13 +56,6 @@ public class MatchManager : MonoBehaviour
         UpdateLifeUI();
     }
 
-    void Update(){
-        // 1game終了するごとに状況を更新
-        if(gameManager.CheckGameOver){
-            ProcessGameOver();
-        }
-    }
-
     private void UpdateLifeUI()
     {
         if (playerLifeText != null)
@@ -109,7 +102,14 @@ public class MatchManager : MonoBehaviour
 
     private bool IsMatchOver()
     {
-        return currentGameCount >= MAX_GAMES || playerLife <= MIN_LIFE || opponentLife <= MIN_LIFE;
+        if (gameManager.CheckGameOver)
+        {
+             return currentGameCount >= MAX_GAMES || playerLife <= MIN_LIFE || opponentLife <= MIN_LIFE;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private void CheckMatchEnd()
@@ -188,9 +188,5 @@ public class MatchManager : MonoBehaviour
         resultViewManager.ResetResults();
         // 新しいマッチを開始
         PrepareNextGame();
-    }
-
-    void ProcessGameOver(){
-    
     }
 } 
