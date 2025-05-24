@@ -185,7 +185,11 @@ public class MatchManager : MonoBehaviour
             gameOverPanel.SetActive(false);
         }
 
+        gameManager.ResetCanUseSkill();
+        panelManager.ResetPanelState();
+        skillManager.ResetObstructedState();
         resultViewManager.ResetResults();
+
         // 新しいマッチを開始
         PrepareNextGame();
     }

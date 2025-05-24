@@ -244,6 +244,17 @@ public class PanelManager : MonoBehaviour
         matchManager.OnGameComplete();
     }
 
+    
+    // パネルの状態をリセット
+    public void ResetPanelState()
+    {
+        VisibleBetButtons(false);
+        VisibleSkillButtons(true);
+        VisibleChangeCardButtons(false);
+        SetSkillButtonInteractable(true);
+        SetBettingButtonInteractable(true);
+    }
+
     // ベットボタンの表示/非表示
     public void VisibleBetButtons(bool visible)
     {

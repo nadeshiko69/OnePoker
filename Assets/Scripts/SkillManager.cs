@@ -38,6 +38,13 @@ public class SkillManager : MonoBehaviour
         }
     }
 
+    public void ResetObstructedState()
+    {
+        isPlayerObstructed = false;
+        isOpponentObstructed = false;
+    }
+
+
     
 
     public IEnumerator ScanSkill()

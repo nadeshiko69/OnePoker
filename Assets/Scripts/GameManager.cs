@@ -397,7 +397,19 @@ public class GameManager : MonoBehaviour
         panelManager.noButton.onClick.RemoveAllListeners();
     }
 
+    public void ResetCanUseSkill(){
+        playerCanUseScanSkill = true;
+        playerCanUseChangeSkill = true;
+        playerCanUseObstructSkill = true;
+        playerCanUseFakeOutSkill = true;
+        playerCanUseCopySkill = true;
 
+        opponentCanUseScanSkill = true;
+        opponentCanUseChangeSkill = true;
+        opponentCanUseObstructSkill = true;
+        opponentCanUseFakeOutSkill = true;
+        opponentCanUseCopySkill = true;
+    }
 
 
 
