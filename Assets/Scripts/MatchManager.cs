@@ -190,6 +190,9 @@ public class MatchManager : MonoBehaviour
         skillManager.ResetObstructedState();
         resultViewManager.ResetResults();
 
+        // 山札を新規作成し、手札を配り直す
+        deckManager.RestartMatch();
+        
         // 新しいマッチを開始
         PrepareNextGame();
     }

@@ -236,4 +236,17 @@ public class DeckManager : MonoBehaviour
             markText.color = (mark == 0 || mark == 1) ? redColor : blackColor;
         }
     }
+
+    public void RestartMatch(){
+        RefillPlayerCard();
+        RefillOpponentCard();
+        
+        shuffledCard = Enumerable.Range(0, 51).ToList();
+        ShuffleCard();
+        Debug.Log(string.Join(", ", shuffledCard));
+        DrawCard(playerUI1, playerCard1);
+        DrawCard(playerUI2, playerCard2);
+        DrawCard(opponentUI1, opponentCard1);
+        DrawCard(opponentUI2, opponentCard2);
+    }
 }

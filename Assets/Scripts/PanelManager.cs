@@ -253,6 +253,7 @@ public class PanelManager : MonoBehaviour
         VisibleChangeCardButtons(false);
         SetSkillButtonInteractable(true);
         SetBettingButtonInteractable(true);
+        obstructPanel.SetActive(false);
     }
 
     // ベットボタンの表示/非表示
