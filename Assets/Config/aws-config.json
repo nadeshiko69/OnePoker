@@ -1,0 +1,7 @@
+{
+    "AccessKey": "AKIAXXXXXXXXXXXXXXXX",
+    "SecretKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "ClientId": "xxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "Region": "ap-northeast-1",
+    "UserPoolId": "ap-northeast-1_xxxxxxxxx"
+} 

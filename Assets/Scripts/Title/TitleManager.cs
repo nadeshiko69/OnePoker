@@ -27,4 +27,12 @@ public class TitleManager : MonoBehaviour
         successMessage.SetActive(false);
         errorText.text = message;
     }
+  
+    // アカウント登録パネル操作
+    public void OpenRegisterAccountPanel(){
+        registerAccountPanel.SetActive(true);
+    }
+    public void CloseRegisterAccountPanel(){
+        registerAccountPanel.SetActive(false);
+    }
 }
