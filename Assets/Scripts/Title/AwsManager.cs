@@ -34,11 +34,19 @@ public class AwsManager : MonoBehaviour
         titleManager = FindObjectOfType<TitleManager>();
     }
 
+    // 外部から呼び出す用
+    public void OnRegisterButtonClicked()
+    {
+        string username = titleManager.usernameInput.text;
+        string email = titleManager.emailInput.text;
+        string password = titleManager.passwordInput.text;
+        StartCoroutine(RegisterUser(username, email, password));
+    }
 
     IEnumerator RegisterUser(string username, string email, string password)
     {
         var json = JsonUtility.ToJson(new RegisterRequest { username = username, email = email, password = password });
-        var request = new UnityWebRequest("https://your-api-endpoint/register", "POST");
+        var request = new UnityWebRequest("https://ik9lesw2oa.execute-api.ap-northeast-1.amazonaws.com/dev/register", "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
@@ -47,11 +55,11 @@ public class AwsManager : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            // 登録成功
+            Debug.Log("登録成功: " + request.downloadHandler.text);
         }
         else
         {
-            // エラー処理
+            Debug.LogError("登録失敗: " + request.error + " / " + request.downloadHandler.text);
         }
     }
 
