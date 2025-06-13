@@ -91,24 +91,29 @@ public class AwsManager : MonoBehaviour
 
     IEnumerator RegisterUser(string username, string email, string password)
     {
-        var userData = new UserData { username = username, email = email, password = password };
-        var json = JsonUtility.ToJson(userData);
-        var request = new UnityWebRequest("https://ik9lesw2oa.execute-api.ap-northeast-1.amazonaws.com/dev/register", "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+        string clientId = "hv3rji4sb8s5h6a9vmefj77r4";
+        string endpoint = "https://cognito-idp.ap-northeast-1.amazonaws.com/";
+
+        // 手動でJSON文字列を組み立て
+        string jsonBody = $"{{\"ClientId\":\"{clientId}\",\"Username\":\"{username}\",\"Password\":\"{password}\",\"UserAttributes\":[{{\"Name\":\"email\",\"Value\":\"{email}\"}}]}}";
+
+        var request = new UnityWebRequest(endpoint, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
+        request.SetRequestHeader("Content-Type", "application/x-amz-json-1.1");
+        request.SetRequestHeader("X-Amz-Target", "AWSCognitoIdentityProviderService.SignUp");
+
         yield return request.SendWebRequest();
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log("登録成功: " + request.downloadHandler.text);
-            // ユーザー情報を保存
-            SaveUserData(userData);
+            Debug.Log("Cognitoユーザー登録成功: " + request.downloadHandler.text);
+            
         }
         else
         {
-            Debug.LogError("登録失敗: " + request.error + " / " + request.downloadHandler.text);
+            Debug.LogError("Cognitoユーザー登録失敗: " + request.error + " / " + request.downloadHandler.text);
         }
     }
 
@@ -149,6 +154,38 @@ public class AwsManager : MonoBehaviour
         }
         catch {
             return false;
+        }
+    }
+
+    // メール認証（ConfirmSignUp）用の関数を追加
+    public void OnConfirmSignUpButtonClicked(string username, string confirmationCode)
+    {
+        StartCoroutine(ConfirmSignUp(username, confirmationCode));
+    }
+
+    IEnumerator ConfirmSignUp(string username, string confirmationCode)
+    {
+        string clientId = "hv3rji4sb8s5h6a9vmefj77r4"; // あなたのCognitoクライアントID
+        string endpoint = "https://cognito-idp.ap-northeast-1.amazonaws.com/";
+        string jsonBody = $"{{\"ClientId\":\"{clientId}\",\"Username\":\"{username}\",\"ConfirmationCode\":\"{confirmationCode}\"}}";
+
+        var request = new UnityWebRequest(endpoint, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/x-amz-json-1.1");
+        request.SetRequestHeader("X-Amz-Target", "AWSCognitoIdentityProviderService.ConfirmSignUp");
+
+        yield return request.SendWebRequest();
+
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log("メール認証成功: " + request.downloadHandler.text);
+            // 認証成功時の処理（例：ログイン画面に遷移など）
+        }
+        else
+        {
+            Debug.LogError("メール認証失敗: " + request.error + " / " + request.downloadHandler.text);
         }
     }
 }
