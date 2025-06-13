@@ -38,6 +38,11 @@ public class AwsManager : MonoBehaviour
 
     void Start(){
         titleManager = FindObjectOfType<TitleManager>();
+        
+        // For Debug
+        // PlayerPrefs.DeleteAll();
+        // PlayerPrefs.Save();     
+        
         LoadAndAutoLogin();
     }
 
