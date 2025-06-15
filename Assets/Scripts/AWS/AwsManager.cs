@@ -52,31 +52,7 @@ public class AwsManager : MonoBehaviour
         if (!string.IsNullOrEmpty(savedUserData))
         {
             UserData userData = JsonUtility.FromJson<UserData>(savedUserData);
-            StartCoroutine(AutoLogin(userData));
-        }
-    }
-
-    private IEnumerator AutoLogin(UserData userData)
-    {
-        var json = JsonUtility.ToJson(userData);
-        var request = new UnityWebRequest("https://ik9lesw2oa.execute-api.ap-northeast-1.amazonaws.com/dev/login", "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-        yield return request.SendWebRequest();
-
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            Debug.Log("自動ログイン成功: " + request.downloadHandler.text);
-            LoginResponse response = JsonUtility.FromJson<LoginResponse>(request.downloadHandler.text);
-            SaveAuthTokens(response.tokens);
-            // ログイン成功時の処理（例：メイン画面への遷移など）
-        }
-        else
-        {
-            Debug.LogError("自動ログイン失敗: " + request.error + " / " + request.downloadHandler.text);
-            // ログイン失敗時の処理（例：ログイン画面の表示など）
+            StartCoroutine(CognitoLogin(userData.username, userData.password));
         }
     }
 
@@ -109,11 +85,27 @@ public class AwsManager : MonoBehaviour
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log("Cognitoユーザー登録成功: " + request.downloadHandler.text);
-            
+            // ユーザー情報を保存
+            UserData userData = new UserData
+            {
+                username = username,
+                email = email,
+                password = password
+            };
+            SaveUserData(userData);
+            titleManager.OpenConfirmSignUpPanel();
         }
         else
         {
-            Debug.LogError("Cognitoユーザー登録失敗: " + request.error + " / " + request.downloadHandler.text);
+            string errorMessage = request.downloadHandler.text;
+            if (errorMessage.Contains("UsernameExistsException"))
+            {
+                Debug.LogError("このユーザー名は既に使用されています。");
+            }
+            else
+            {
+                Debug.LogError("Cognitoユーザー登録失敗: " + request.error + " / " + errorMessage);
+            }
         }
     }
 
@@ -157,7 +149,6 @@ public class AwsManager : MonoBehaviour
         }
     }
 
-    // メール認証（ConfirmSignUp）用の関数を追加
     public void OnConfirmSignUpButtonClicked(string username, string confirmationCode)
     {
         StartCoroutine(ConfirmSignUp(username, confirmationCode));
@@ -165,7 +156,7 @@ public class AwsManager : MonoBehaviour
 
     IEnumerator ConfirmSignUp(string username, string confirmationCode)
     {
-        string clientId = "hv3rji4sb8s5h6a9vmefj77r4"; // あなたのCognitoクライアントID
+        string clientId = "hv3rji4sb8s5h6a9vmefj77r4";
         string endpoint = "https://cognito-idp.ap-northeast-1.amazonaws.com/";
         string jsonBody = $"{{\"ClientId\":\"{clientId}\",\"Username\":\"{username}\",\"ConfirmationCode\":\"{confirmationCode}\"}}";
 
@@ -177,15 +168,74 @@ public class AwsManager : MonoBehaviour
         request.SetRequestHeader("X-Amz-Target", "AWSCognitoIdentityProviderService.ConfirmSignUp");
 
         yield return request.SendWebRequest();
+        Debug.Log("request.result: " + request.result);
 
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log("メール認証成功: " + request.downloadHandler.text);
-            // 認証成功時の処理（例：ログイン画面に遷移など）
+            // 認証済みユーザーとして自動ログイン
+            string savedUserData = PlayerPrefs.GetString(USER_DATA_KEY, "");
+            if (!string.IsNullOrEmpty(savedUserData))
+            {
+                UserData userData = JsonUtility.FromJson<UserData>(savedUserData);
+                StartCoroutine(CognitoLogin(userData.username, userData.password));
+            }
         }
         else
         {
-            Debug.LogError("メール認証失敗: " + request.error + " / " + request.downloadHandler.text);
+            string errorMessage = request.downloadHandler.text;
+            if (errorMessage.Contains("UserNotFoundException"))
+            {
+                Debug.LogError("ユーザーが見つかりません。登録からやり直してください。");
+            }
+            else if (errorMessage.Contains("CodeMismatchException"))
+            {
+                Debug.LogError("確認コードが正しくありません。");
+            }
+            else if (errorMessage.Contains("ExpiredCodeException"))
+            {
+                Debug.LogError("確認コードの有効期限が切れています。新しいコードをリクエストしてください。");
+            }
+            else
+            {
+                Debug.LogError("メール認証失敗: " + request.error + " / " + errorMessage);
+            }
+        }
+    }
+
+    IEnumerator CognitoLogin(string username, string password)
+    {
+        string clientId = "hv3rji4sb8s5h6a9vmefj77r4";
+        string endpoint = "https://cognito-idp.ap-northeast-1.amazonaws.com/";
+        string jsonBody = $@"
+        {{
+            ""AuthParameters"": {{
+                ""USERNAME"": ""{username}"",
+                ""PASSWORD"": ""{password}""
+            }},
+            ""AuthFlow"": ""USER_PASSWORD_AUTH"",
+            ""ClientId"": ""{clientId}""
+        }}";
+
+        Debug.Log("CognitoLoginリクエスト: " + jsonBody);
+
+        var request = new UnityWebRequest(endpoint, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/x-amz-json-1.1");
+        request.SetRequestHeader("X-Amz-Target", "AWSCognitoIdentityProviderService.InitiateAuth");
+
+        yield return request.SendWebRequest();
+
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log("Cognitoログイン成功: " + request.downloadHandler.text);
+            // ここでトークンを保存し、ログイン後の処理へ
+        }
+        else
+        {
+            Debug.LogError("Cognitoログイン失敗: " + request.error + " / " + request.downloadHandler.text);
         }
     }
 }
