@@ -207,15 +207,7 @@ public class AwsManager : MonoBehaviour
     {
         string clientId = "hv3rji4sb8s5h6a9vmefj77r4";
         string endpoint = "https://cognito-idp.ap-northeast-1.amazonaws.com/";
-        string jsonBody = $@"
-        {{
-            ""AuthParameters"": {{
-                ""USERNAME"": ""{username}"",
-                ""PASSWORD"": ""{password}""
-            }},
-            ""AuthFlow"": ""USER_PASSWORD_AUTH"",
-            ""ClientId"": ""{clientId}""
-        }}";
+        string jsonBody = "{\"AuthParameters\":{\"USERNAME\":\"" + username + "\",\"PASSWORD\":\"" + password + "\"},\"AuthFlow\":\"USER_PASSWORD_AUTH\",\"ClientId\":\"" + clientId + "\"}";
 
         Debug.Log("CognitoLoginリクエスト: " + jsonBody);
 
