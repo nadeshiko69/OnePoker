@@ -223,7 +223,12 @@ public class AwsManager : MonoBehaviour
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log("Cognitoログイン成功: " + request.downloadHandler.text);
-            // ここでトークンを保存し、ログイン後の処理へ
+            // ログイン成功時にボタンのテキストを変更
+            if (titleManager != null && titleManager.accountButton != null)
+            {
+                titleManager.accountText.text = username;
+                titleManager.alreadyLogin = true;
+            }
         }
         else
         {

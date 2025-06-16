@@ -4,17 +4,26 @@ using TMPro;
 
 public class TitleManager : MonoBehaviour
 {
-    void Start(){
-        registerAccountPanel.SetActive(false);
-        confirmSignUpPanel.SetActive(false);
-    }
-
     // アカウント登録
     public GameObject registerAccountPanel;
     public TMP_InputField usernameInput;
     public TMP_InputField emailInput;
     public TMP_InputField passwordInput;
     public GameObject confirmSignUpPanel;
+
+    // アカウントボタン
+    public Button accountButton;
+    public TextMeshProUGUI accountText;
+
+    // ユーザーメニューパネル
+    public GameObject userMenuPanel;
+    public bool alreadyLogin = false;
+
+    void Start(){
+        registerAccountPanel.SetActive(false);
+        confirmSignUpPanel.SetActive(false);
+        userMenuPanel.SetActive(false);
+    }
     
     // 確認コード入力用
     public TMP_InputField confirmationCodeInput;
@@ -52,5 +61,25 @@ public class TitleManager : MonoBehaviour
         }
         awsManager.OnConfirmSignUpButtonClicked(username, confirmationCode);
         CloseConfirmSignUpPanel();
+    }
+
+    // アカウントボタンクリック時の処理
+    public void OnAccountButtonClicked()
+    {
+        // ユーザー名が表示されている場合（ログイン済み）
+        if (alreadyLogin)
+        {
+            userMenuPanel.SetActive(true);
+        }
+        // 未ログインの場合
+        else
+        {
+            OpenRegisterAccountPanel();
+        }
+    }
+
+    public void CloseUserMenuPanel()
+    {
+        userMenuPanel.SetActive(false);
     }
 }
