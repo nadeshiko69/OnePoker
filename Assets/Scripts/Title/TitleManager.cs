@@ -19,10 +19,19 @@ public class TitleManager : MonoBehaviour
     public GameObject userMenuPanel;
     public bool alreadyLogin = false;
 
+    [Header("フレンドマッチ")]
+    [SerializeField] private TitleAnimationManager titleAnimationManager;
+    [SerializeField] private GameObject createRoomButton;
+    [SerializeField] private GameObject joinRoomButton;
+
     void Start(){
         registerAccountPanel.SetActive(false);
         confirmSignUpPanel.SetActive(false);
         userMenuPanel.SetActive(false);
+
+        // ボタンを非表示にする
+        if (createRoomButton != null) createRoomButton.SetActive(false);
+        if (joinRoomButton != null) joinRoomButton.SetActive(false);
     }
     
     // 確認コード入力用
