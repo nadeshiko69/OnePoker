@@ -21,4 +21,8 @@ public class SceneChange : MonoBehaviour
     public void ChangeCreateRoomScene(){
         SceneManager.LoadScene("CreateRoomScene");
     }
+
+    public void ChangeJoinRoomScene(){
+        SceneManager.LoadScene("JoinRoomScene");
+    }
 }
