@@ -17,4 +17,8 @@ public class SceneChange : MonoBehaviour
     public void ChangeSettingScene(){
         SceneManager.LoadScene("SettingScene");
     }
+
+    public void ChangeCreateRoomScene(){
+        SceneManager.LoadScene("CreateRoomScene");
+    }
 }
