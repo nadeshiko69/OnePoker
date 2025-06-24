@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 public class TitleManager : MonoBehaviour
 {
@@ -27,6 +28,11 @@ public class TitleManager : MonoBehaviour
     [SerializeField] private Button rankMatchButton;
     [SerializeField] private Button cpuBattleButton;
 
+    private Vector2 friendMatchButtonOriginalPos;
+    private bool friendMatchButtonOriginalInteractable;
+    private List<GameObject> buttonsToHide = new List<GameObject>();
+    private List<GameObject> buttonsToShow = new List<GameObject>();
+
     void Start(){
         registerAccountPanel.SetActive(false);
         confirmSignUpPanel.SetActive(false);
@@ -35,6 +41,18 @@ public class TitleManager : MonoBehaviour
         // ボタンを非表示にする
         if (createRoomButton != null) createRoomButton.SetActive(false);
         if (joinRoomButton != null) joinRoomButton.SetActive(false);
+
+        // 元の位置と状態を記憶
+        if (friendMatchButton != null)
+        {
+            friendMatchButtonOriginalPos = friendMatchButton.GetComponent<RectTransform>().anchoredPosition;
+            friendMatchButtonOriginalInteractable = friendMatchButton.interactable;
+        }
+        // 非表示・表示切り替え対象をリスト化
+        if (rankMatchButton != null) buttonsToShow.Add(rankMatchButton.gameObject);
+        if (cpuBattleButton != null) buttonsToShow.Add(cpuBattleButton.gameObject);
+        if (createRoomButton != null) buttonsToHide.Add(createRoomButton);
+        if (joinRoomButton != null) buttonsToHide.Add(joinRoomButton);
     }
     
     // 確認コード入力用
@@ -114,6 +132,30 @@ public class TitleManager : MonoBehaviour
                     if (cpuBattleButton != null) cpuBattleButton.gameObject.SetActive(false);
                 }
             );
+        }
+    }
+
+    /// <summary>
+    /// 画面状態をリセットする
+    /// </summary>
+    public void ResetMatchButtons()
+    {
+        // 移動したボタンを元の位置に戻し、有効化
+        if (friendMatchButton != null)
+        {
+            var rect = friendMatchButton.GetComponent<RectTransform>();
+            rect.anchoredPosition = friendMatchButtonOriginalPos;
+            friendMatchButton.interactable = friendMatchButtonOriginalInteractable;
+        }
+        // 表示させたボタンを非表示
+        foreach (var go in buttonsToHide)
+        {
+            if (go != null) go.SetActive(false);
+        }
+        // 非表示にしたボタンを表示
+        foreach (var go in buttonsToShow)
+        {
+            if (go != null) go.SetActive(true);
         }
     }
 }
