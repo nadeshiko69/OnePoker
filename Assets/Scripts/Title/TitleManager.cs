@@ -19,10 +19,13 @@ public class TitleManager : MonoBehaviour
     public GameObject userMenuPanel;
     public bool alreadyLogin = false;
 
-    [Header("フレンドマッチ")]
+    [Header("対戦ボタン管理")]
     [SerializeField] private TitleAnimationManager titleAnimationManager;
     [SerializeField] private GameObject createRoomButton;
     [SerializeField] private GameObject joinRoomButton;
+    [SerializeField] private Button friendMatchButton;
+    [SerializeField] private Button rankMatchButton;
+    [SerializeField] private Button cpuBattleButton;
 
     void Start(){
         registerAccountPanel.SetActive(false);
@@ -90,5 +93,27 @@ public class TitleManager : MonoBehaviour
     public void CloseUserMenuPanel()
     {
         userMenuPanel.SetActive(false);
+    }
+
+    // FriendMatchボタン用のOnClickイベント
+    public void OnClickFriendMatchButton()
+    {
+        if (titleAnimationManager != null && friendMatchButton != null)
+        {
+            titleAnimationManager.MoveButton(
+                friendMatchButton.GetComponent<RectTransform>(),
+                () =>
+                {
+                    // ボタンを無効化
+                    friendMatchButton.interactable = false;
+                    // 2つのボタンを表示
+                    if (createRoomButton != null) createRoomButton.SetActive(true);
+                    if (joinRoomButton != null) joinRoomButton.SetActive(true);
+                    // 他の機能ボタンを非表示
+                    if (rankMatchButton != null) rankMatchButton.gameObject.SetActive(false);
+                    if (cpuBattleButton != null) cpuBattleButton.gameObject.SetActive(false);
+                }
+            );
+        }
     }
 }

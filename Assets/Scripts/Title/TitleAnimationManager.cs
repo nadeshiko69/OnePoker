@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 // 移動させるボタンの情報をまとめるクラス
 [System.Serializable]
@@ -18,31 +19,20 @@ public class TitleAnimationManager : MonoBehaviour
     /// <summary>
     /// 指定されたボタンを目標位置に移動させる
     /// </summary>
-    public void MoveButton(RectTransform buttonToMove)
+    public void MoveButton(RectTransform buttonToMove, Action onComplete = null)
     {
         foreach (var info in buttonAnimationInfos)
         {
             if (info.targetButton == buttonToMove)
             {
-                StartCoroutine(MoveButtonCoroutine(info.targetButton, info.targetPosition, info.moveDuration));
+                StartCoroutine(MoveButtonCoroutine(info.targetButton, info.targetPosition, info.moveDuration, onComplete));
                 return;
             }
         }
         Debug.LogWarning("指定されたボタンの情報が見つかりませんでした: " + buttonToMove.name);
     }
 
-    /// <summary>
-    /// すべてのボタンを同時に移動させる
-    /// </summary>
-    public void MoveAllButtons()
-    {
-        foreach (var info in buttonAnimationInfos)
-        {
-            StartCoroutine(MoveButtonCoroutine(info.targetButton, info.targetPosition, info.moveDuration));
-        }
-    }
-
-    private IEnumerator MoveButtonCoroutine(RectTransform rectTransform, Vector2 endPosition, float duration)
+    private IEnumerator MoveButtonCoroutine(RectTransform rectTransform, Vector2 endPosition, float duration, Action onComplete)
     {
         float time = 0;
         Vector2 startPosition = rectTransform.anchoredPosition;
@@ -57,5 +47,6 @@ public class TitleAnimationManager : MonoBehaviour
 
         // 最終的な位置を正確に設定
         rectTransform.anchoredPosition = endPosition;
+        onComplete?.Invoke();
     }
 } 

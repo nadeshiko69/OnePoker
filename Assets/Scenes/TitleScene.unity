@@ -3496,6 +3496,9 @@ MonoBehaviour:
   titleAnimationManager: {fileID: 1921210447}
   createRoomButton: {fileID: 1013615000}
   joinRoomButton: {fileID: 766621144}
+  friendMatchButton: {fileID: 1777581817}
+  rankMatchButton: {fileID: 327718924}
+  cpuBattleButton: {fileID: 333816454}
   confirmationCodeInput: {fileID: 464780541}
 --- !u!1 &868131394
 GameObject:
@@ -7231,13 +7234,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1921210447}
-        m_TargetAssemblyTypeName: TitleAnimationManager, Assembly-CSharp
-        m_MethodName: MoveButton
-        m_Mode: 2
+      - m_Target: {fileID: 806838513}
+        m_TargetAssemblyTypeName: TitleManager, Assembly-CSharp
+        m_MethodName: OnClickFriendMatchButton
+        m_Mode: 1
         m_Arguments:
-          m_ObjectArgument: {fileID: 1777581815}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.RectTransform, UnityEngine
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
