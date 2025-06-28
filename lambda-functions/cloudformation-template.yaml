@@ -1,0 +1,245 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'OnePoker Online Battle Infrastructure'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'dev'
+    Description: 'Environment name (dev, staging, prod)'
+
+Resources:
+  # DynamoDBテーブル
+  GameStatesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'GameStates-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: gameId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: gameId
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: OnePoker
+
+  # Lambda実行ロール
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'OnePoker-Lambda-Role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: !GetAtt GameStatesTable.Arn
+
+  # Lambda関数: ゲーム開始
+  StartGameFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'start-game-${Environment}'
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # Lambda関数: ゲーム状態取得
+  GetGameStateFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'get-game-state-${Environment}'
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # Lambda関数: ゲーム状態更新
+  UpdateGameStateFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'update-game-state-${Environment}'
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub 'OnePoker-API-${Environment}'
+      Description: 'OnePoker Online Battle API'
+
+  # API Gatewayリソースとメソッド
+  ApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: 'game'
+
+  # ゲーム開始エンドポイント
+  StartGameResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !Ref ApiResource
+      PathPart: 'start'
+
+  StartGameMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref StartGameResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StartGameFunction.Arn}/invocations'
+
+  # ゲーム状態取得エンドポイント
+  GetGameStateResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !Ref ApiResource
+      PathPart: 'state'
+
+  GetGameStateMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref GetGameStateResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetGameStateFunction.Arn}/invocations'
+
+  # ゲーム状態更新エンドポイント
+  UpdateGameStateResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !Ref ApiResource
+      PathPart: 'update'
+
+  UpdateGameStateMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref UpdateGameStateResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateGameStateFunction.Arn}/invocations'
+
+  # Lambda関数にAPI Gatewayの実行権限を付与
+  StartGamePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref StartGameFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/POST/game/start'
+
+  GetGameStatePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetGameStateFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/GET/game/state'
+
+  UpdateGameStatePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UpdateGameStateFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/POST/game/update'
+
+  # API Gatewayデプロイメント
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - StartGameMethod
+      - GetGameStateMethod
+      - UpdateGameStateMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: !Ref Environment
+
+Outputs:
+  ApiGatewayUrl:
+    Description: 'API Gateway URL'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+  
+  GameStatesTableName:
+    Description: 'DynamoDB Table Name'
+    Value: !Ref GameStatesTable
+  
+  StartGameFunctionArn:
+    Description: 'Start Game Lambda Function ARN'
+    Value: !GetAtt StartGameFunction.Arn
+  
+  GetGameStateFunctionArn:
+    Description: 'Get Game State Lambda Function ARN'
+    Value: !GetAtt GetGameStateFunction.Arn
+  
+  UpdateGameStateFunctionArn:
+    Description: 'Update Game State Lambda Function ARN'
+    Value: !GetAtt UpdateGameStateFunction.Arn 
