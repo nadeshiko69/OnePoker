@@ -74,3 +74,5 @@ crashlytics-build.properties
 
 /[Aa]ssets/Fonts/*
 /[Aa]ssets/TextMesh Pro/*
+
+/[Oo]utput/*

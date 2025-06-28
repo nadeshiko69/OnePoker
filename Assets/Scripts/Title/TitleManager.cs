@@ -53,6 +53,11 @@ public class TitleManager : MonoBehaviour
         if (cpuBattleButton != null) buttonsToShow.Add(cpuBattleButton.gameObject);
         if (createRoomButton != null) buttonsToHide.Add(createRoomButton);
         if (joinRoomButton != null) buttonsToHide.Add(joinRoomButton);
+
+        // if (AdMobManager.Instance != null)
+        // {
+        //     AdMobManager.Instance.ShowBannerAd();
+        // }
     }
     
     // 確認コード入力用

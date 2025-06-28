@@ -15,7 +15,9 @@ EditorBuildSettings:
     path: Assets/Scenes/CreateRoomScene.unity
     guid: 2331245aab06d824182407667ae5575e
   m_configObjects:
+    com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: 48dedc7056a80b643b16056918418083, type: 2}
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 1635972f82e777744b009cf8651d8da2, type: 2}
+    com.unity.adaptiveperformance.samsung.android.provider_settings: {fileID: 11400000, guid: 6ddf00753777f08489b8bd4fa4755e33, type: 2}
     com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 41162a70265f3a241ae5f50954d3dcbb, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

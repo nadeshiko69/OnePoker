@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.sakuTech.info.OnePoker">
 
     <!-- AdMobに必要な権限 -->
@@ -13,13 +14,15 @@
         android:label="@string/app_name"
         android:theme="@style/UnityThemeSelector">
 
-        <!-- AdMob用のメタデータ -->
+        <!-- AdMob App ID -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-1142801310983686~9710648064" />
 
         <activity
             android:name="com.unity3d.player.UnityPlayerActivity"
+            android:enabled="true"
+            tools:replace="android:enabled"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:hardwareAccelerated="true"
             android:launchMode="singleTask"

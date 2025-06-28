@@ -1154,6 +1154,62 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 257707986}
   m_CullTransparentMesh: 1
+--- !u!1 &299567948
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 299567949}
+  - component: {fileID: 299567950}
+  m_Layer: 5
+  m_Name: AdmobManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &299567949
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 299567948}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1717167940}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &299567950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 299567948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c8a8cb24d781ec409ae38fb5c22b7e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  androidAppId: ca-app-pub-1142801310983686~9710648064
+  iosAppId: ca-app-pub-1142801310983686~5472020152
+  androidBannerAdUnitId: ca-app-pub-1142801310983686/9954190641
+  iosBannerAdUnitId: ca-app-pub-1142801310983686/7519598995
+  androidInterstitialAdUnitId: ca-app-pub-1142801310983686/1776317723
+  iosInterstitialAdUnitId: ca-app-pub-1142801310983686/3540260888
+  androidRewardedAdUnitId: ca-app-pub-1142801310983686/7283795279
+  iosRewardedAdUnitId: ca-app-pub-1142801310983686/5603882095
 --- !u!1 &327718922
 GameObject:
   m_ObjectHideFlags: 0
@@ -7053,6 +7109,7 @@ RectTransform:
   - {fileID: 1128405597}
   - {fileID: 375738703}
   - {fileID: 1921210446}
+  - {fileID: 299567949}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
