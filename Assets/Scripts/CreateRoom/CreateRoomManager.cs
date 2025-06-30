@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.Networking;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class CreateRoomManager : MonoBehaviour
 {
@@ -19,11 +20,22 @@ public class CreateRoomManager : MonoBehaviour
     [SerializeField] private float warningThreshold = 300f; // 5分前から警告色
     [SerializeField] private float dangerThreshold = 60f; // 1分前から危険色
     
+    [Header("マッチング状態")]
+    [SerializeField] private GameObject waitingPanel;
+    [SerializeField] private GameObject matchedPanel;
+    [SerializeField] private TextMeshProUGUI matchedText;
+    
     private float currentTime;
     private bool isTimerRunning = false;
+    private string roomCode;
+    private string playerId;
+    private string opponentId;
+    private bool isMatched = false;
     
     // API GatewayのエンドポイントURL
     private string apiUrl = "https://s4sg7fzh7c.execute-api.ap-northeast-1.amazonaws.com/dev/create";
+    private string checkMatchUrl = "https://s4sg7fzh7c.execute-api.ap-northeast-1.amazonaws.com/dev/check-match";
+    private string startGameUrl = "https://s4sg7fzh7c.execute-api.ap-northeast-1.amazonaws.com/dev/start-game";
     
     void Start()
     {
@@ -35,6 +47,9 @@ public class CreateRoomManager : MonoBehaviour
         
         // タイマーを開始
         StartTimer();
+        
+        // マッチング状態のチェックを開始
+        StartCoroutine(CheckMatchingStatus());
     }
     
     void Update()
@@ -140,7 +155,7 @@ public class CreateRoomManager : MonoBehaviour
     {
         // PlayerPrefsからUserData(JSON)を取得し、usernameをパース
         string userDataJson = PlayerPrefs.GetString("UserData", "");
-        string playerId = "guest";
+        playerId = "guest";
         if (!string.IsNullOrEmpty(userDataJson))
         {
             var userData = JsonUtility.FromJson<UserData>(userDataJson);
@@ -159,12 +174,127 @@ public class CreateRoomManager : MonoBehaviour
         if (request.result == UnityWebRequest.Result.Success)
         {
             var response = JsonUtility.FromJson<RoomCodeResponse>(request.downloadHandler.text);
-            roomNumberText.text = response.code;
+            roomCode = response.code;
+            roomNumberText.text = roomCode;
         }
         else
         {
             roomNumberText.text = "Error";
         }
+    }
+
+    /// <summary>
+    /// マッチング状態を定期的にチェック
+    /// </summary>
+    private IEnumerator CheckMatchingStatus()
+    {
+        while (!isMatched)
+        {
+            yield return new WaitForSeconds(2f); // 2秒間隔でチェック
+            
+            if (!string.IsNullOrEmpty(roomCode))
+            {
+                yield return StartCoroutine(CheckMatchStatus());
+            }
+        }
+    }
+
+    /// <summary>
+    /// マッチング状態をチェック
+    /// </summary>
+    private IEnumerator CheckMatchStatus()
+    {
+        string url = $"{checkMatchUrl}?roomCode={roomCode}";
+        
+        using (UnityWebRequest request = UnityWebRequest.Get(url))
+        {
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                var response = JsonUtility.FromJson<MatchStatusResponse>(request.downloadHandler.text);
+                
+                if (response.status == "matched")
+                {
+                    // マッチング完了
+                    isMatched = true;
+                    opponentId = response.guestPlayerId;
+                    
+                    // UIを更新
+                    ShowMatchedPanel();
+                    
+                    // ゲーム開始処理を実行
+                    yield return StartCoroutine(StartGame());
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// ゲーム開始処理を実行
+    /// </summary>
+    private IEnumerator StartGame()
+    {
+        string json = "{\"roomCode\":\"" + roomCode + "\"}";
+
+        UnityWebRequest request = new UnityWebRequest(startGameUrl, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            var response = JsonUtility.FromJson<StartGameResponse>(request.downloadHandler.text);
+            
+            // 3秒後にOnlineBattleSceneに遷移
+            yield return new WaitForSeconds(3f);
+            StartOnlineBattle(response);
+        }
+        else
+        {
+            Debug.LogError($"Failed to start game: {request.error}");
+            // エラー時はタイトルシーンに戻る
+            SceneManager.LoadScene("TitleScene");
+        }
+    }
+
+    /// <summary>
+    /// マッチング完了パネルを表示
+    /// </summary>
+    private void ShowMatchedPanel()
+    {
+        if (waitingPanel != null) waitingPanel.SetActive(false);
+        if (matchedPanel != null) matchedPanel.SetActive(true);
+        if (matchedText != null) matchedText.text = $"Matched with {opponentId}!";
+        
+        // タイマーを停止
+        StopTimer();
+    }
+
+    /// <summary>
+    /// オンライン対戦を開始
+    /// </summary>
+    private void StartOnlineBattle(StartGameResponse gameData)
+    {
+        // ゲームデータをPlayerPrefsに保存
+        var onlineGameData = new OnlineGameData
+        {
+            roomCode = roomCode,
+            playerId = playerId,
+            opponentId = opponentId,
+            isPlayer1 = true,
+            gameId = gameData.gameId
+        };
+        
+        string gameDataJson = JsonUtility.ToJson(onlineGameData);
+        PlayerPrefs.SetString("OnlineGameData", gameDataJson);
+        PlayerPrefs.Save();
+        
+        // OnlineBattleSceneに遷移
+        SceneManager.LoadScene("OnlineBattleScene");
     }
 
     [System.Serializable]
@@ -179,5 +309,35 @@ public class CreateRoomManager : MonoBehaviour
         public string username;
         public string email;
         public string password;
+    }
+
+    [System.Serializable]
+    private class MatchStatusResponse
+    {
+        public string status;
+        public string guestPlayerId;
+    }
+
+    [System.Serializable]
+    private class StartGameResponse
+    {
+        public string gameId;
+        public string roomCode;
+        public string player1Id;
+        public string player2Id;
+        public string currentTurn;
+        public string gamePhase;
+        public int player1Life;
+        public int player2Life;
+    }
+
+    [System.Serializable]
+    private class OnlineGameData
+    {
+        public string roomCode;
+        public string playerId;
+        public string opponentId;
+        public bool isPlayer1;
+        public string gameId;
     }
 } 

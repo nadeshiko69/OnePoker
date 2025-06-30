@@ -8,7 +8,7 @@ Parameters:
     Description: 'Environment name (dev, staging, prod)'
 
 Resources:
-  # DynamoDBテーブル
+  # DynamoDB table
   GameStatesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -29,7 +29,6 @@ Resources:
         - Key: Application
           Value: OnePoker
 
-  # Lambda実行ロール
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -58,13 +57,13 @@ Resources:
                   - dynamodb:Scan
                 Resource: !GetAtt GameStatesTable.Arn
 
-  # Lambda関数: ゲーム開始
+  # LambdaFunction ; startGame
   StartGameFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'start-game-${Environment}'
-      Runtime: python3.9
-      Handler: index.lambda_handler
+      Runtime: python3.13
+      Handler: lambda_function.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         ZipFile: |
@@ -76,12 +75,30 @@ Resources:
       Timeout: 30
       MemorySize: 128
 
-  # Lambda関数: ゲーム状態取得
+  # LambdaFunction ; checkMatch
+  CheckMatchFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'check-match-${Environment}'
+      Runtime: python3.13
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # LambdaFunction ; getGameState
   GetGameStateFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'get-game-state-${Environment}'
-      Runtime: python3.9
+      Runtime: python3.13
       Handler: index.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
@@ -94,13 +111,121 @@ Resources:
       Timeout: 30
       MemorySize: 128
 
-  # Lambda関数: ゲーム状態更新
+  # LambdaFunction ; updateGameState
   UpdateGameStateFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'update-game-state-${Environment}'
-      Runtime: python3.9
+      Runtime: python3.13
       Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # LambdaFunction ; createRoom
+  CreateRoomFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'create_room-${Environment}'
+      Runtime: python3.13
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # LambdaFunction ; joinRoom
+  JoinRoomFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'join_room-${Environment}'
+      Runtime: python3.13
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # LambdaFunction ; cancelRoom
+  CancelRoomFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'cancel_room-${Environment}'
+      Runtime: python3.13
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # LambdaFunction ; registerUser
+  RegisterUserFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'register_user-${Environment}'
+      Runtime: python3.13
+      Handler: lamdba_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # LambdaFunction ; loginUser
+  LoginUserFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'login_user-${Environment}'
+      Runtime: python3.13
+      Handler: lamdba_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Placeholder'}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref GameStatesTable
+      Timeout: 30
+      MemorySize: 128
+
+  # LambdaFunction ; updateGameAction
+  UpdateGameActionFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'update-game-action-${Environment}'
+      Runtime: python3.13
+      Handler: lambda_function.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         ZipFile: |
@@ -119,7 +244,7 @@ Resources:
       Name: !Sub 'OnePoker-API-${Environment}'
       Description: 'OnePoker Online Battle API'
 
-  # API Gatewayリソースとメソッド
+  # API Gateway Resource and Method
   ApiResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -127,7 +252,7 @@ Resources:
       ParentId: !GetAtt ApiGateway.RootResourceId
       PathPart: 'game'
 
-  # ゲーム開始エンドポイント
+  # API Gateway Endpoint ; startGame
   StartGameResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -147,7 +272,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StartGameFunction.Arn}/invocations'
 
-  # ゲーム状態取得エンドポイント
+  # API Gateway Endpoint ; getGameState
   GetGameStateResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -167,7 +292,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetGameStateFunction.Arn}/invocations'
 
-  # ゲーム状態更新エンドポイント
+  # API Gateway Endpoint ; updateGameState
   UpdateGameStateResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -187,7 +312,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateGameStateFunction.Arn}/invocations'
 
-  # Lambda関数にAPI Gatewayの実行権限を付与
+  # LambdaFunction ; API Gateway Permission
   StartGamePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -212,7 +337,7 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/POST/game/update'
 
-  # API Gatewayデプロイメント
+  # API Gateway Deployment
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:

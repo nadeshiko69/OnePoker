@@ -3,10 +3,11 @@ import boto3
 import random
 import time
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('GameStates')
+room_table = dynamodb.Table('FriendMatchRoom')
+game_table = dynamodb.Table('GameStates')
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
@@ -19,11 +20,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # リクエストボディをパース
         body = json.loads(event['body'])
         room_code = body.get('roomCode')
-        player1_id = body.get('player1Id')
-        player2_id = body.get('player2Id')
         
         # 必須パラメータの検証
-        if not all([room_code, player1_id, player2_id]):
+        if not room_code:
             return {
                 'statusCode': 400,
                 'headers': {
@@ -33,9 +32,47 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Access-Control-Allow-Methods': 'POST, OPTIONS'
                 },
                 'body': json.dumps({
-                    'error': 'Missing required parameters: roomCode, player1Id, player2Id'
+                    'error': 'Missing required parameter: roomCode'
                 })
             }
+        
+        # ルーム情報を取得
+        room_response = room_table.get_item(Key={'roomcode': room_code})
+        
+        if 'Item' not in room_response:
+            return {
+                'statusCode': 404,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                },
+                'body': json.dumps({
+                    'error': 'Room not found'
+                })
+            }
+        
+        room_data = room_response['Item']
+        
+        # ルームがマッチング済みかチェック
+        if room_data['status'] != 'matched':
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                },
+                'body': json.dumps({
+                    'error': 'Room is not matched yet'
+                })
+            }
+        
+        # プレイヤー情報を取得
+        player1_id = room_data['hostPlayerId']
+        player2_id = room_data['guestPlayerId']
         
         # ゲームIDを生成（タイムスタンプ + ランダム文字列）
         game_id = f"game_{int(time.time())}_{random.randint(100000, 999999)}"
@@ -68,14 +105,14 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2BetAmount': 0,
             'player1PlacedCard': None,
             'player2PlacedCard': None,
-            'createdAt': datetime.utcnow().isoformat(),
-            'updatedAt': datetime.utcnow().isoformat()
+            'createdAt': int(time.time()),
+            'updatedAt': int(time.time())
         }
         
         # DynamoDBにゲーム状態を保存
-        table.put_item(Item=game_state)
+        game_table.put_item(Item=game_state)
         
-        # レスポンスを作成（各プレイヤーには自分のカードのみ返す）
+        # レスポンスを作成
         response = {
             'gameId': game_id,
             'roomCode': room_code,
@@ -114,7 +151,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             })
         }
 
-def shuffle_deck() -> List[int]:
+def shuffle_deck():
     """
     デッキをシャッフルする関数
     52枚のカード（0-51のID）をランダムに並び替える
