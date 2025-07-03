@@ -33,9 +33,9 @@ public class CreateRoomManager : MonoBehaviour
     private bool isMatched = false;
     
     // API GatewayのエンドポイントURL
-    private string apiUrl = "https://s4sg7fzh7c.execute-api.ap-northeast-1.amazonaws.com/dev/create";
-    private string checkMatchUrl = "https://s4sg7fzh7c.execute-api.ap-northeast-1.amazonaws.com/dev/check-match";
-    private string startGameUrl = "https://s4sg7fzh7c.execute-api.ap-northeast-1.amazonaws.com/dev/start-game";
+    private string apiUrl = "https://lbr9cfjhuk.execute-api.ap-northeast-1.amazonaws.com/dev/create";
+    private string checkMatchUrl = "https://lbr9cfjhuk.execute-api.ap-northeast-1.amazonaws.com/dev/check-match";
+    private string startGameUrl = "https://lbr9cfjhuk.execute-api.ap-northeast-1.amazonaws.com/dev/start-game";
     
     void Start()
     {
