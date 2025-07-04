@@ -22,8 +22,8 @@ public class JoinRoomManager : MonoBehaviour
     private bool isMatched = false;
     
     // API GatewayのエンドポイントURL
-    private string joinUrl = "https://s4sg7fzh7c.execute-api.ap-northeast-1.amazonaws.com/dev/join";
-    private string startGameUrl = "https://s4sg7fzh7c.execute-api.ap-northeast-1.amazonaws.com/dev/start-game";
+    private string joinUrl = "https://lbr9cfjhuk.execute-api.ap-northeast-1.amazonaws.com/dev/join";
+    private string startGameUrl = "https://lbr9cfjhuk.execute-api.ap-northeast-1.amazonaws.com/dev/start-game";
 
     private void Start()
     {
