@@ -71,12 +71,13 @@ public class JoinRoomManager : MonoBehaviour
             {
                 // マッチング成功
                 isMatched = true;
-                
+                opponentId = response.player1Id; // 自分はplayer2
                 // UIを更新
                 ShowMatchedPanel();
-                
-                // ゲーム開始処理を実行
-                yield return StartCoroutine(StartGame());
+                // ゲーム開始処理を共通クラスで実行
+                yield return StartCoroutine(
+                    OnlineBattleStarter.StartGameAndTransition(
+                        startGameUrl, roomCode, playerId, opponentId, false));
             }
             else
             {
@@ -90,40 +91,6 @@ public class JoinRoomManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ゲーム開始処理を実行
-    /// </summary>
-    private IEnumerator StartGame()
-    {
-        string json = "{\"roomCode\":\"" + roomCode + "\"}";
-
-        UnityWebRequest request = new UnityWebRequest(startGameUrl, "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-
-        yield return request.SendWebRequest();
-
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            var response = JsonUtility.FromJson<StartGameResponse>(request.downloadHandler.text);
-            
-            // 相手プレイヤーIDを設定
-            opponentId = response.player1Id; // 自分はplayer2
-            
-            // 3秒後にOnlineBattleSceneに遷移
-            yield return new WaitForSeconds(3f);
-            StartOnlineBattle(response);
-        }
-        else
-        {
-            Debug.LogError($"Failed to start game: {request.error}");
-            // エラー時はタイトルシーンに戻る
-            SceneManager.LoadScene("TitleScene");
-        }
-    }
-
-    /// <summary>
     /// マッチング完了パネルを表示
     /// </summary>
     private void ShowMatchedPanel()
@@ -131,29 +98,6 @@ public class JoinRoomManager : MonoBehaviour
         if (inputPanel != null) inputPanel.SetActive(false);
         if (matchedPanel != null) matchedPanel.SetActive(true);
         if (matchedText != null) matchedText.text = "Matched! Starting game...";
-    }
-
-    /// <summary>
-    /// オンライン対戦を開始
-    /// </summary>
-    private void StartOnlineBattle(StartGameResponse gameData)
-    {
-        // ゲームデータをPlayerPrefsに保存
-        var onlineGameData = new OnlineGameData
-        {
-            roomCode = roomCode,
-            playerId = playerId,
-            opponentId = opponentId,
-            isPlayer1 = false,
-            gameId = gameData.gameId
-        };
-        
-        string gameDataJson = JsonUtility.ToJson(onlineGameData);
-        PlayerPrefs.SetString("OnlineGameData", gameDataJson);
-        PlayerPrefs.Save();
-        
-        // OnlineBattleSceneに遷移
-        SceneManager.LoadScene("OnlineBattleScene");
     }
 
     [System.Serializable]
@@ -167,19 +111,8 @@ public class JoinRoomManager : MonoBehaviour
     private class JoinRoomResponse
     {
         public string message;
-    }
-
-    [System.Serializable]
-    private class StartGameResponse
-    {
-        public string gameId;
-        public string roomCode;
         public string player1Id;
         public string player2Id;
-        public string currentTurn;
-        public string gamePhase;
-        public int player1Life;
-        public int player2Life;
     }
 
     [System.Serializable]
@@ -188,15 +121,5 @@ public class JoinRoomManager : MonoBehaviour
         public string username;
         public string email;
         public string password;
-    }
-
-    [System.Serializable]
-    private class OnlineGameData
-    {
-        public string roomCode;
-        public string playerId;
-        public string opponentId;
-        public bool isPlayer1;
-        public string gameId;
     }
 } 
