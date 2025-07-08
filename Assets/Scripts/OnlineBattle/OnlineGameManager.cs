@@ -6,50 +6,6 @@ using System.Collections.Generic;
 
 public class OnlineGameManager : MonoBehaviour
 {
-    private MatchManager matchManager;
-    private DeckManager deckManager;
-    private ResultViewManager resultViewManager;
-    private PanelManager panelManager;
-    private SkillManager skillManager;
-    private OnlineHandManager onlineHandManager;
-
-    private CardDisplay currentCard;
-    private DropZone currentZone;
-
-    // For Debug ; 相手のカードを自動で配置
-    private bool opponent_setCard = false;
-    private CardDisplay opponentCard;
-    public DropZone opponentZone;
-
-    // プレイヤーのカードを保持
-    private CardDisplay setPlayerCard;
-    private CardDisplay setOpponentCard;
-    public CardDisplay SetPlayerCard => setPlayerCard;
-    public CardDisplay SetOpponentCard => setOpponentCard;
-
-    // スキル使用可能フラグ
-    private bool playerCanUseScanSkill = true;
-    private bool playerCanUseChangeSkill = true;
-    private bool playerCanUseObstructSkill = true;
-    private bool playerCanUseFakeOutSkill = true;
-    private bool playerCanUseCopySkill = true;
-    public bool PlayerCanUseScanSkill => playerCanUseScanSkill;
-    public bool PlayerCanUseChangeSkill => playerCanUseChangeSkill;
-    public bool PlayerCanUseObstructSkill => playerCanUseObstructSkill;
-    public bool PlayerCanUseFakeOutSkill => playerCanUseFakeOutSkill;
-    public bool PlayerCanUseCopySkill => playerCanUseCopySkill;
-
-    private bool opponentCanUseScanSkill = true;
-    private bool opponentCanUseChangeSkill = true;
-    private bool opponentCanUseObstructSkill = true;
-    private bool opponentCanUseFakeOutSkill = true;
-    private bool opponentCanUseCopySkill = true;
-    public bool OpponentCanUseScanSkill => opponentCanUseScanSkill;
-    public bool OpponentCanUseChangeSkill => opponentCanUseChangeSkill;
-    public bool OpponentCanUseObstructSkill => opponentCanUseObstructSkill;
-    public bool OpponentCanUseFakeOutSkill => opponentCanUseFakeOutSkill;
-    public bool OpponentCanUseCopySkill => opponentCanUseCopySkill;
-
     public enum SkillType
     {
         Scan,
@@ -59,393 +15,71 @@ public class OnlineGameManager : MonoBehaviour
         Copy,
         None
     }
+    private OnlineMatchManager matchManager;
+    private OnlineResultViewManager resultViewManager;
+    private OnlinePanelManager panelManager;
+    private OnlineSkillManager skillManager;
+    private OnlineHandManager handManager;
 
-    public enum PlayerType
-    {
-        Player,
-        Opponent
-    }
+    // プレイヤーの手札・相手の手札
+    private int[] myHand;
+    private int[] opponentHand;
 
-    // 両者カードを配置したらベット開始
-    private bool bothCardsPlaced = false;
+    // プレイヤー情報
+    private bool isPlayer1;
+    private string playerId;
+    private string opponentId;
 
-    // ベットフェーズ用のUI
+    // ライフ
     public TextMeshProUGUI playerLifeText;
     public TextMeshProUGUI opponentLifeText;
-    private int currentBetAmount = 0;
-    public int CurrentBetAmount => currentBetAmount;
-
-    private bool OpponentCalled = false;
-    private bool cardsRevealed = false;
-
-    private bool checkGameOver = false;
-    public bool CheckGameOver => checkGameOver;
 
     void Start()
     {
-        deckManager = FindObjectOfType<DeckManager>();
-        resultViewManager = FindObjectOfType<ResultViewManager>();
-        matchManager = FindObjectOfType<MatchManager>();
-        panelManager = FindObjectOfType<PanelManager>();
-        skillManager = FindObjectOfType<SkillManager>();
-        onlineHandManager = FindObjectOfType<OnlineHandManager>();
+        // 各マネージャの取得
+        matchManager = FindObjectOfType<OnlineMatchManager>();
+        resultViewManager = FindObjectOfType<OnlineResultViewManager>();
+        panelManager = FindObjectOfType<OnlinePanelManager>();
+        skillManager = FindObjectOfType<OnlineSkillManager>();
+        handManager = FindObjectOfType<OnlineHandManager>();
 
-        // OnlineGameDataから手札情報を取得しUIに反映
+        // OnlineGameDataから手札・プレイヤー情報を取得
         string gameDataJson = PlayerPrefs.GetString("OnlineGameData", "");
         if (!string.IsNullOrEmpty(gameDataJson))
         {
             var gameData = JsonUtility.FromJson<OnlineGameDataWithCards>(gameDataJson);
-            if (gameData != null && onlineHandManager != null)
+            if (gameData != null && handManager != null)
             {
-                // プレイヤーがplayer1かplayer2かで手札を分岐
-                if (gameData.isPlayer1)
-                {
-                    onlineHandManager.SetPlayerHand(gameData.player1Cards);
-                    onlineHandManager.SetOpponentHand(gameData.player2Cards);
-                }
-                else
-                {
-                    onlineHandManager.SetPlayerHand(gameData.player2Cards);
-                    onlineHandManager.SetOpponentHand(gameData.player1Cards);
-                }
+                isPlayer1 = gameData.isPlayer1;
+                playerId = gameData.playerId;
+                opponentId = gameData.opponentId;
+
+                // 手札をセット
+                myHand = isPlayer1 ? gameData.player1Cards : gameData.player2Cards;
+                opponentHand = isPlayer1 ? gameData.player2Cards : gameData.player1Cards;
+
+                handManager.SetPlayerHand(myHand);
+                handManager.SetOpponentHand(opponentHand);
             }
         }
+
+        // ライフUI初期化
+        UpdateLifeUI();
     }
 
-    void Update()
-    {
-        if (opponent_setCard)
-        {
-            // ランダムに相手のカードを選択
-            opponentCard = GetRandomOpponentCard();
-            PlaceOpponentCard(opponentCard, opponentZone);
-            opponent_setCard = false;
-        }
-
-        if (bothCardsPlaced)
-        {
-            Debug.Log("ベット開始");
-            panelManager.ShowBettingUI();
-            bothCardsPlaced = false;
-        }
-    }
-
-    // 次のGameを開始する前に状態をリセット
-    public void ResetGame(){
-        checkGameOver = false;
-        bothCardsPlaced = false;
-        OpponentCalled = false;
-        cardsRevealed = false;   
-
-        panelManager.SetSkillButtonInteractable(true);
-    }
-
-    private IEnumerator SetOpponentCardFlag()
-    {
-        yield return new WaitForSeconds(1f);
-        opponent_setCard = true;
-    }
-    
-    private IEnumerator SetBettingPhase()
-    {
-        yield return new WaitForSeconds(1f);
-        bothCardsPlaced = true;
-    }
-
-    public void SetCheckGameOver(bool check){
-        checkGameOver = check;
-    }
-
-
-    public void SetSkillAvailability(PlayerType player, SkillType skill, bool canUse)
-    {
-        switch (player)
-        {
-            case PlayerType.Player:
-                switch (skill)
-                {
-                    case SkillType.Scan: playerCanUseScanSkill = canUse; break;
-                    case SkillType.Change: playerCanUseChangeSkill = canUse; break;
-                    case SkillType.Obstruct: playerCanUseObstructSkill = canUse; break;
-                    case SkillType.FakeOut: playerCanUseFakeOutSkill = canUse; break;
-                    case SkillType.Copy: playerCanUseCopySkill = canUse; break;
-                }
-                break;
-            case PlayerType.Opponent:
-                switch (skill)
-                {
-                    case SkillType.Scan: opponentCanUseScanSkill = canUse; break;
-                    case SkillType.Change: opponentCanUseChangeSkill = canUse; break;
-                    case SkillType.Obstruct: opponentCanUseObstructSkill = canUse; break;
-                    case SkillType.FakeOut: opponentCanUseFakeOutSkill = canUse; break;
-                    case SkillType.Copy: opponentCanUseCopySkill = canUse; break;
-                }
-                break;
-        }
-    }
-
-    private void UpdateLifeUI()
+    // ライフUIの更新
+    public void UpdateLifeUI()
     {
         if (playerLifeText != null)
-        {
             playerLifeText.text = $"Life: {matchManager.PlayerLife}";
-        }
         if (opponentLifeText != null)
-        {
             opponentLifeText.text = $"Life: {matchManager.OpponentLife}";
-        }
     }
 
-    public void PlaceBet(int amount)
-    {
-        if (amount > 0)
-        {
-            // ベット額を1増やす
-            if (matchManager.PlayerLife >= 1) // 1ライフ以上あればベット可能
-            {
-                currentBetAmount += 1;
-                matchManager.UpdatePlayerLife(-1); // 1ずつライフを減らす
-                Debug.Log($"Betting {currentBetAmount} life!");
-                UpdateLifeUI();
-                panelManager.UpdateCallButtonText();
-            }
-            else
-            {
-                Debug.LogWarning("ライフが足りないためベットできません！");
-            }
-        }
-        else if (amount < 0)
-        {
-            // ベット額を1減らす
-            if (currentBetAmount > 1) // 最小ベット額は1
-            {
-                currentBetAmount -= 1;
-                matchManager.UpdatePlayerLife(1); // ライフを1戻す
-                Debug.Log($"Reducing bet to {currentBetAmount} life!");
-                UpdateLifeUI();
-                panelManager.UpdateCallButtonText();
-            }
-        }
-    }
-
-    public void RevealCards()
-    {
-        if (!cardsRevealed)
-        {
-            // プレイヤーのカードを表向きにする
-            Debug.Log("RevealCards called");
-            // プレイヤーのカードはすでに表向きなのでSetCard不要
-            // 相手のカードを表向きにする
-            if (opponentCard != null)
-            {
-                CardDisplay opponentCardDisplay = opponentCard.GetComponent<CardDisplay>();
-                if (opponentCardDisplay != null)
-                {
-                    opponentCardDisplay.SetCard(true);
-                }
-            }
-
-            cardsRevealed = true;
-
-            // 勝敗判定を表示
-            if (deckManager != null)
-            {
-                if (resultViewManager == null)
-                {
-                    resultViewManager = FindObjectOfType<ResultViewManager>();
-                    if (resultViewManager == null)
-                    {
-                        Debug.LogError("ResultViewManager not found in the scene!");
-                        return;
-                    }
-                }
-                StartCoroutine(ShowResultWithDelay(deckManager));
-            }
-            else
-            {
-                Debug.LogError("deckManager not found!");
-            }
-        }
-    }
-
-    private IEnumerator ShowResultWithDelay(DeckManager deckManager)
-    {
-        if (resultViewManager == null || deckManager == null)
-        {
-            Debug.LogError("Required components are missing for showing results!");
-            yield break;
-        }
-
-        yield return new WaitForSeconds(1f);
-
-        if (setPlayerCard != null)
-        {
-            int playerCardValue = setPlayerCard.GetComponent<CardDisplay>().CardValue;
-            int opponentCardValue = setOpponentCard.GetComponent<CardDisplay>().CardValue;
-            Debug.Log($"Showing result - Player: {playerCardValue}, Opponent: {opponentCardValue}");
-            panelManager.ShowResultPanel(playerCardValue, opponentCardValue);
-            resultViewManager.ShowResultTable(playerCardValue, opponentCardValue);
-            UpdateLife(playerCardValue, opponentCardValue);
-        }
-        else
-        {
-            Debug.LogError("No player cards found!");
-        }
-        
-        yield return new WaitForSeconds(3f);
-        panelManager.HidePanel(panelManager.resultPanel);
-
-        // 結果を表示したらベットボタン→スキルボタン
-        panelManager.ShowSkillUI();
-
-        matchManager.OnGameComplete();
-    }
-
-    // 1回の勝負が終わった後に残ライフを更新する
-    private void UpdateLife(int playerValue, int opponentValue)
-    {
-        Debug.Log($"Before result - Player Life: {matchManager.PlayerLife}, Opponent Life: {matchManager.OpponentLife}, Bet: {currentBetAmount}");
-
-        if (playerValue == opponentValue)
-        {
-            // 引き分けの場合は両者のライフを元に戻す
-            matchManager.UpdatePlayerLife(currentBetAmount);
-            matchManager.UpdateOpponentLife(currentBetAmount);
-            Debug.Log("Draw - Returning bets");
-        }
-        else if (resultViewManager.IsWinner(playerValue, opponentValue))
-        {
-            // プレイヤーの勝利
-            matchManager.UpdatePlayerLife(currentBetAmount*2);
-            Debug.Log($"Player wins - Player gains opponent's bet: {currentBetAmount*2}");
-        }
-        else
-        {
-            // 相手の勝利
-            matchManager.UpdateOpponentLife(currentBetAmount*2);
-            Debug.Log($"CPU wins - CPU gains player's bet: {currentBetAmount*2}");
-        }
-
-        Debug.Log($"After result - Player Life: {matchManager.PlayerLife}, Opponent Life: {matchManager.OpponentLife}");
-
-        checkGameOver = true;
-    }
-
-    public void ShowConfirmation(CardDisplay card, DropZone zone)
-    {
-        Debug.Log("ShowConfirmation called");
-        Debug.Log("number: " + card.GetComponent<CardDisplay>().CardValue);
-        currentCard = card;
-        currentZone = zone;
-        panelManager.confirmationPanel.SetActive(true);
-
-        // リスナーの多重登録防止
-        panelManager.yesButton.onClick.RemoveAllListeners();
-        panelManager.noButton.onClick.RemoveAllListeners();
-
-        panelManager.yesButton.onClick.AddListener(ConfirmPlacement);
-        panelManager.noButton.onClick.AddListener(CancelPlacement);
-    }
-
-    public void ConfirmPlacement()
-    {
-        currentCard.transform.position = currentZone.transform.position;
-        panelManager.confirmationPanel.SetActive(false);
-
-        // プレイヤーのカードをリストに追加
-        setPlayerCard = currentCard;
-
-        ResetState();
-        StartCoroutine(SetOpponentCardFlag());
-    }
-
-    public void PlaceOpponentCard(CardDisplay card, DropZone zone)
-    {
-        if (card != null && zone != null)
-        {
-            // カードをDropZoneの子にする（親子関係をセット）
-            card.transform.SetParent(zone.transform);
-
-            // カードの位置を整える（中央揃え）
-            card.transform.localPosition = Vector3.zero;
-
-            // カードの裏面を表示
-            CardDisplay cardDisplay = card.GetComponent<CardDisplay>();
-            if (cardDisplay != null)
-            {
-                cardDisplay.SetCard(false);
-            }
-            setOpponentCard = card;
-        }
-        else
-        {
-            Debug.LogError("Card or zone is null!");
-        }
-
-        StartCoroutine(SetBettingPhase());
-    }
-
-    public void CancelPlacement()
-    {
-        // カードを元の位置に戻す
-        var drag = currentCard.GetComponent<CardDraggable>();
-        if (drag != null)
-        {
-            currentCard.transform.SetParent(drag.OriginalParent);
-            currentCard.transform.position = drag.OriginalPosition;
-        }
-        
-        // パネル非表示 & 状態クリア
-        panelManager.confirmationPanel.SetActive(false);
-        ResetState();
-    }
-
-    public void SetOpponentCalled(bool called)
-    {
-        OpponentCalled = called;
-    }
-
-    private void ResetState()
-    {
-        currentCard = null;
-        currentZone = null;
-        panelManager.confirmationPanel.SetActive(false);
-        OpponentCalled = false;
-        cardsRevealed = false;
-        currentBetAmount = 0;
-        panelManager.UpdateCallButtonText();
-
-        // リスナーをリセット
-        panelManager.yesButton.onClick.RemoveAllListeners();
-        panelManager.noButton.onClick.RemoveAllListeners();
-    }
-
-    public void ResetCanUseSkill(){
-        playerCanUseScanSkill = true;
-        playerCanUseChangeSkill = true;
-        playerCanUseObstructSkill = true;
-        playerCanUseFakeOutSkill = true;
-        playerCanUseCopySkill = true;
-
-        opponentCanUseScanSkill = true;
-        opponentCanUseChangeSkill = true;
-        opponentCanUseObstructSkill = true;
-        opponentCanUseFakeOutSkill = true;
-        opponentCanUseCopySkill = true;
-    }
-
-
-
-    //////////////////////////////////////
-    ////////// CPUのランダム要素 //////////
-    //////////////////////////////////////
-
-    // CPUのセットするカードをランダムに選択
-    private CardDisplay GetRandomOpponentCard()
-    {
-        int randomIndex = Random.Range(0, 2);
-        return randomIndex == 0 ? deckManager.opponentCard1 : deckManager.opponentCard2;
-    }
+    // カード配置・スキル・ベットなどのイベントは
+    // サーバー同期用のメソッドをここに追加していく
+    // 例: public void PlaceCard(int cardId) { ... }
+    // 例: public void UseSkill(SkillType skill) { ... }
 
     [System.Serializable]
     private class OnlineGameDataWithCards
@@ -458,4 +92,19 @@ public class OnlineGameManager : MonoBehaviour
         public int[] player1Cards;
         public int[] player2Cards;
     }
+
+    
+    public void ConfirmPlacement() { /* TODO: 実装 */ }
+    public void CancelPlacement() { /* TODO: 実装 */ }
+    public void PlaceBet(int amount) { /* TODO: 実装 */ }
+    public int CurrentBetAmount { get; private set; }
+    public void SetOpponentCalled(bool called) { /* TODO: 実装 */ }
+    public void RevealCards() { /* TODO: 実装 */ }
+    public CardDisplay SetPlayerCard { get; }
+    public CardDisplay SetOpponentCard { get; }
+    public bool PlayerCanUseScanSkill { get; }
+    public bool PlayerCanUseChangeSkill { get; }
+    public bool PlayerCanUseObstructSkill { get; }
+    public bool PlayerCanUseFakeOutSkill { get; }
+    public bool PlayerCanUseCopySkill { get; }
 }

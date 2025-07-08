@@ -10,30 +10,62 @@ public class OnlineHandManager : MonoBehaviour
     // プレイヤーの手札をUIに反映
     public void SetPlayerHand(int[] cardIds)
     {
-        if (cardIds.Length > 0)
+        if (playerCard1 != null)
         {
-            playerCard1.SetCardValue(cardIds[0]);
-            playerCard1.SetCard(true); // 表向き
+            if (cardIds != null && cardIds.Length > 0)
+            {
+                playerCard1.SetCardValue(cardIds[0]);
+                playerCard1.SetCard(true); // 表向き
+            }
+            else
+            {
+                playerCard1.SetCardValue(0);
+                playerCard1.SetCard(true);
+            }
         }
-        if (cardIds.Length > 1)
+        if (playerCard2 != null)
         {
-            playerCard2.SetCardValue(cardIds[1]);
-            playerCard2.SetCard(true); // 表向き
+            if (cardIds != null && cardIds.Length > 1)
+            {
+                playerCard2.SetCardValue(cardIds[1]);
+                playerCard2.SetCard(true); // 表向き
+            }
+            else
+            {
+                playerCard2.SetCardValue(0);
+                playerCard2.SetCard(true);
+            }
         }
     }
 
     // 相手の手札をUIに反映（初期は裏向き）
     public void SetOpponentHand(int[] cardIds)
     {
-        if (cardIds.Length > 0)
+        if (opponentCard1 != null)
         {
-            opponentCard1.SetCardValue(cardIds[0]);
-            opponentCard1.SetCard(false); // 裏向き
+            if (cardIds != null && cardIds.Length > 0)
+            {
+                opponentCard1.SetCardValue(cardIds[0]);
+                opponentCard1.SetCard(false); // 裏向き
+            }
+            else
+            {
+                opponentCard1.SetCardValue(0);
+                opponentCard1.SetCard(false);
+            }
         }
-        if (cardIds.Length > 1)
+        if (opponentCard2 != null)
         {
-            opponentCard2.SetCardValue(cardIds[1]);
-            opponentCard2.SetCard(false); // 裏向き
+            if (cardIds != null && cardIds.Length > 1)
+            {
+                opponentCard2.SetCardValue(cardIds[1]);
+                opponentCard2.SetCard(false); // 裏向き
+            }
+            else
+            {
+                opponentCard2.SetCardValue(0);
+                opponentCard2.SetCard(false);
+            }
         }
     }
 } 

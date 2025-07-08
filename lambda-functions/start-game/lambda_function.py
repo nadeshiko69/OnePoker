@@ -118,6 +118,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'roomCode': room_code,
             'player1Id': player1_id,
             'player2Id': player2_id,
+            'player1Cards': player1_cards,
+            'player2Cards': player2_cards,
             'currentTurn': player1_id,
             'gamePhase': 'card_placement',
             'player1Life': 10,
