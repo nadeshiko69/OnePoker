@@ -340,7 +340,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4870535730830949973, guid: 816709cafd1f1a24abce8707547d9bd2, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -365,5 +365,5 @@ MonoBehaviour:
   numberText: {fileID: 3028796803225780537}
   markText: {fileID: 4376800749167064492}
   cardImage: {fileID: 1419736087886293770}
-  frontSprite: {fileID: 7704196095705134382, guid: 3ea6ec1eebeeaff4ba8f9b505dcf6ff4, type: 3}
+  frontSprite: {fileID: 4870535730830949973, guid: 816709cafd1f1a24abce8707547d9bd2, type: 3}
   backSprite: {fileID: 1827056050872044259, guid: c426aa303f23cd244b1c1aa1244dd2c4, type: 3}
