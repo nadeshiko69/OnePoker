@@ -47,13 +47,16 @@ public class OnlineGameManager : MonoBehaviour
 
         Debug.Log($"Managers found - matchManager: {matchManager != null}, resultViewManager: {resultViewManager != null}, panelManager: {panelManager != null}, skillManager: {skillManager != null}, handManager: {handManager != null}");
 
+        // gameDataをスコープ外で使えるように宣言
+        OnlineGameDataWithCards gameData = null;
+
         // OnlineGameDataから手札・プレイヤー情報を取得
         string gameDataJson = PlayerPrefs.GetString("OnlineGameData", "");
         Debug.Log($"OnlineGameData from PlayerPrefs: {gameDataJson}");
         
         if (!string.IsNullOrEmpty(gameDataJson))
         {
-            var gameData = JsonUtility.FromJson<OnlineGameDataWithCards>(gameDataJson);
+            gameData = JsonUtility.FromJson<OnlineGameDataWithCards>(gameDataJson);
             Debug.Log($"Parsed gameData: {gameData != null}");
             
             if (gameData != null)
@@ -90,6 +93,15 @@ public class OnlineGameManager : MonoBehaviour
         else
         {
             Debug.LogWarning("OnlineGameData is empty in PlayerPrefs");
+        }
+
+        // マッチング完了パネル表示（PanelManager経由）
+        if (panelManager != null && gameData != null)
+        {
+            string playerName = gameData.playerId;
+            string opponentName = gameData.opponentId;
+            Debug.Log($"[MatchStartPanel] playerName: {playerName}, opponentName: {opponentName}");
+            panelManager.ShowMatchStartPanel(playerName, opponentName, 3f);
         }
 
         // ライフUI初期化

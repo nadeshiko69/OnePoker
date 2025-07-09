@@ -25,16 +25,24 @@ public static class OnlineBattleStarter
         {
             var response = JsonUtility.FromJson<StartGameResponse>(request.downloadHandler.text);
 
+            // isPlayer1フラグでplayer1Id/player2Idを切り替え
+            string getOpponentId;
+            if (isPlayer1) {
+                getOpponentId = response.player2Id;
+            } else {
+                getOpponentId = response.player1Id;
+            }
+
             // ゲームデータを保存（カード配列も含める）
             var onlineGameData = new OnlineGameDataWithCards
             {
                 roomCode = roomCode,
                 playerId = playerId,
-                opponentId = opponentId,
+                opponentId = getOpponentId,
                 isPlayer1 = isPlayer1,
                 gameId = response.gameId,
                 player1Cards = response.player1Cards,
-                player2Cards = response.player2Cards
+                player2Cards = response.player2Cards,
             };
             string gameDataJson = JsonUtility.ToJson(onlineGameData);
             PlayerPrefs.SetString("OnlineGameData", gameDataJson);
@@ -76,5 +84,7 @@ public static class OnlineBattleStarter
         public string gameId;
         public int[] player1Cards;
         public int[] player2Cards;
+        public string player1Id;
+        public string player2Id;
     }
 } 

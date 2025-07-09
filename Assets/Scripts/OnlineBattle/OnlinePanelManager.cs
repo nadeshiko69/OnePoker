@@ -58,6 +58,14 @@ public class OnlinePanelManager : MonoBehaviour
     public GameObject resultPanel;
     public TextMeshProUGUI resultText;
 
+    // マッチング開始パネル
+    public GameObject matchStartPanel;
+    public TextMeshProUGUI playerNameText;
+    public TextMeshProUGUI opponentNameText;
+    // TODO: マッチング開始パネルにランク表示を追加
+    public TextMeshProUGUI playerRate;
+    public TextMeshProUGUI opponentRate;
+
     private OnlineResultViewManager resultViewManager;
     private OnlineGameManager gameManager;
     private OnlineMatchManager matchManager;
@@ -81,6 +89,7 @@ public class OnlinePanelManager : MonoBehaviour
         if (dropPanel != null) dropPanel.SetActive(false);
         if (descriptionSkillPanel != null) descriptionSkillPanel.SetActive(false);
         if (obstructPanel != null) obstructPanel.SetActive(false);
+        if (matchStartPanel != null) matchStartPanel.SetActive(false);
 
         Debug.Log("OnlinePanelManager - All panels set to inactive");
 
@@ -268,6 +277,23 @@ public class OnlinePanelManager : MonoBehaviour
         matchManager.OnGameComplete();
     }
 
+    public void ShowMatchStartPanel(string player1, string player2, float duration)
+    {
+        if (matchStartPanel != null && playerNameText != null && opponentNameText != null)
+        {
+            playerNameText.text = player1;
+            opponentNameText.text = player2;
+            matchStartPanel.SetActive(true);
+            StartCoroutine(HideMatchStartPanelAfterDelay(duration));
+        }
+    }
+
+    private IEnumerator HideMatchStartPanelAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (matchStartPanel != null)
+            matchStartPanel.SetActive(false);
+    }
     
     // パネルの状態をリセット
     public void ResetPanelState()
