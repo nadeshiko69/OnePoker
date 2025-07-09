@@ -36,6 +36,8 @@ public class OnlineGameManager : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("OnlineGameManager.Start() called");
+        
         // 各マネージャの取得
         matchManager = FindObjectOfType<OnlineMatchManager>();
         resultViewManager = FindObjectOfType<OnlineResultViewManager>();
@@ -43,28 +45,56 @@ public class OnlineGameManager : MonoBehaviour
         skillManager = FindObjectOfType<OnlineSkillManager>();
         handManager = FindObjectOfType<OnlineHandManager>();
 
+        Debug.Log($"Managers found - matchManager: {matchManager != null}, resultViewManager: {resultViewManager != null}, panelManager: {panelManager != null}, skillManager: {skillManager != null}, handManager: {handManager != null}");
+
         // OnlineGameDataから手札・プレイヤー情報を取得
         string gameDataJson = PlayerPrefs.GetString("OnlineGameData", "");
+        Debug.Log($"OnlineGameData from PlayerPrefs: {gameDataJson}");
+        
         if (!string.IsNullOrEmpty(gameDataJson))
         {
             var gameData = JsonUtility.FromJson<OnlineGameDataWithCards>(gameDataJson);
-            if (gameData != null && handManager != null)
+            Debug.Log($"Parsed gameData: {gameData != null}");
+            
+            if (gameData != null)
             {
-                isPlayer1 = gameData.isPlayer1;
-                playerId = gameData.playerId;
-                opponentId = gameData.opponentId;
+                Debug.Log($"GameData - isPlayer1: {gameData.isPlayer1}, playerId: {gameData.playerId}, opponentId: {gameData.opponentId}");
+                Debug.Log($"GameData - player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
+                Debug.Log($"GameData - player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+                
+                if (handManager != null)
+                {
+                    isPlayer1 = gameData.isPlayer1;
+                    playerId = gameData.playerId;
+                    opponentId = gameData.opponentId;
 
-                // 手札をセット
-                myHand = isPlayer1 ? gameData.player1Cards : gameData.player2Cards;
-                opponentHand = isPlayer1 ? gameData.player2Cards : gameData.player1Cards;
+                    // 手札をセット
+                    myHand = isPlayer1 ? gameData.player1Cards : gameData.player2Cards;
+                    opponentHand = isPlayer1 ? gameData.player2Cards : gameData.player1Cards;
 
-                handManager.SetPlayerHand(myHand);
-                handManager.SetOpponentHand(opponentHand);
+                    Debug.Log($"Setting hands - myHand: {(myHand != null ? string.Join(",", myHand) : "null")}, opponentHand: {(opponentHand != null ? string.Join(",", opponentHand) : "null")}");
+
+                    handManager.SetPlayerHand(myHand);
+                    handManager.SetOpponentHand(opponentHand);
+                }
+                else
+                {
+                    Debug.LogError("handManager is null!");
+                }
             }
+            else
+            {
+                Debug.LogError("Failed to parse OnlineGameData from JSON");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("OnlineGameData is empty in PlayerPrefs");
         }
 
         // ライフUI初期化
         UpdateLifeUI();
+        Debug.Log("OnlineGameManager.Start() completed");
     }
 
     // ライフUIの更新

@@ -23,12 +23,14 @@ public class CardDisplay : MonoBehaviour
     public void SetCardValue(int value)
     {
         cardValue = value;
+        Debug.Log($"CardDisplay.SetCardValue called: value={value}, gameObject={gameObject.name}");
     }
 
     // カードを設定
     public void SetCard(bool faceUp)
     {
         isFaceUp = faceUp;
+        Debug.Log($"CardDisplay.SetCard called: faceUp={faceUp}, cardValue={cardValue}, gameObject={gameObject.name}");
 
         if (isFaceUp)
         {
@@ -50,6 +52,12 @@ public class CardDisplay : MonoBehaviour
                 Color textColor = (mark == 0 || mark == 1) ? redColor : blackColor;
                 numberText.color = textColor;
                 markText.color = textColor;
+                
+                Debug.Log($"CardDisplay.SetCard (faceUp) - Updated UI: number={number}, mark={marks[mark]}, color={textColor}, gameObject={gameObject.name}");
+            }
+            else
+            {
+                Debug.LogError($"CardDisplay.SetCard (faceUp) - UI components null: numberText={numberText != null}, markText={markText != null}, gameObject={gameObject.name}");
             }
         }
         else
@@ -57,6 +65,7 @@ public class CardDisplay : MonoBehaviour
             cardImage.sprite = backSprite;
             numberText.enabled = false;
             markText.enabled = false;
+            Debug.Log($"CardDisplay.SetCard (faceDown) - Set to back sprite, gameObject={gameObject.name}");
         }
     }
 }

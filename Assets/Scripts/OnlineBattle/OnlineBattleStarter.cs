@@ -25,14 +25,16 @@ public static class OnlineBattleStarter
         {
             var response = JsonUtility.FromJson<StartGameResponse>(request.downloadHandler.text);
 
-            // ゲームデータを保存
-            var onlineGameData = new OnlineGameData
+            // ゲームデータを保存（カード配列も含める）
+            var onlineGameData = new OnlineGameDataWithCards
             {
                 roomCode = roomCode,
                 playerId = playerId,
                 opponentId = opponentId,
                 isPlayer1 = isPlayer1,
-                gameId = response.gameId
+                gameId = response.gameId,
+                player1Cards = response.player1Cards,
+                player2Cards = response.player2Cards
             };
             string gameDataJson = JsonUtility.ToJson(onlineGameData);
             PlayerPrefs.SetString("OnlineGameData", gameDataJson);
@@ -56,6 +58,8 @@ public static class OnlineBattleStarter
         public string roomCode;
         public string player1Id;
         public string player2Id;
+        public int[] player1Cards;
+        public int[] player2Cards;
         public string currentTurn;
         public string gamePhase;
         public int player1Life;
@@ -63,12 +67,14 @@ public static class OnlineBattleStarter
     }
 
     [System.Serializable]
-    private class OnlineGameData
+    private class OnlineGameDataWithCards
     {
         public string roomCode;
         public string playerId;
         public string opponentId;
         public bool isPlayer1;
         public string gameId;
+        public int[] player1Cards;
+        public int[] player2Cards;
     }
 } 

@@ -65,10 +65,14 @@ public class OnlinePanelManager : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("OnlinePanelManager.Start() called");
+        
         resultViewManager = FindObjectOfType<OnlineResultViewManager>();
         gameManager = FindObjectOfType<OnlineGameManager>();
         matchManager = FindObjectOfType<OnlineMatchManager>();
         skillManager = FindObjectOfType<OnlineSkillManager>();
+
+        Debug.Log($"OnlinePanelManager - Managers found: resultViewManager={resultViewManager != null}, gameManager={gameManager != null}, matchManager={matchManager != null}, skillManager={skillManager != null}");
 
         if (resultPanel != null) resultPanel.SetActive(false);
         if (confirmationPanel != null) confirmationPanel.SetActive(false);
@@ -78,11 +82,31 @@ public class OnlinePanelManager : MonoBehaviour
         if (descriptionSkillPanel != null) descriptionSkillPanel.SetActive(false);
         if (obstructPanel != null) obstructPanel.SetActive(false);
 
+        Debug.Log("OnlinePanelManager - All panels set to inactive");
+
         // ボタンUIの初期化
-        yesButton.onClick.AddListener(gameManager.ConfirmPlacement);
-        noButton.onClick.AddListener(gameManager.CancelPlacement);
+        if (yesButton != null && gameManager != null)
+        {
+            yesButton.onClick.AddListener(gameManager.ConfirmPlacement);
+            Debug.Log("OnlinePanelManager - yesButton listener added");
+        }
+        else
+        {
+            Debug.LogError($"OnlinePanelManager - yesButton or gameManager is null: yesButton={yesButton != null}, gameManager={gameManager != null}");
+        }
+        
+        if (noButton != null && gameManager != null)
+        {
+            noButton.onClick.AddListener(gameManager.CancelPlacement);
+            Debug.Log("OnlinePanelManager - noButton listener added");
+        }
+        else
+        {
+            Debug.LogError($"OnlinePanelManager - noButton or gameManager is null: noButton={noButton != null}, gameManager={gameManager != null}");
+        }
         
         ShowSkillUI();
+        Debug.Log("OnlinePanelManager.Start() completed");
     }
 
     public void ShowSkillUI()
