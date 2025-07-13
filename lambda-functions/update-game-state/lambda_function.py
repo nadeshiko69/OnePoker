@@ -3,9 +3,23 @@ import boto3
 import time
 from datetime import datetime
 from typing import Dict, Any
+import decimal
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('GameStates')
+
+def convert_decimal(obj):
+    if isinstance(obj, list):
+        return [convert_decimal(i) for i in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_decimal(v) for k, v in obj.items()}
+    elif isinstance(obj, decimal.Decimal):
+        if obj % 1 == 0:
+            return int(obj)
+        else:
+            return float(obj)
+    else:
+        return obj
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
@@ -223,11 +237,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
-            'body': json.dumps({
-                'success': True,
-                'message': f'{action_type} action completed successfully',
-                'updatedGameState': update_data
-            })
+            'body': json.dumps(convert_decimal(update_data))
         }
         
     except Exception as error:

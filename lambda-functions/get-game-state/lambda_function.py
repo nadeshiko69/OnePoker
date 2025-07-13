@@ -2,9 +2,23 @@ import json
 import boto3
 import time
 from typing import Dict, Any
+import decimal
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('GameStates')
+
+def convert_decimal(obj):
+    if isinstance(obj, list):
+        return [convert_decimal(i) for i in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_decimal(v) for k, v in obj.items()}
+    elif isinstance(obj, decimal.Decimal):
+        if obj % 1 == 0:
+            return int(obj)
+        else:
+            return float(obj)
+    else:
+        return obj
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
@@ -51,21 +65,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         game_state = response['Item']
-        
-        # プレイヤーがこのゲームに参加しているかチェック
-        if player_id not in [game_state['player1Id'], game_state['player2Id']]:
-            return {
-                'statusCode': 403,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS'
-                },
-                'body': json.dumps({
-                    'error': 'Player not authorized to access this game'
-                })
-            }
         
         # set_phaseから自動的にcard_placementに移行する処理
         if game_state['gamePhase'] == 'set_phase':
@@ -148,7 +147,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Methods': 'GET, OPTIONS'
             },
-            'body': json.dumps(response_data)
+            'body': json.dumps(convert_decimal(response_data))
         }
         
     except Exception as error:

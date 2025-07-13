@@ -24,6 +24,8 @@ namespace OnePoker.Network
             }
         }
 
+        private const string ApiBaseUrl = "https://5tp37snsbk.execute-api.ap-northeast-1.amazonaws.com/dev";
+
         [Serializable]
         private class GenericErrorResponse
         {
@@ -59,7 +61,7 @@ namespace OnePoker.Network
             Action<string> onSuccess,
             Action<string> onError)
         {
-            string url = $"https://your-api-gateway-url/get-game-state?gameId={gameId}&playerId={playerId}";
+            string url = $"{ApiBaseUrl}/get-state?gameId={gameId}&playerId={playerId}";
             Debug.Log($"HttpManager - Calling get-game-state API: {url}");
             
             Get<GameStateResponse>(
