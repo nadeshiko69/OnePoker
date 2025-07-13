@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using System.Collections.Generic;
+using OnePoker.Network;
 
 public class OnlineGameManager : MonoBehaviour
 {
@@ -33,6 +34,13 @@ public class OnlineGameManager : MonoBehaviour
     // ライフ
     public TextMeshProUGUI playerLifeText;
     public TextMeshProUGUI opponentLifeText;
+
+    // ゲームフェーズ管理
+    private bool isSetPhaseActive = false;
+    private bool canSetCard = false;
+    private string currentGameId = "";
+    private string currentPlayerId = "";
+    private Coroutine gamePhaseMonitorCoroutine;
 
     void Start()
     {
@@ -107,6 +115,19 @@ public class OnlineGameManager : MonoBehaviour
         // ライフUI初期化
         UpdateLifeUI();
         Debug.Log("OnlineGameManager.Start() completed");
+
+        // ゲームフェーズ監視を開始
+        if (gameData != null)
+        {
+            currentGameId = gameData.gameId;
+            currentPlayerId = gameData.playerId;
+            Debug.Log($"OnlineGameManager - Starting game phase monitoring for gameId: {currentGameId}, playerId: {currentPlayerId}");
+            StartGamePhaseMonitoring();
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - gameData is null, cannot start phase monitoring");
+        }
     }
 
     // ライフUIの更新
@@ -116,6 +137,146 @@ public class OnlineGameManager : MonoBehaviour
             playerLifeText.text = $"Life: {matchManager.PlayerLife}";
         if (opponentLifeText != null)
             opponentLifeText.text = $"Life: {matchManager.OpponentLife}";
+    }
+
+    // ゲームフェーズ監視を開始
+    private void StartGamePhaseMonitoring()
+    {
+        if (gamePhaseMonitorCoroutine != null)
+        {
+            StopCoroutine(gamePhaseMonitorCoroutine);
+        }
+        gamePhaseMonitorCoroutine = StartCoroutine(MonitorGamePhase());
+    }
+
+    // ゲームフェーズを定期的に監視
+    private IEnumerator MonitorGamePhase()
+    {
+        Debug.Log("OnlineGameManager - Starting game phase monitoring coroutine");
+        
+        while (true)
+        {
+            yield return new WaitForSeconds(0.5f); // 0.5秒ごとに状態確認
+            
+            if (!string.IsNullOrEmpty(currentGameId) && !string.IsNullOrEmpty(currentPlayerId))
+            {
+                StartCoroutine(CheckGamePhase());
+            }
+            else
+            {
+                Debug.LogWarning("OnlineGameManager - gameId or playerId is empty, skipping phase check");
+            }
+        }
+    }
+
+    // ゲームフェーズを確認
+    private IEnumerator CheckGamePhase()
+    {
+        try
+        {
+            Debug.Log($"OnlineGameManager - Checking game phase for gameId: {currentGameId}, playerId: {currentPlayerId}");
+            
+            // HttpManagerを使用してget-game-state APIを呼び出す
+            HttpManager.Instance.GetGameState(currentGameId, currentPlayerId, OnGameStateReceived, OnGameStateError);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"OnlineGameManager - Error checking game phase: {e.Message}");
+        }
+        
+        yield return null; // 非同期処理のため、yield return null
+    }
+
+    // ゲーム状態を受信した時の処理
+    private void OnGameStateReceived(string response)
+    {
+        try
+        {
+            Debug.Log($"OnlineGameManager - Received game state: {response}");
+            
+            // JSONをパース
+            var gameState = JsonUtility.FromJson<GameStateResponse>(response);
+            
+            if (gameState != null)
+            {
+                HandleGamePhaseChange(gameState.gamePhase);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"OnlineGameManager - Error parsing game state: {e.Message}");
+        }
+    }
+
+    // ゲーム状態エラー時の処理
+    private void OnGameStateError(string error)
+    {
+        Debug.LogError($"OnlineGameManager - Game state error: {error}");
+    }
+
+    // ゲームフェーズ変更を処理
+    private void HandleGamePhaseChange(string newPhase)
+    {
+        Debug.Log($"OnlineGameManager - Handling phase change to: {newPhase}");
+        
+        switch (newPhase)
+        {
+            case "set_phase":
+                if (!isSetPhaseActive)
+                {
+                    isSetPhaseActive = true;
+                    canSetCard = false;
+                    if (panelManager != null)
+                    {
+                        panelManager.ShowStartPhasePanel("Set Phase", "カードをSetZoneにセットしてください");
+                        Debug.Log("OnlineGameManager - Set Phase started");
+                        Debug.Log("OnlineGameManager - Lambda function: set_phase phase activated");
+                    }
+                }
+                break;
+                
+            case "card_placement":
+                if (isSetPhaseActive)
+                {
+                    isSetPhaseActive = false;
+                    canSetCard = true;
+                    if (panelManager != null)
+                    {
+                        panelManager.HideStartPhasePanel();
+                        Debug.Log("OnlineGameManager - Set Phase ended, card placement enabled");
+                        Debug.Log("OnlineGameManager - Lambda function: card_placement phase activated");
+                    }
+                }
+                break;
+
+            case "betting":
+                if (panelManager != null)
+                {
+                    panelManager.ShowBettingPhasePanel();
+                    Debug.Log("OnlineGameManager - Betting Phase started");
+                    Debug.Log("OnlineGameManager - Lambda function: betting phase activated");
+                }
+                break;
+
+            case "reveal":
+                if (panelManager != null)
+                {
+                    panelManager.ShowRevealPhasePanel();
+                    Debug.Log("OnlineGameManager - Reveal Phase started");
+                    Debug.Log("OnlineGameManager - Lambda function: reveal phase activated");
+                }
+                break;
+                
+            default:
+                Debug.Log($"OnlineGameManager - Unknown game phase: {newPhase}");
+                break;
+        }
+    }
+
+    // カードセット可能かどうかを取得
+    public bool CanSetCard()
+    {
+        return canSetCard;
     }
 
     // カード配置・スキル・ベットなどのイベントは
@@ -133,6 +294,27 @@ public class OnlineGameManager : MonoBehaviour
         public string gameId;
         public int[] player1Cards;
         public int[] player2Cards;
+    }
+
+    [System.Serializable]
+    private class GameStateResponse
+    {
+        public string gameId;
+        public string gamePhase;
+        public long phaseTransitionTime;
+        public string currentTurn;
+        public int player1Life;
+        public int player2Life;
+        public int currentBet;
+        public bool player1CardPlaced;
+        public bool player2CardPlaced;
+        public int[] myCards;
+        public int myLife;
+        public int myBetAmount;
+        public bool myCardPlaced;
+        public bool opponentCardPlaced;
+        public int? opponentPlacedCardId;
+        public string updatedAt;
     }
 
     

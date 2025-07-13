@@ -85,6 +85,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         player2_cards = shuffled_deck[2:4]
         remaining_deck = shuffled_deck[4:]
         
+        # 現在時刻を取得
+        current_time = int(time.time())
+        
         # ゲーム状態を作成
         game_state = {
             'gameId': game_id,
@@ -98,15 +101,16 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2Life': 10,
             'currentBet': 0,
             'currentTurn': player1_id,  # 先手はplayer1
-            'gamePhase': 'card_placement',  # card_placement, betting, reveal
+            'gamePhase': 'set_phase',  # 最初はset_phaseから開始
+            'phaseTransitionTime': current_time + 1,  # 1秒後にcard_placementに移行
             'player1CardPlaced': False,
             'player2CardPlaced': False,
             'player1BetAmount': 0,
             'player2BetAmount': 0,
             'player1PlacedCard': None,
             'player2PlacedCard': None,
-            'createdAt': int(time.time()),
-            'updatedAt': int(time.time())
+            'createdAt': current_time,
+            'updatedAt': current_time
         }
         
         # DynamoDBにゲーム状態を保存
@@ -121,7 +125,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player1Cards': player1_cards,
             'player2Cards': player2_cards,
             'currentTurn': player1_id,
-            'gamePhase': 'card_placement',
+            'gamePhase': 'set_phase',
+            'phaseTransitionTime': current_time + 1,
             'player1Life': 10,
             'player2Life': 10
         }

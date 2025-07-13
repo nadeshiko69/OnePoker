@@ -1,5 +1,6 @@
 import json
 import boto3
+import time
 from typing import Dict, Any
 
 dynamodb = boto3.resource('dynamodb')
@@ -66,6 +67,33 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 })
             }
         
+        # set_phaseから自動的にcard_placementに移行する処理
+        if game_state['gamePhase'] == 'set_phase':
+            current_time = int(time.time())
+            phase_transition_time = game_state.get('phaseTransitionTime', 0)
+            
+            if current_time >= phase_transition_time:
+                # 自動移行を実行
+                update_expression = 'SET gamePhase = :gamePhase, phaseTransitionTime = :phaseTransitionTime, updatedAt = :updatedAt'
+                expression_attribute_values = {
+                    ':gamePhase': 'card_placement',
+                    ':phaseTransitionTime': None,
+                    ':updatedAt': current_time
+                }
+                
+                table.update_item(
+                    Key={'gameId': game_id},
+                    UpdateExpression=update_expression,
+                    ExpressionAttributeValues=expression_attribute_values
+                )
+                
+                # ゲーム状態を更新
+                game_state['gamePhase'] = 'card_placement'
+                game_state['phaseTransitionTime'] = None
+                game_state['updatedAt'] = current_time
+                
+                print(f"Auto-transitioning from set_phase to card_placement for game {game_id}")
+        
         # プレイヤーIDに応じて適切な情報を返す
         is_player1 = player_id == game_state['player1Id']
         
@@ -85,6 +113,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2BetAmount': game_state['player2BetAmount'],
             'updatedAt': game_state['updatedAt']
         }
+        
+        # phaseTransitionTimeが存在する場合は追加
+        if 'phaseTransitionTime' in game_state and game_state['phaseTransitionTime'] is not None:
+            response_data['phaseTransitionTime'] = game_state['phaseTransitionTime']
         
         # 自分のカードのみを返す
         if is_player1:

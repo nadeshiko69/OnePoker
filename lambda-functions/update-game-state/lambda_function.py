@@ -1,5 +1,6 @@
 import json
 import boto3
+import time
 from datetime import datetime
 from typing import Dict, Any
 
@@ -89,6 +90,16 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         is_player1 = player_id == game_state['player1Id']
         update_data = {}
         
+        # set_phaseから自動的にcard_placementに移行する処理
+        if game_state['gamePhase'] == 'set_phase':
+            current_time = int(time.time())
+            phase_transition_time = game_state.get('phaseTransitionTime', 0)
+            
+            if current_time >= phase_transition_time:
+                update_data['gamePhase'] = 'card_placement'
+                update_data['phaseTransitionTime'] = None  # 移行完了後はクリア
+                print(f"Auto-transitioning from set_phase to card_placement for game {game_id}")
+        
         if action_type == 'place_card':
             # カード配置処理
             card_id = action_data.get('cardId')
@@ -171,6 +182,19 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             # ターンを相手に移す
             update_data['currentTurn'] = game_state['player2Id'] if is_player1 else game_state['player1Id']
+        
+        elif action_type == 'check_phase_transition':
+            # フェーズ移行確認処理（set_phaseからcard_placementへの自動移行）
+            current_time = int(time.time())
+            phase_transition_time = game_state.get('phaseTransitionTime', 0)
+            
+            if game_state['gamePhase'] == 'set_phase' and current_time >= phase_transition_time:
+                update_data['gamePhase'] = 'card_placement'
+                update_data['phaseTransitionTime'] = None
+                print(f"Phase transition confirmed: set_phase -> card_placement for game {game_id}")
+            else:
+                # 移行条件を満たしていない場合は何もしない
+                print(f"Phase transition not ready yet for game {game_id}")
         
         else:
             return create_error_response(f'Unknown action type: {action_type}')

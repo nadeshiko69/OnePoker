@@ -35,7 +35,7 @@ public class CreateRoomManager : MonoBehaviour
     // API GatewayのエンドポイントURL
     private string apiUrl = "https://lbr9cfjhuk.execute-api.ap-northeast-1.amazonaws.com/dev/create";
     private string checkMatchUrl = "https://lbr9cfjhuk.execute-api.ap-northeast-1.amazonaws.com/dev/check-match";
-    private string startGameUrl = "https://lbr9cfjhuk.execute-api.ap-northeast-1.amazonaws.com/dev/start-game";
+    private string startGameUrl = "https://5tp37snsbk.execute-api.ap-northeast-1.amazonaws.com/dev/start-game";
     
     void Start()
     {

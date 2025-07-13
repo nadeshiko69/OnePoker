@@ -66,6 +66,11 @@ public class OnlinePanelManager : MonoBehaviour
     public TextMeshProUGUI playerRate;
     public TextMeshProUGUI opponentRate;
 
+    // Set Phase用のUI
+    public GameObject startPhasePanel;
+    public TextMeshProUGUI startPhaseTitle;
+    public TextMeshProUGUI startPhaseDescription;
+
     private OnlineResultViewManager resultViewManager;
     private OnlineGameManager gameManager;
     private OnlineMatchManager matchManager;
@@ -90,6 +95,7 @@ public class OnlinePanelManager : MonoBehaviour
         if (descriptionSkillPanel != null) descriptionSkillPanel.SetActive(false);
         if (obstructPanel != null) obstructPanel.SetActive(false);
         if (matchStartPanel != null) matchStartPanel.SetActive(false);
+        if (startPhasePanel != null) startPhasePanel.SetActive(false);
 
         Debug.Log("OnlinePanelManager - All panels set to inactive");
 
@@ -375,5 +381,76 @@ public class OnlinePanelManager : MonoBehaviour
         if (betMinusButton != null) betMinusButton.interactable = interactable;
         if (callButton != null) callButton.interactable = interactable;
         if (dropButton != null) dropButton.interactable = interactable;
+    }
+
+    // Set Phaseパネルの表示/非表示
+    public void ShowStartPhasePanel(string title = "Set Phase", string description = "カードをSetZoneにセットしてください")
+    {
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(true);
+            
+            // タイトルとテキストを設定
+            if (startPhaseTitle != null)
+            {
+                startPhaseTitle.text = title;
+                Debug.Log($"OnlinePanelManager - Set startPhaseTitle to: '{title}'");
+            }
+            else
+            {
+                Debug.LogWarning("OnlinePanelManager - startPhaseTitle is null!");
+            }
+            
+            if (startPhaseDescription != null)
+            {
+                startPhaseDescription.text = description;
+                Debug.Log($"OnlinePanelManager - Set startPhaseDescription to: '{description}'");
+            }
+            else
+            {
+                Debug.LogWarning("OnlinePanelManager - startPhaseDescription is null!");
+            }
+            
+            Debug.Log($"OnlinePanelManager - StartPhasePanel shown with title: '{title}', description: '{description}'");
+        }
+        else
+        {
+            Debug.LogError("OnlinePanelManager - startPhasePanel is null!");
+        }
+    }
+
+    public void HideStartPhasePanel()
+    {
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - StartPhasePanel hidden");
+        }
+        else
+        {
+            Debug.LogError("OnlinePanelManager - startPhasePanel is null!");
+        }
+    }
+
+    // 汎用的なフェーズパネル表示メソッド
+    public void ShowPhasePanel(string title, string description)
+    {
+        ShowStartPhasePanel(title, description);
+    }
+
+    // 特定のフェーズ用のパネル表示メソッド
+    public void ShowBettingPhasePanel()
+    {
+        ShowStartPhasePanel("Betting Phase", "ベット額を設定してください");
+    }
+
+    public void ShowRevealPhasePanel()
+    {
+        ShowStartPhasePanel("Reveal Phase", "カードを公開します");
+    }
+
+    public void ShowGameOverPanel(string result)
+    {
+        ShowStartPhasePanel("Game Over", result);
     }
 }

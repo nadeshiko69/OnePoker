@@ -24,6 +24,13 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // オンライン対戦時のカードセット可能フラグをチェック
+        if (IsOnlineBattle() && !CanSetCardInOnlineBattle())
+        {
+            Debug.Log("CardDraggable - Cannot drag card in online battle: Set Phase not active");
+            return;
+        }
+
         draggedCard = gameObject;
         originalPosition = transform.position;
         originalParent = transform.parent;
@@ -36,6 +43,8 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
         // 親をCanvasに変更（ドラッグ時に他の UI の影響を受けないように）
         transform.SetParent(transform.root);
+        
+        Debug.Log("CardDraggable - Started dragging card");
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -59,5 +68,24 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         }
 
         draggedCard = null;
+        Debug.Log("CardDraggable - Ended dragging card");
+    }
+
+    // オンライン対戦かどうかを判定
+    private bool IsOnlineBattle()
+    {
+        // OnlineGameManagerが存在するかどうかで判定
+        return FindObjectOfType<OnlineGameManager>() != null;
+    }
+
+    // オンライン対戦時にカードセット可能かどうかを判定
+    private bool CanSetCardInOnlineBattle()
+    {
+        var onlineGameManager = FindObjectOfType<OnlineGameManager>();
+        if (onlineGameManager != null)
+        {
+            return onlineGameManager.CanSetCard();
+        }
+        return true; // オンライン対戦でない場合は常にtrue
     }
 }
