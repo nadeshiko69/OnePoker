@@ -88,6 +88,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # 現在時刻を取得
         current_time = int(time.time())
         
+        # フェーズ移行時間を設定（3秒後）
+        phase_transition_time = current_time + 3
+        
+        print(f"Game {game_id}: Starting with set_phase, current_time={current_time}, phase_transition_time={phase_transition_time}")
+        
         # ゲーム状態を作成
         game_state = {
             'gameId': game_id,
@@ -102,7 +107,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'currentBet': 0,
             'currentTurn': player1_id,  # 先手はplayer1
             'gamePhase': 'set_phase',  # 最初はset_phaseから開始
-            'phaseTransitionTime': current_time + 1,  # 1秒後にcard_placementに移行
+            'phaseTransitionTime': phase_transition_time,  # 1秒後にcard_placementに移行
             'player1CardPlaced': False,
             'player2CardPlaced': False,
             'player1BetAmount': 0,

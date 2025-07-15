@@ -156,7 +156,7 @@ public class OnlineGameManager : MonoBehaviour
         
         while (true)
         {
-            yield return new WaitForSeconds(0.5f); // 0.5秒ごとに状態確認
+            yield return new WaitForSeconds(0.1f); // 0.1秒ごとに状態確認（短縮）
             
             if (!string.IsNullOrEmpty(currentGameId) && !string.IsNullOrEmpty(currentPlayerId))
             {
@@ -218,20 +218,31 @@ public class OnlineGameManager : MonoBehaviour
     private void HandleGamePhaseChange(string newPhase)
     {
         Debug.Log($"OnlineGameManager - Handling phase change to: {newPhase}");
+        Debug.Log($"OnlineGameManager - Current state: isSetPhaseActive={isSetPhaseActive}, canSetCard={canSetCard}");
         
         switch (newPhase)
         {
             case "set_phase":
+                Debug.Log("OnlineGameManager - Processing set_phase case");
                 if (!isSetPhaseActive)
                 {
                     isSetPhaseActive = true;
                     canSetCard = false;
+                    Debug.Log("OnlineGameManager - Activating set phase");
                     if (panelManager != null)
                     {
                         panelManager.ShowStartPhasePanel("Set Phase", "カードをSetZoneにセットしてください");
                         Debug.Log("OnlineGameManager - Set Phase started");
                         Debug.Log("OnlineGameManager - Lambda function: set_phase phase activated");
                     }
+                    else
+                    {
+                        Debug.LogError("OnlineGameManager - panelManager is null!");
+                    }
+                }
+                else
+                {
+                    Debug.Log("OnlineGameManager - Set phase already active, skipping");
                 }
                 break;
                 

@@ -1526,6 +1526,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 133013b44e3e7a54a82ed20c07a8aa3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  matchStartPanel: {fileID: 1500271825}
+  playerNameText: {fileID: 1104976589}
+  opponentNameText: {fileID: 1263128802}
+  playerRate: {fileID: 1594887158}
+  opponentRate: {fileID: 1297792601}
+  startPhasePanel: {fileID: 241110070}
+  startPhaseTitle: {fileID: 1270036994}
+  startPhaseDescription: {fileID: 1476344491}
   ScanSkillButton: {fileID: 1400056812}
   ChangeSkillButton: {fileID: 1168913272}
   ObstructSkillButton: {fileID: 315877830}
@@ -1550,16 +1558,11 @@ MonoBehaviour:
   dropButton: {fileID: 1908348655}
   openPanel: {fileID: 1139368100}
   dropPanel: {fileID: 1473246864}
-  resultPanel: {fileID: 2007954557}
-  resultText: {fileID: 1207794368}
-  matchStartPanel: {fileID: 1500271825}
-  playerNameText: {fileID: 1104976589}
-  opponentNameText: {fileID: 1263128802}
-  playerRate: {fileID: 1594887158}
-  opponentRate: {fileID: 1297792601}
-  startPhasePanel: {fileID: 241110070}
-  startPhaseTitle: {fileID: 1270036994}
-  startPhaseDescription: {fileID: 1476344491}
+  gameResultPanel: {fileID: 2007954557}
+  gameResultText: {fileID: 1207794368}
+  matchResultPanel: {fileID: 736612973}
+  matchResultText: {fileID: 1667555893}
+  matchRestartButton: {fileID: 1603740483}
 --- !u!1 &363663042
 GameObject:
   m_ObjectHideFlags: 0
@@ -4395,7 +4398,7 @@ GameObject:
   - component: {fileID: 736612976}
   - component: {fileID: 736612975}
   m_Layer: 5
-  m_Name: Panel_RevealMatchResult
+  m_Name: Panel_MatchResult
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13236,7 +13239,7 @@ GameObject:
   - component: {fileID: 2007954560}
   - component: {fileID: 2007954559}
   m_Layer: 5
-  m_Name: Panel_RevealResult
+  m_Name: Panel_GameResult
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

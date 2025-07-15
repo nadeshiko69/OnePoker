@@ -5,7 +5,21 @@ using UnityEngine.UI;
 
 public class OnlinePanelManager : MonoBehaviour
 {
-    // スキルボタン
+    [Header("◎　Start Match")]
+    public GameObject matchStartPanel;
+    public TextMeshProUGUI playerNameText;
+    public TextMeshProUGUI opponentNameText;
+    // TODO: マッチング開始パネルにランク表示を追加
+    public TextMeshProUGUI playerRate;
+    public TextMeshProUGUI opponentRate;
+
+    [Header("◎　Phase通知用UI")]
+    public GameObject startPhasePanel;
+    public TextMeshProUGUI startPhaseTitle;
+    public TextMeshProUGUI startPhaseDescription;
+
+    [Header("◎　Set Phase")]
+    [Header("スキルボタン")]
     public Button ScanSkillButton;
     public Button ChangeSkillButton;
     public Button ObstructSkillButton;
@@ -14,12 +28,13 @@ public class OnlinePanelManager : MonoBehaviour
     public Button ChangeCard1Button;
     public Button ChangeCard2Button;
 
-    // スキル使用確認用のUI
+    [Header("スキル確認パネル")]
     public GameObject descriptionSkillPanel;
     public TextMeshProUGUI skillNameText;
     public TextMeshProUGUI skillDescriptionText;
     public Button UseSkillButton;
     public Button CancelSkillButton;
+    public GameObject obstructPanel;
 
     private string descriptionScanSkill = "相手の手札を\n1枚ランダムに確認できます。";
     private string descriptionChangeSkill = "自分の手札を1枚捨て、\n山札から1枚引きます。";
@@ -32,44 +47,29 @@ public class OnlinePanelManager : MonoBehaviour
     public string DescriptionFakeOutSkill => descriptionFakeOutSkill;
     public string DescriptionCopySkill => descriptionCopySkill;
 
-    // プレイヤーがObstructスキルの被害を受けているか
-    public GameObject obstructPanel;
-
-    // セット確認用のUI
+    [Header("セット確認パネル")]
     public GameObject confirmationPanel;
     public Button yesButton;
     public Button noButton;
 
-    // ベットフェーズ用のUI
+    [Header("◎　Betting Phase")]
+    [Header("ベットパネル")]
     public GameObject bettingPanel;
+    [Header("ベット値設定ボタン")]
     public Button betPlusButton;
     public Button betMinusButton;
     public Button callButton;
     public TextMeshProUGUI callButtonText;
     public Button dropButton;
     
-    // オープンのUI
+    [Header("◎　Open Phase")]
     public GameObject openPanel;
-
-    // ドロップのUI
     public GameObject dropPanel;
-
-    // 勝敗表示用のUI
-    public GameObject resultPanel;
-    public TextMeshProUGUI resultText;
-
-    // マッチング開始パネル
-    public GameObject matchStartPanel;
-    public TextMeshProUGUI playerNameText;
-    public TextMeshProUGUI opponentNameText;
-    // TODO: マッチング開始パネルにランク表示を追加
-    public TextMeshProUGUI playerRate;
-    public TextMeshProUGUI opponentRate;
-
-    // Set Phase用のUI
-    public GameObject startPhasePanel;
-    public TextMeshProUGUI startPhaseTitle;
-    public TextMeshProUGUI startPhaseDescription;
+    public GameObject gameResultPanel;
+    public TextMeshProUGUI gameResultText;
+    public GameObject matchResultPanel;
+    public TextMeshProUGUI matchResultText;
+    public Button matchRestartButton;
 
     private OnlineResultViewManager resultViewManager;
     private OnlineGameManager gameManager;
@@ -87,7 +87,7 @@ public class OnlinePanelManager : MonoBehaviour
 
         Debug.Log($"OnlinePanelManager - Managers found: resultViewManager={resultViewManager != null}, gameManager={gameManager != null}, matchManager={matchManager != null}, skillManager={skillManager != null}");
 
-        if (resultPanel != null) resultPanel.SetActive(false);
+        if (gameResultPanel != null) gameResultPanel.SetActive(false);
         if (confirmationPanel != null) confirmationPanel.SetActive(false);
         if (bettingPanel != null) bettingPanel.SetActive(false);
         if (openPanel != null) openPanel.SetActive(false);
@@ -96,6 +96,7 @@ public class OnlinePanelManager : MonoBehaviour
         if (obstructPanel != null) obstructPanel.SetActive(false);
         if (matchStartPanel != null) matchStartPanel.SetActive(false);
         if (startPhasePanel != null) startPhasePanel.SetActive(false);
+        if (matchResultPanel != null) matchResultPanel.SetActive(false);
 
         Debug.Log("OnlinePanelManager - All panels set to inactive");
 
@@ -119,6 +120,11 @@ public class OnlinePanelManager : MonoBehaviour
         {
             Debug.LogError($"OnlinePanelManager - noButton or gameManager is null: noButton={noButton != null}, gameManager={gameManager != null}");
         }
+        
+        // 初期化時のボタン表示/非表示設定
+        VisibleSkillButtons(true);      // スキルボタンを表示
+        VisibleBetButtons(false);       // ベット設定ボタンを非表示
+        VisibleChangeCardButtons(false); // カード変更ボタンを非表示
         
         ShowSkillUI();
         Debug.Log("OnlinePanelManager.Start() completed");
@@ -179,26 +185,26 @@ public class OnlinePanelManager : MonoBehaviour
     }
 
     // 勝敗判定を行い結果を表示
-    public void ShowResultPanel(int SetPlayerCard, int SetOpponentCard)
+    public void ShowGameResultPanel(int SetPlayerCard, int SetOpponentCard)
     {
-        if (resultPanel != null && resultText != null)
+        if (gameResultPanel != null && gameResultText != null)
         {
-            resultPanel.SetActive(true);
+            gameResultPanel.SetActive(true);
 
             if (SetPlayerCard == SetOpponentCard)
             {
-                resultText.text = "DRAW";
-                resultText.color = Color.white;
+                gameResultText.text = "DRAW";
+                gameResultText.color = Color.white;
             }
             else if (resultViewManager.IsWinner(SetPlayerCard, SetOpponentCard))
             {
-                resultText.text = "YOU WIN!";
-                resultText.color = Color.red;
+                gameResultText.text = "YOU WIN!";
+                gameResultText.color = Color.red;
             }
             else
             {
-                resultText.text = "YOU LOSE...";
-                resultText.color = Color.blue;
+                gameResultText.text = "YOU LOSE...";
+                gameResultText.color = Color.blue;
             }
 
             Debug.Log($"Battle Result - Player: {SetPlayerCard} vs Opponent: {SetOpponentCard}");
@@ -268,11 +274,11 @@ public class OnlinePanelManager : MonoBehaviour
         dropPanel.SetActive(false);
 
         // 負けUIの表示（相手のDropを考慮して後々修正）
-        resultPanel.SetActive(true);
-        resultText.text = "YOU LOSE...";
-        resultText.color = Color.blue;
+        gameResultPanel.SetActive(true);
+        gameResultText.text = "YOU LOSE...";
+        gameResultText.color = Color.blue;
         yield return new WaitForSeconds(1f);
-        resultPanel.SetActive(false);
+        gameResultPanel.SetActive(false);
 
         // 相手勝ちとしてライフ更新
         matchManager.UpdateOpponentLife(gameManager.CurrentBetAmount);

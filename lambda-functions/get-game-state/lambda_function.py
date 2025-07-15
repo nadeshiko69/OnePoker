@@ -66,10 +66,16 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         game_state = response['Item']
         
+        # デバッグログを追加
+        print(f"Game {game_id}: Retrieved game state - gamePhase: {game_state.get('gamePhase')}, phaseTransitionTime: {game_state.get('phaseTransitionTime')}")
+        
         # set_phaseから自動的にcard_placementに移行する処理
         if game_state['gamePhase'] == 'set_phase':
             current_time = int(time.time())
             phase_transition_time = game_state.get('phaseTransitionTime', 0)
+            
+            # フェーズ移行のログを追加
+            print(f"Game {game_id}: current_time={current_time}, phase_transition_time={phase_transition_time}")
             
             if current_time >= phase_transition_time:
                 # 自動移行を実行
@@ -92,6 +98,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 game_state['updatedAt'] = current_time
                 
                 print(f"Auto-transitioning from set_phase to card_placement for game {game_id}")
+            else:
+                # まだ移行時間に達していない場合はset_phaseのまま
+                remaining_time = phase_transition_time - current_time
+                print(f"Game {game_id}: Still in set_phase, remaining time: {remaining_time} seconds")
         
         # プレイヤーIDに応じて適切な情報を返す
         is_player1 = player_id == game_state['player1Id']
