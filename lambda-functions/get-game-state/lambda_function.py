@@ -102,6 +102,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 # まだ移行時間に達していない場合はset_phaseのまま
                 remaining_time = phase_transition_time - current_time
                 print(f"Game {game_id}: Still in set_phase, remaining time: {remaining_time} seconds")
+                # set_phaseのまま返す（移行しない）
+                pass
         
         # プレイヤーIDに応じて適切な情報を返す
         is_player1 = player_id == game_state['player1Id']
