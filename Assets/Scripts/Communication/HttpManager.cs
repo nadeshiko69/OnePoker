@@ -102,6 +102,36 @@ namespace OnePoker.Network
             );
         }
 
+        public void UpdateGameState(
+            string gameId,
+            string playerId,
+            string actionType,
+            object actionData,
+            Action<string> onSuccess,
+            Action<string> onError)
+        {
+            string url = $"{ApiBaseUrl}/update-game-state";
+            string jsonBody = JsonUtility.ToJson(new UpdateGameStateRequest
+            {
+                gameId = gameId,
+                playerId = playerId,
+                actionType = actionType,
+                actionData = actionData
+            });
+            
+            Debug.Log($"HttpManager - Calling update-game-state API: {url}, body: {jsonBody}");
+            
+            Post<UpdateGameStateResponse>(
+                url,
+                jsonBody,
+                (response) => {
+                    string responseJson = JsonUtility.ToJson(response);
+                    onSuccess?.Invoke(responseJson);
+                },
+                onError
+            );
+        }
+
         [System.Serializable]
         private class GameStateResponse
         {
@@ -136,6 +166,22 @@ namespace OnePoker.Network
         {
             public bool success;
             public long phaseTransitionTime;
+            public string message;
+        }
+
+        [System.Serializable]
+        private class UpdateGameStateRequest
+        {
+            public string gameId;
+            public string playerId;
+            public string actionType;
+            public object actionData;
+        }
+
+        [System.Serializable]
+        private class UpdateGameStateResponse
+        {
+            public bool success;
             public string message;
         }
 

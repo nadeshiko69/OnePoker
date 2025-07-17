@@ -104,4 +104,12 @@ public class OnlineHandManager : MonoBehaviour
         
         Debug.Log("SetOpponentHand completed");
     }
+
+    // 指定されたカードがプレイヤーのカードかどうかを判定
+    public bool IsPlayerCard(CardDisplay card)
+    {
+        if (card == null) return false;
+        
+        return card == playerCard1 || card == playerCard2;
+    }
 } 

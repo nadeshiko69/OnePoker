@@ -3197,8 +3197,8 @@ MonoBehaviour:
   gameOverPanel: {fileID: 2007954557}
   gameOverText: {fileID: 1207794368}
   restartButton: {fileID: 1603740483}
-  playerDropZone: {fileID: 2120547383}
-  opponentDropZone: {fileID: 1887968400}
+  playerDropZone: {fileID: 0}
+  opponentDropZone: {fileID: 0}
 --- !u!1 &593240512
 GameObject:
   m_ObjectHideFlags: 0
@@ -12200,7 +12200,7 @@ GameObject:
   - component: {fileID: 1887968403}
   - component: {fileID: 1887968402}
   - component: {fileID: 1887968401}
-  - component: {fileID: 1887968400}
+  - component: {fileID: 1887968404}
   m_Layer: 5
   m_Name: Opponent_DropZone
   m_TagString: Untagged
@@ -12208,20 +12208,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1887968400
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1887968399}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f665fa27f1afdd45b8a141766e954ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isPlayerZone: 0
-  zoneImage: {fileID: 1887968401}
 --- !u!114 &1887968401
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12279,6 +12265,20 @@ RectTransform:
   m_AnchoredPosition: {x: -250, y: -200}
   m_SizeDelta: {x: 200, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1887968404
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1887968399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea480a9571bda8c4aa7c2d477181132a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isPlayerZone: 0
+  zoneImage: {fileID: 1887968401}
 --- !u!1 &1898410583
 GameObject:
   m_ObjectHideFlags: 0
@@ -13689,7 +13689,7 @@ GameObject:
   - component: {fileID: 2120547382}
   - component: {fileID: 2120547385}
   - component: {fileID: 2120547384}
-  - component: {fileID: 2120547383}
+  - component: {fileID: 2120547386}
   m_Layer: 5
   m_Name: Player_DropZone
   m_TagString: Untagged
@@ -13716,20 +13716,6 @@ RectTransform:
   m_AnchoredPosition: {x: 250, y: -200}
   m_SizeDelta: {x: 200, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &2120547383
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2120547381}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f665fa27f1afdd45b8a141766e954ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isPlayerZone: 1
-  zoneImage: {fileID: 2120547384}
 --- !u!114 &2120547384
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13768,6 +13754,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2120547381}
   m_CullTransparentMesh: 1
+--- !u!114 &2120547386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2120547381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea480a9571bda8c4aa7c2d477181132a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isPlayerZone: 1
+  zoneImage: {fileID: 2120547384}
 --- !u!1 &2135009276
 GameObject:
   m_ObjectHideFlags: 0

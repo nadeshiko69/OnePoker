@@ -24,12 +24,16 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // オンライン対戦時のカードセット可能フラグをチェック
+        // オンライン対戦時のカードセット可能フラグをチェック（一時的に無効化）
+        /*
         if (IsOnlineBattle() && !CanSetCardInOnlineBattle())
         {
             Debug.Log("CardDraggable - Cannot drag card in online battle: Set Phase not active");
+            Debug.Log($"CardDraggable - Debug: IsOnlineBattle={IsOnlineBattle()}, CanSetCardInOnlineBattle={CanSetCardInOnlineBattle()}");
             return;
         }
+        */
+        Debug.Log("CardDraggable - Drag check bypassed for testing");
 
         draggedCard = gameObject;
         originalPosition = transform.position;
@@ -84,8 +88,11 @@ public class CardDraggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         var onlineGameManager = FindObjectOfType<OnlineGameManager>();
         if (onlineGameManager != null)
         {
-            return onlineGameManager.CanSetCard();
+            bool canSet = onlineGameManager.CanSetCard();
+            Debug.Log($"CardDraggable - CanSetCardInOnlineBattle: {canSet}");
+            return canSet;
         }
+        Debug.Log("CardDraggable - CanSetCardInOnlineBattle: No OnlineGameManager found, returning true");
         return true; // オンライン対戦でない場合は常にtrue
     }
 }

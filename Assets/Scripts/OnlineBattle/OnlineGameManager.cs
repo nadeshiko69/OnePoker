@@ -43,6 +43,12 @@ public class OnlineGameManager : MonoBehaviour
     private Coroutine gamePhaseMonitorCoroutine;
     private OnlineGameDataWithCards gameData; // ゲームデータを保存
 
+    // カード配置管理
+    private CardDisplay currentCard;
+    private OnlineDropZone currentZone;
+    private CardDisplay setPlayerCard;
+    public CardDisplay SetPlayerCard => setPlayerCard;
+
     void Start()
     {
         Debug.Log("OnlineGameManager.Start() called");
@@ -107,6 +113,10 @@ public class OnlineGameManager : MonoBehaviour
         // ライフUI初期化
         UpdateLifeUI();
         Debug.Log("OnlineGameManager.Start() completed");
+
+        // デバッグ用：カードセットを有効化
+        canSetCard = true;
+        Debug.Log("OnlineGameManager - Card set enabled for testing in Start()");
 
         // マッチング完了パネル表示後にゲームフェーズ監視を開始
         if (panelManager != null && gameData != null)
@@ -315,6 +325,12 @@ public class OnlineGameManager : MonoBehaviour
                         Debug.Log("OnlineGameManager - Lambda function: card_placement phase activated");
                     }
                 }
+                else
+                {
+                    // set_phaseをスキップして直接card_placementになった場合
+                    canSetCard = true;
+                    Debug.Log("OnlineGameManager - Direct card_placement phase activated");
+                }
                 break;
 
             case "betting":
@@ -344,7 +360,138 @@ public class OnlineGameManager : MonoBehaviour
     // カードセット可能かどうかを取得
     public bool CanSetCard()
     {
+        Debug.Log($"OnlineGameManager - CanSetCard called, returning: {canSetCard}");
         return canSetCard;
+    }
+
+    // デバッグ用：カードセット可能フラグを強制的に有効化
+    public void EnableCardSetForTesting()
+    {
+        canSetCard = true;
+        Debug.Log("OnlineGameManager - Card set enabled for testing");
+    }
+
+    // カード配置確認パネルを表示
+    public void ShowConfirmation(CardDisplay card, OnlineDropZone zone)
+    {
+        Debug.Log($"OnlineGameManager - ShowConfirmation called for card: {card.CardValue}");
+        currentCard = card;
+        currentZone = zone;
+        
+        if (panelManager != null)
+        {
+            panelManager.confirmationPanel.SetActive(true);
+
+            // リスナーの多重登録防止
+            panelManager.yesButton.onClick.RemoveAllListeners();
+            panelManager.noButton.onClick.RemoveAllListeners();
+
+            panelManager.yesButton.onClick.AddListener(ConfirmPlacement);
+            panelManager.noButton.onClick.AddListener(CancelPlacement);
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - panelManager is null!");
+        }
+    }
+
+    // カード配置を確定
+    public void ConfirmPlacement()
+    {
+        Debug.Log($"OnlineGameManager - ConfirmPlacement called for card: {currentCard.CardValue}");
+        
+        if (currentCard != null && currentZone != null)
+        {
+            // カードをDropZoneの子にする（親子関係をセット）
+            currentCard.transform.SetParent(currentZone.transform);
+            currentCard.transform.localPosition = Vector3.zero;
+            
+            // 配置されたカードを記録
+            setPlayerCard = currentCard;
+            
+            // 確認パネルを非表示
+            if (panelManager != null)
+            {
+                panelManager.confirmationPanel.SetActive(false);
+            }
+            
+            // カード配置完了をサーバーに通知
+            StartCoroutine(NotifyCardPlacement(currentCard.CardValue));
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - currentCard or currentZone is null!");
+        }
+        
+        ResetPlacementState();
+    }
+
+    // カード配置をキャンセル
+    public void CancelPlacement()
+    {
+        Debug.Log("OnlineGameManager - CancelPlacement called");
+        
+        if (currentCard != null)
+        {
+            // カードを元の位置に戻す
+            var drag = currentCard.GetComponent<CardDraggable>();
+            if (drag != null)
+            {
+                currentCard.transform.SetParent(drag.OriginalParent);
+                currentCard.transform.position = drag.OriginalPosition;
+            }
+        }
+        
+        // 確認パネルを非表示
+        if (panelManager != null)
+        {
+            panelManager.confirmationPanel.SetActive(false);
+        }
+        
+        ResetPlacementState();
+    }
+
+    // カード配置状態をリセット
+    private void ResetPlacementState()
+    {
+        currentCard = null;
+        currentZone = null;
+        
+        if (panelManager != null)
+        {
+            panelManager.confirmationPanel.SetActive(false);
+            
+            // リスナーをリセット
+            panelManager.yesButton.onClick.RemoveAllListeners();
+            panelManager.noButton.onClick.RemoveAllListeners();
+        }
+    }
+
+    // サーバーにカード配置を通知
+    private IEnumerator NotifyCardPlacement(int cardValue)
+    {
+        Debug.Log($"OnlineGameManager - Notifying card placement: {cardValue}");
+        
+        // update-game-state APIを呼び出してカード配置を通知
+        HttpManager.Instance.UpdateGameState(currentGameId, currentPlayerId, "place_card", 
+            new { cardId = cardValue }, OnCardPlacementSuccess, OnCardPlacementError);
+        
+        yield return null;
+    }
+
+    // カード配置成功時のコールバック
+    private void OnCardPlacementSuccess(string response)
+    {
+        Debug.Log($"OnlineGameManager - Card placement successful: {response}");
+        canSetCard = false; // カード配置後はセット不可
+    }
+
+    // カード配置エラー時のコールバック
+    private void OnCardPlacementError(string error)
+    {
+        Debug.LogError($"OnlineGameManager - Card placement failed: {error}");
+        // エラーの場合はカードを元の位置に戻す
+        CancelPlacement();
     }
 
     // カード配置・スキル・ベットなどのイベントは
@@ -385,14 +532,10 @@ public class OnlineGameManager : MonoBehaviour
         public string updatedAt;
     }
 
-    
-    public void ConfirmPlacement() { /* TODO: 実装 */ }
-    public void CancelPlacement() { /* TODO: 実装 */ }
     public void PlaceBet(int amount) { /* TODO: 実装 */ }
     public int CurrentBetAmount { get; private set; }
     public void SetOpponentCalled(bool called) { /* TODO: 実装 */ }
     public void RevealCards() { /* TODO: 実装 */ }
-    public CardDisplay SetPlayerCard { get; }
     public CardDisplay SetOpponentCard { get; }
     public bool PlayerCanUseScanSkill { get; }
     public bool PlayerCanUseChangeSkill { get; }
