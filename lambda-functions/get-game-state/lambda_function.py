@@ -72,12 +72,16 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # set_phaseから自動的にcard_placementに移行する処理
         if game_state['gamePhase'] == 'set_phase':
             current_time = int(time.time())
-            phase_transition_time = game_state.get('phaseTransitionTime', 0)
+            phase_transition_time = game_state.get('phaseTransitionTime')
             
             # フェーズ移行のログを追加
             print(f"Game {game_id}: current_time={current_time}, phase_transition_time={phase_transition_time}")
             
-            if current_time >= phase_transition_time:
+            # phaseTransitionTimeがNoneの場合は移行しない
+            if phase_transition_time is None:
+                print(f"Game {game_id}: phaseTransitionTime is None, staying in set_phase")
+                pass
+            elif current_time >= phase_transition_time:
                 # 自動移行を実行
                 update_expression = 'SET gamePhase = :gamePhase, phaseTransitionTime = :phaseTransitionTime, updatedAt = :updatedAt'
                 expression_attribute_values = {

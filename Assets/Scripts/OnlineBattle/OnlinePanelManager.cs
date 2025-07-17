@@ -390,7 +390,7 @@ public class OnlinePanelManager : MonoBehaviour
     }
 
     // Set Phaseパネルの表示/非表示
-    public void ShowStartPhasePanel(string title = "Set Phase", string description = "カードをSetZoneにセットしてください")
+    public void ShowStartPhasePanel(string title = "Set Phase", string description = "カードをSetZoneにセットしてください", float autoHideDelay = 3f)
     {
         if (startPhasePanel != null)
         {
@@ -417,11 +417,28 @@ public class OnlinePanelManager : MonoBehaviour
                 Debug.LogWarning("OnlinePanelManager - startPhaseDescription is null!");
             }
             
-            Debug.Log($"OnlinePanelManager - StartPhasePanel shown with title: '{title}', description: '{description}'");
+            Debug.Log($"OnlinePanelManager - StartPhasePanel shown with title: '{title}', description: '{description}', autoHideDelay: {autoHideDelay}");
+            
+            // 指定された時間後に自動的に非表示にする
+            if (autoHideDelay > 0)
+            {
+                StartCoroutine(AutoHideStartPhasePanelAfterDelay(autoHideDelay));
+            }
         }
         else
         {
             Debug.LogError("OnlinePanelManager - startPhasePanel is null!");
+        }
+    }
+
+    // StartPhasePanelを指定時間後に非表示にするコルーチン
+    private IEnumerator AutoHideStartPhasePanelAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(false);
+            Debug.Log($"OnlinePanelManager - StartPhasePanel auto-hidden after {delay} seconds");
         }
     }
 

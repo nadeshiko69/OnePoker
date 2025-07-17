@@ -13,6 +13,7 @@ if ([string]::IsNullOrEmpty($FunctionName)) {
     Write-Host "  - join_room"
     Write-Host "  - cancel_room"
     Write-Host "  - register_user"
+    Write-Host "  - set-phase-transition"
     Write-Host "  - login_user"
     Write-Host "  - check-match"
     Write-Host "  - start-game"

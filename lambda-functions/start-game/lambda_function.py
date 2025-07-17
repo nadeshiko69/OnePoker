@@ -88,10 +88,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # 現在時刻を取得
         current_time = int(time.time())
         
-        # フェーズ移行時間を設定（3秒後）
-        phase_transition_time = current_time + 3
-        
-        print(f"Game {game_id}: Starting with set_phase, current_time={current_time}, phase_transition_time={phase_transition_time}")
+        print(f"Game {game_id}: Starting with set_phase, current_time={current_time}")
         
         # ゲーム状態を作成
         game_state = {
@@ -107,7 +104,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'currentBet': 0,
             'currentTurn': player1_id,  # 先手はplayer1
             'gamePhase': 'set_phase',  # 最初はset_phaseから開始
-            'phaseTransitionTime': phase_transition_time,  # 1秒後にcard_placementに移行
+            'phaseTransitionTime': None,  # Unity側の監視開始時に設定
             'player1CardPlaced': False,
             'player2CardPlaced': False,
             'player1BetAmount': 0,
@@ -131,7 +128,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2Cards': player2_cards,
             'currentTurn': player1_id,
             'gamePhase': 'set_phase',
-            'phaseTransitionTime': current_time + 1,
             'player1Life': 10,
             'player2Life': 10
         }

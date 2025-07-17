@@ -41,6 +41,7 @@ public class OnlineGameManager : MonoBehaviour
     private string currentGameId = "";
     private string currentPlayerId = "";
     private Coroutine gamePhaseMonitorCoroutine;
+    private OnlineGameDataWithCards gameData; // ゲームデータを保存
 
     void Start()
     {
@@ -55,8 +56,8 @@ public class OnlineGameManager : MonoBehaviour
 
         Debug.Log($"Managers found - matchManager: {matchManager != null}, resultViewManager: {resultViewManager != null}, panelManager: {panelManager != null}, skillManager: {skillManager != null}, handManager: {handManager != null}");
 
-        // gameDataをスコープ外で使えるように宣言
-        OnlineGameDataWithCards gameData = null;
+        // gameDataをクラスフィールドとして初期化
+        gameData = null;
 
         // OnlineGameDataから手札・プレイヤー情報を取得
         string gameDataJson = PlayerPrefs.GetString("OnlineGameData", "");
@@ -64,7 +65,7 @@ public class OnlineGameManager : MonoBehaviour
         
         if (!string.IsNullOrEmpty(gameDataJson))
         {
-            gameData = JsonUtility.FromJson<OnlineGameDataWithCards>(gameDataJson);
+            this.gameData = JsonUtility.FromJson<OnlineGameDataWithCards>(gameDataJson);
             Debug.Log($"Parsed gameData: {gameData != null}");
             
             if (gameData != null)
@@ -103,22 +104,23 @@ public class OnlineGameManager : MonoBehaviour
             Debug.LogWarning("OnlineGameData is empty in PlayerPrefs");
         }
 
-        // マッチング完了パネル表示（PanelManager経由）
+        // ライフUI初期化
+        UpdateLifeUI();
+        Debug.Log("OnlineGameManager.Start() completed");
+
+        // マッチング完了パネル表示後にゲームフェーズ監視を開始
         if (panelManager != null && gameData != null)
         {
             string playerName = gameData.playerId;
             string opponentName = gameData.opponentId;
             Debug.Log($"[MatchStartPanel] playerName: {playerName}, opponentName: {opponentName}");
-            panelManager.ShowMatchStartPanel(playerName, opponentName, 3f);
+            
+            // マッチング完了パネルを表示し、3秒後にゲームフェーズ監視を開始
+            StartCoroutine(ShowMatchStartPanelAndStartMonitoring(playerName, opponentName, 3f));
         }
-
-        // ライフUI初期化
-        UpdateLifeUI();
-        Debug.Log("OnlineGameManager.Start() completed");
-
-        // ゲームフェーズ監視を開始
-        if (gameData != null)
+        else if (gameData != null)
         {
+            // panelManagerがnullの場合は即座にゲームフェーズ監視を開始
             currentGameId = gameData.gameId;
             currentPlayerId = gameData.playerId;
             Debug.Log($"OnlineGameManager - Starting game phase monitoring for gameId: {currentGameId}, playerId: {currentPlayerId}");
@@ -137,6 +139,61 @@ public class OnlineGameManager : MonoBehaviour
             playerLifeText.text = $"Life: {matchManager.PlayerLife}";
         if (opponentLifeText != null)
             opponentLifeText.text = $"Life: {matchManager.OpponentLife}";
+    }
+
+    // マッチング完了パネル表示後にゲームフェーズ監視を開始するコルーチン
+    private IEnumerator ShowMatchStartPanelAndStartMonitoring(string playerName, string opponentName, float duration)
+    {
+        Debug.Log($"OnlineGameManager - Showing match start panel for {duration} seconds");
+        
+        // マッチング完了パネルを表示
+        panelManager.ShowMatchStartPanel(playerName, opponentName, duration);
+        
+        // パネル表示時間分待機
+        yield return new WaitForSeconds(duration);
+        
+        Debug.Log("OnlineGameManager - Match start panel duration completed, setting phase transition time");
+        
+        // フェーズ移行時間を設定してからゲームフェーズ監視を開始
+        if (gameData != null)
+        {
+            currentGameId = gameData.gameId;
+            currentPlayerId = gameData.playerId;
+            
+            // フェーズ移行時間を設定
+            yield return StartCoroutine(SetPhaseTransitionTime());
+            
+            Debug.Log($"OnlineGameManager - Starting game phase monitoring for gameId: {currentGameId}, playerId: {currentPlayerId}");
+            StartGamePhaseMonitoring();
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - gameData is null, cannot start phase monitoring");
+        }
+    }
+
+    // フェーズ移行時間を設定するコルーチン
+    private IEnumerator SetPhaseTransitionTime()
+    {
+        Debug.Log($"OnlineGameManager - Setting phase transition time for gameId: {currentGameId}, playerId: {currentPlayerId}");
+        
+        // set-phase-transition APIを呼び出す
+        HttpManager.Instance.SetPhaseTransitionTime(currentGameId, currentPlayerId, 3, OnPhaseTransitionSet, OnPhaseTransitionError);
+        
+        // 非同期処理の完了を待つ
+        yield return new WaitForSeconds(0.1f);
+    }
+
+    // フェーズ移行時間設定成功時のコールバック
+    private void OnPhaseTransitionSet(string response)
+    {
+        Debug.Log($"OnlineGameManager - Phase transition time set successfully: {response}");
+    }
+
+    // フェーズ移行時間設定エラー時のコールバック
+    private void OnPhaseTransitionError(string error)
+    {
+        Debug.LogError($"OnlineGameManager - Failed to set phase transition time: {error}");
     }
 
     // ゲームフェーズ監視を開始
@@ -312,7 +369,7 @@ public class OnlineGameManager : MonoBehaviour
     {
         public string gameId;
         public string gamePhase;
-        public long phaseTransitionTime;
+        public long? phaseTransitionTime; // nullableに変更
         public string currentTurn;
         public int player1Life;
         public int player2Life;

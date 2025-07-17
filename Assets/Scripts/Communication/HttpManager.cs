@@ -74,12 +74,40 @@ namespace OnePoker.Network
             );
         }
 
+        public void SetPhaseTransitionTime(
+            string gameId,
+            string playerId,
+            int transitionDelay,
+            Action<string> onSuccess,
+            Action<string> onError)
+        {
+            string url = $"{ApiBaseUrl}/set-phase-transition";
+            string jsonBody = JsonUtility.ToJson(new SetPhaseTransitionRequest
+            {
+                gameId = gameId,
+                playerId = playerId,
+                transitionDelay = transitionDelay
+            });
+            
+            Debug.Log($"HttpManager - Calling set-phase-transition API: {url}, body: {jsonBody}");
+            
+            Post<SetPhaseTransitionResponse>(
+                url,
+                jsonBody,
+                (response) => {
+                    string responseJson = JsonUtility.ToJson(response);
+                    onSuccess?.Invoke(responseJson);
+                },
+                onError
+            );
+        }
+
         [System.Serializable]
         private class GameStateResponse
         {
             public string gameId;
             public string gamePhase;
-            public long phaseTransitionTime;
+            public long? phaseTransitionTime; // nullableに変更
             public string currentTurn;
             public int player1Life;
             public int player2Life;
@@ -93,6 +121,22 @@ namespace OnePoker.Network
             public bool opponentCardPlaced;
             public int? opponentPlacedCardId;
             public string updatedAt;
+        }
+
+        [System.Serializable]
+        private class SetPhaseTransitionRequest
+        {
+            public string gameId;
+            public string playerId;
+            public int transitionDelay;
+        }
+
+        [System.Serializable]
+        private class SetPhaseTransitionResponse
+        {
+            public bool success;
+            public long phaseTransitionTime;
+            public string message;
         }
 
         private IEnumerator PostCoroutine<TResponse>(
