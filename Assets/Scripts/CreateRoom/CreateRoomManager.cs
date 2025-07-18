@@ -214,9 +214,12 @@ public class CreateRoomManager : MonoBehaviour
             {
                 var response = JsonUtility.FromJson<MatchStatusResponse>(request.downloadHandler.text);
                 
+                Debug.Log($"CreateRoom: CheckMatchStatus - status: {response.status}, guestPlayerId: {response.guestPlayerId}");
+                
                 if (response.status == "matched")
                 {
                     // マッチング完了
+                    Debug.Log($"CreateRoom: マッチング成立！opponentId: {response.guestPlayerId}");
                     isMatched = true;
                     opponentId = response.guestPlayerId;
                     
@@ -224,10 +227,15 @@ public class CreateRoomManager : MonoBehaviour
                     ShowMatchedPanel();
                     
                     // ゲーム開始処理を共通クラスで実行
+                    Debug.Log($"CreateRoom: StartGameAndTransition開始 - roomCode: {roomCode}, playerId: {playerId}, opponentId: {opponentId}");
                     yield return StartCoroutine(
                         OnlineBattleStarter.StartGameAndTransition(
                             startGameUrl, roomCode, playerId, opponentId, true));
                 }
+            }
+            else
+            {
+                Debug.LogError($"CreateRoom: CheckMatchStatus failed - {request.error}");
             }
         }
     }

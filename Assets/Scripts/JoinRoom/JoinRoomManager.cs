@@ -67,14 +67,18 @@ public class JoinRoomManager : MonoBehaviour
         {
             var response = JsonUtility.FromJson<JoinRoomResponse>(request.downloadHandler.text);
             
+            Debug.Log($"JoinRoom: JoinRoomRequest - message: {response.message}, player1Id: {response.player1Id}");
+            
             if (response.message == "Matched successfully")
             {
                 // マッチング成功
+                Debug.Log($"JoinRoom: マッチング成立！opponentId: {response.player1Id}");
                 isMatched = true;
                 opponentId = response.player1Id; // 自分はplayer2
                 // UIを更新
                 ShowMatchedPanel();
                 // ゲーム開始処理を共通クラスで実行
+                Debug.Log($"JoinRoom: StartGameAndTransition開始 - roomCode: {roomCode}, playerId: {playerId}, opponentId: {opponentId}");
                 yield return StartCoroutine(
                     OnlineBattleStarter.StartGameAndTransition(
                         startGameUrl, roomCode, playerId, opponentId, false));
@@ -86,6 +90,7 @@ public class JoinRoomManager : MonoBehaviour
         }
         else
         {
+            Debug.LogError($"JoinRoom: JoinRoomRequest failed - {request.error}");
             messageText.text = "マッチング失敗: " + request.downloadHandler.text;
         }
     }
