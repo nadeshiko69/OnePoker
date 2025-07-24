@@ -310,6 +310,26 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetGameStateFunction.Arn}/invocations'
 
+  # API Gateway Endpoint ; checkMatch
+  CheckMatchResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !Ref ApiResource
+      PathPart: 'check-match'
+
+  CheckMatchMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref CheckMatchResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CheckMatchFunction.Arn}/invocations'
+
   # API Gateway Endpoint ; updateGameState
   UpdateGameStateResource:
     Type: AWS::ApiGateway::Resource
@@ -367,6 +387,14 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/GET/game/state'
 
+  CheckMatchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CheckMatchFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/GET/game/check-match'
+
   UpdateGameStatePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -389,6 +417,7 @@ Resources:
     DependsOn:
       - StartGameMethod
       - GetGameStateMethod
+      - CheckMatchMethod
       - UpdateGameStateMethod
       - SetPhaseTransitionMethod
     Properties:
