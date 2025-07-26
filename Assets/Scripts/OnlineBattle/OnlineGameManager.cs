@@ -491,6 +491,8 @@ public class OnlineGameManager : MonoBehaviour
         Action<string> onSuccess,
         Action<string> onError)
     {
+        Debug.Log($"OnlineGameManager - SetCard method entered with gameId: {gameId}, playerId: {playerId}, cardValue: {cardValue}");
+        
         string url = $"{HttpManager.ApiBaseUrl}/update-state";
         string jsonBody = JsonUtility.ToJson(new SetCardRequest
         {
@@ -500,30 +502,43 @@ public class OnlineGameManager : MonoBehaviour
         });
         
         Debug.Log($"OnlineGameManager - Calling set-card API: {url}, body: {jsonBody}");
+        Debug.Log($"OnlineGameManager - About to call HttpManager.Post with onSuccess and onError callbacks");
         
         HttpManager.Instance.Post<SetCardResponse>(
             url,
             jsonBody,
             (response) => {
+                Debug.Log($"OnlineGameManager - SetCard API success callback triggered");
                 string responseJson = JsonUtility.ToJson(response);
+                Debug.Log($"OnlineGameManager - Response JSON: {responseJson}");
                 onSuccess?.Invoke(responseJson);
             },
-            onError
+            (error) => {
+                Debug.LogError($"OnlineGameManager - SetCard API error callback triggered: {error}");
+                onError?.Invoke(error);
+            }
         );
+        
+        Debug.Log($"OnlineGameManager - SetCard method completed, API call initiated");
     }
 
     // カード配置成功時のコールバック
     private void OnCardPlacementSuccess(string response)
     {
-        Debug.Log($"OnlineGameManager - Card placement successful: {response}");
+        Debug.Log($"OnlineGameManager - OnCardPlacementSuccess method entered with response: {response}");
         
         try
         {
+            Debug.Log("OnlineGameManager - Attempting to parse response JSON");
             // レスポンスをパース
             var setCardResponse = JsonUtility.FromJson<SetCardResponse>(response);
+            Debug.Log($"OnlineGameManager - Successfully parsed response. GameId: {setCardResponse.gameId}, GamePhase: {setCardResponse.gamePhase}");
+            Debug.Log($"OnlineGameManager - Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
+            Debug.Log($"OnlineGameManager - Player1CardValue: {setCardResponse.player1CardValue}, Player2CardValue: {setCardResponse.player2CardValue}");
             
             // カード配置後はセット不可
             canSetCard = false;
+            Debug.Log("OnlineGameManager - Set canSetCard to false");
             
             // 両者セット済みかチェック
             if (setCardResponse.player1Set && setCardResponse.player2Set)
@@ -536,6 +551,10 @@ public class OnlineGameManager : MonoBehaviour
                     Debug.Log("OnlineGameManager - Game phase changed to reveal!");
                     HandleGamePhaseChange("reveal");
                 }
+                else
+                {
+                    Debug.Log($"OnlineGameManager - Both players set but gamePhase is still: {setCardResponse.gamePhase}");
+                }
             }
             else
             {
@@ -545,14 +564,17 @@ public class OnlineGameManager : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"OnlineGameManager - Error parsing card placement response: {e.Message}");
+            Debug.LogError($"OnlineGameManager - Full exception: {e}");
         }
     }
 
     // カード配置エラー時のコールバック
     private void OnCardPlacementError(string error)
     {
+        Debug.LogError($"OnlineGameManager - OnCardPlacementError method entered with error: {error}");
         Debug.LogError($"OnlineGameManager - Card placement failed: {error}");
         // エラーの場合はカードを元の位置に戻す
+        Debug.Log("OnlineGameManager - Calling CancelPlacement due to error");
         CancelPlacement();
     }
 
