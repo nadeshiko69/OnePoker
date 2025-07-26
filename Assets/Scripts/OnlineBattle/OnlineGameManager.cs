@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using System.Collections.Generic;
+using System;
 using OnePoker.Network;
 
 public class OnlineGameManager : MonoBehaviour
@@ -380,6 +381,7 @@ public class OnlineGameManager : MonoBehaviour
         
         if (panelManager != null)
         {
+            Debug.Log($"OnlineGameManager - panelManager found, yesButton: {panelManager.yesButton != null}");
             panelManager.confirmationPanel.SetActive(true);
 
             // リスナーの多重登録防止
@@ -388,6 +390,8 @@ public class OnlineGameManager : MonoBehaviour
 
             panelManager.yesButton.onClick.AddListener(ConfirmPlacement);
             panelManager.noButton.onClick.AddListener(CancelPlacement);
+            
+            Debug.Log("OnlineGameManager - Button listeners added successfully");
         }
         else
         {
@@ -398,7 +402,8 @@ public class OnlineGameManager : MonoBehaviour
     // カード配置を確定
     public void ConfirmPlacement()
     {
-        Debug.Log($"OnlineGameManager - ConfirmPlacement called for card: {currentCard.CardValue}");
+        Debug.Log("OnlineGameManager - ConfirmPlacement method entered!");
+        Debug.Log($"OnlineGameManager - ConfirmPlacement called for card: {currentCard?.CardValue}");
         
         if (currentCard != null && currentZone != null)
         {
@@ -472,18 +477,75 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.Log($"OnlineGameManager - Notifying card placement: {cardValue}");
         
-        // update-game-state APIを呼び出してカード配置を通知
-        HttpManager.Instance.UpdateGameState(currentGameId, currentPlayerId, "place_card", 
-            new { cardId = cardValue }, OnCardPlacementSuccess, OnCardPlacementError);
+        // SetCard APIを呼び出してカード配置を通知
+        SetCard(currentGameId, currentPlayerId, cardValue, OnCardPlacementSuccess, OnCardPlacementError);
         
         yield return null;
+    }
+
+    // カードセット用のAPI呼び出しメソッド
+    private void SetCard(
+        string gameId,
+        string playerId,
+        int cardValue,
+        Action<string> onSuccess,
+        Action<string> onError)
+    {
+        string url = $"{HttpManager.ApiBaseUrl}/update-state";
+        string jsonBody = JsonUtility.ToJson(new SetCardRequest
+        {
+            gameId = gameId,
+            playerId = playerId,
+            cardValue = cardValue
+        });
+        
+        Debug.Log($"OnlineGameManager - Calling set-card API: {url}, body: {jsonBody}");
+        
+        HttpManager.Instance.Post<SetCardResponse>(
+            url,
+            jsonBody,
+            (response) => {
+                string responseJson = JsonUtility.ToJson(response);
+                onSuccess?.Invoke(responseJson);
+            },
+            onError
+        );
     }
 
     // カード配置成功時のコールバック
     private void OnCardPlacementSuccess(string response)
     {
         Debug.Log($"OnlineGameManager - Card placement successful: {response}");
-        canSetCard = false; // カード配置後はセット不可
+        
+        try
+        {
+            // レスポンスをパース
+            var setCardResponse = JsonUtility.FromJson<SetCardResponse>(response);
+            
+            // カード配置後はセット不可
+            canSetCard = false;
+            
+            // 両者セット済みかチェック
+            if (setCardResponse.player1Set && setCardResponse.player2Set)
+            {
+                Debug.Log("OnlineGameManager - Both players have set their cards!");
+                
+                // フェーズがrevealに変更されているかチェック
+                if (setCardResponse.gamePhase == "reveal")
+                {
+                    Debug.Log("OnlineGameManager - Game phase changed to reveal!");
+                    HandleGamePhaseChange("reveal");
+                }
+            }
+            else
+            {
+                Debug.Log($"OnlineGameManager - Waiting for opponent. Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"OnlineGameManager - Error parsing card placement response: {e.Message}");
+        }
     }
 
     // カード配置エラー時のコールバック
@@ -530,6 +592,27 @@ public class OnlineGameManager : MonoBehaviour
         public bool opponentCardPlaced;
         public int? opponentPlacedCardId;
         public string updatedAt;
+    }
+
+    [System.Serializable]
+    private class SetCardRequest
+    {
+        public string gameId;
+        public string playerId;
+        public int cardValue;
+    }
+
+    [System.Serializable]
+    private class SetCardResponse
+    {
+        public string gameId;
+        public string gamePhase;
+        public bool player1Set;
+        public bool player2Set;
+        public int player1CardValue;
+        public int player2CardValue;
+        public string player1Id;
+        public string player2Id;
     }
 
     public void PlaceBet(int amount) { /* TODO: 実装 */ }

@@ -24,7 +24,7 @@ namespace OnePoker.Network
             }
         }
 
-        private const string ApiBaseUrl = "https://5tp37snsbk.execute-api.ap-northeast-1.amazonaws.com/dev";
+        public const string ApiBaseUrl = "https://5tp37snsbk.execute-api.ap-northeast-1.amazonaws.com/dev";
 
         [Serializable]
         private class GenericErrorResponse
@@ -110,7 +110,7 @@ namespace OnePoker.Network
             Action<string> onSuccess,
             Action<string> onError)
         {
-            string url = $"{ApiBaseUrl}/update-game-state";
+            string url = $"{ApiBaseUrl}/update-state";
             string jsonBody = JsonUtility.ToJson(new UpdateGameStateRequest
             {
                 gameId = gameId,
@@ -119,7 +119,7 @@ namespace OnePoker.Network
                 actionData = actionData
             });
             
-            Debug.Log($"HttpManager - Calling update-game-state API: {url}, body: {jsonBody}");
+            Debug.Log($"HttpManager - Calling update-state API: {url}, body: {jsonBody}");
             
             Post<UpdateGameStateResponse>(
                 url,
