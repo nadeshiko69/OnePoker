@@ -74,6 +74,46 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         player1_id = room_data['hostPlayerId']
         player2_id = room_data['guestPlayerId']
         
+        # 既存のゲーム状態をチェック（roomCodeで検索）
+        existing_games = game_table.scan(
+            FilterExpression='roomCode = :roomCode',
+            ExpressionAttributeValues={':roomCode': room_code}
+        )
+        
+        if existing_games['Items']:
+            print(f"Found existing game for roomCode {room_code}: {existing_games['Items']}")
+            # 既存のゲーム状態が存在する場合は、最初のものを返す
+            existing_game = existing_games['Items'][0]
+            
+            response = {
+                'gameId': existing_game['gameId'],
+                'roomCode': existing_game['roomCode'],
+                'player1Id': existing_game['player1Id'],
+                'player2Id': existing_game['player2Id'],
+                'player1Cards': existing_game['player1Cards'],
+                'player2Cards': existing_game['player2Cards'],
+                'currentTurn': existing_game['currentTurn'],
+                'gamePhase': existing_game['gamePhase'],
+                'player1Life': existing_game['player1Life'],
+                'player2Life': existing_game['player2Life']
+            }
+            
+            print(f"Returning existing game state: {response}")
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                },
+                'body': json.dumps(response)
+            }
+        
+        # 既存のゲーム状態が存在しない場合のみ新規作成
+        print(f"No existing game found for roomCode {room_code}, creating new game")
+        
         # ゲームIDを生成（タイムスタンプ + ランダム文字列）
         game_id = f"game_{int(time.time())}_{random.randint(100000, 999999)}"
         
@@ -117,6 +157,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         # DynamoDBにゲーム状態を保存
         game_table.put_item(Item=game_state)
+        print(f"New game state created and saved: {game_id}")
         
         # レスポンスを作成
         response = {
