@@ -41,16 +41,15 @@ def lambda_handler(event, context):
         }
 
     # 2. プレイヤーごとにセット済みフラグとカード値を更新
-    update_expr = []
+    update_attrs = {}
     expr_attr = {}
+    
     if player_id == item.get('player1Id'):
-        update_expr.append('SET player1Set = :true, player1CardValue = :cv')
-        expr_attr[':true'] = True
-        expr_attr[':cv'] = card_value
+        update_attrs['player1Set'] = True
+        update_attrs['player1CardValue'] = card_value
     elif player_id == item.get('player2Id'):
-        update_expr.append('SET player2Set = :true, player2CardValue = :cv')
-        expr_attr[':true'] = True
-        expr_attr[':cv'] = card_value
+        update_attrs['player2Set'] = True
+        update_attrs['player2CardValue'] = card_value
     else:
         return {
             'statusCode': 400,
@@ -58,24 +57,48 @@ def lambda_handler(event, context):
         }
 
     # 3. 両者セット済みならgamePhaseをrevealに
-    player1_set = item.get('player1Set', False) or (player_id == item.get('player1Id'))
-    player2_set = item.get('player2Set', False) or (player_id == item.get('player2Id'))
+    # 現在のプレイヤーがセットした後の状態を計算
+    if player_id == item.get('player1Id'):
+        player1_set = True  # 今セットしたのでTrue
+        player2_set = item.get('player2Set', False)  # 相手の状態
+    else:  # player2Idの場合
+        player1_set = item.get('player1Set', False)  # 相手の状態
+        player2_set = True  # 今セットしたのでTrue
+    
+    print(f"Player1Set: {player1_set}, Player2Set: {player2_set}")
+    
     if player1_set and player2_set:
-        update_expr.append('SET gamePhase = :reveal')
-        expr_attr[':reveal'] = 'reveal'
+        print("Both players have set their cards, transitioning to reveal phase")
+        update_attrs['gamePhase'] = 'reveal'
+    else:
+        print(f"Waiting for opponent. Player1Set: {player1_set}, Player2Set: {player2_set}")
 
     # 4. 更新実行
-    update_expression = ', '.join(update_expr)
+    update_expression = 'SET ' + ', '.join([f'#{k} = :{k}' for k in update_attrs.keys()])
+    expression_attribute_names = {f'#{k}': k for k in update_attrs.keys()}
+    expression_attribute_values = {f':{k}': v for k, v in update_attrs.items()}
     table.update_item(
         Key={'gameId': game_id},
         UpdateExpression=update_expression,
-        ExpressionAttributeValues=expr_attr
+        ExpressionAttributeNames=expression_attribute_names,
+        ExpressionAttributeValues=expression_attribute_values
     )
 
     # 5. 最新状態を返却
     response = table.get_item(Key={'gameId': game_id})
     item = response.get('Item')
+    
+    # player2Setフィールドが存在しない場合はFalseを設定
+    if 'player2Set' not in item:
+        item['player2Set'] = False
+        print(f"Added missing player2Set field: {item['player2Set']}")
+    
+    # Decimal型をint/floatに変換
+    item = convert_decimals(item)
+    
+    print(f"Final game state - gamePhase: {item.get('gamePhase')}, player1Set: {item.get('player1Set')}, player2Set: {item.get('player2Set')}")
+    
     return {
         'statusCode': 200,
-        'body': json.dumps(convert_decimals(item))
+        'body': json.dumps(item)
     } 

@@ -475,10 +475,13 @@ public class OnlineGameManager : MonoBehaviour
     // サーバーにカード配置を通知
     private IEnumerator NotifyCardPlacement(int cardValue)
     {
-        Debug.Log($"OnlineGameManager - Notifying card placement: {cardValue}");
+        Debug.Log($"OnlineGameManager - NotifyCardPlacement called with cardValue: {cardValue}");
+        Debug.Log($"OnlineGameManager - currentGameId: {currentGameId}, currentPlayerId: {currentPlayerId}");
         
         // SetCard APIを呼び出してカード配置を通知
         SetCard(currentGameId, currentPlayerId, cardValue, OnCardPlacementSuccess, OnCardPlacementError);
+        
+        Debug.Log($"OnlineGameManager - SetCard API call completed");
         
         yield return null;
     }
@@ -491,6 +494,7 @@ public class OnlineGameManager : MonoBehaviour
         Action<string> onSuccess,
         Action<string> onError)
     {
+        Debug.Log($"OnlineGameManager - SetCard API call started");
         Debug.Log($"OnlineGameManager - SetCard method entered with gameId: {gameId}, playerId: {playerId}, cardValue: {cardValue}");
         
         string url = $"{HttpManager.ApiBaseUrl}/update-state";

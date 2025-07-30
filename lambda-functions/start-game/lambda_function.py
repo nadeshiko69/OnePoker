@@ -4,6 +4,7 @@ import random
 import time
 from datetime import datetime
 from typing import Dict, Any
+from decimal import Decimal
 
 dynamodb = boto3.resource('dynamodb')
 room_table = dynamodb.Table('FriendMatchRoom')
@@ -85,6 +86,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             # 既存のゲーム状態が存在する場合は、最初のものを返す
             existing_game = existing_games['Items'][0]
             
+            # Decimal型を変換
+            existing_game = convert_decimals(existing_game)
+            
             response = {
                 'gameId': existing_game['gameId'],
                 'roomCode': existing_game['roomCode'],
@@ -145,6 +149,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'currentTurn': player1_id,  # 先手はplayer1
             'gamePhase': 'set_phase',  # 最初はset_phaseから開始
             'phaseTransitionTime': None,  # Unity側の監視開始時に設定
+            'player1Set': False,  # プレイヤー1のカードセット状態
+            'player2Set': False,  # プレイヤー2のカードセット状態
+            'player1CardValue': None,  # プレイヤー1のセットしたカード値
+            'player2CardValue': None,  # プレイヤー2のセットしたカード値
             'player1CardPlaced': False,
             'player2CardPlaced': False,
             'player1BetAmount': 0,
@@ -173,6 +181,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2Life': 10
         }
         
+        print(f"New game response: {json.dumps(response)}")
+        
         return {
             'statusCode': 200,
             'headers': {
@@ -199,6 +209,22 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'message': str(error)
             })
         }
+
+def convert_decimals(obj):
+    """
+    Decimal型をint/floatに変換する関数
+    """
+    if isinstance(obj, list):
+        return [convert_decimals(i) for i in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_decimals(v) for k, v in obj.items()}
+    elif isinstance(obj, Decimal):
+        if obj % 1 == 0:
+            return int(obj)
+        else:
+            return float(obj)
+    else:
+        return obj
 
 def shuffle_deck():
     """
