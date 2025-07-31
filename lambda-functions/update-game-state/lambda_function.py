@@ -47,9 +47,11 @@ def lambda_handler(event, context):
     if player_id == item.get('player1Id'):
         update_attrs['player1Set'] = True
         update_attrs['player1CardValue'] = card_value
+        update_attrs['player1CardPlaced'] = True
     elif player_id == item.get('player2Id'):
         update_attrs['player2Set'] = True
         update_attrs['player2CardValue'] = card_value
+        update_attrs['player2CardPlaced'] = True
     else:
         return {
             'statusCode': 400,

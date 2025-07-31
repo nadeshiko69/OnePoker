@@ -639,6 +639,8 @@ public class OnlineGameManager : MonoBehaviour
         public int player2CardValue;
         public string player1Id;
         public string player2Id;
+        public bool player1CardPlaced;
+        public bool player2CardPlaced;
     }
 
     public void PlaceBet(int amount) { /* TODO: 実装 */ }

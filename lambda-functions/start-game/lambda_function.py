@@ -153,8 +153,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2Set': False,  # プレイヤー2のカードセット状態
             'player1CardValue': None,  # プレイヤー1のセットしたカード値
             'player2CardValue': None,  # プレイヤー2のセットしたカード値
-            'player1CardPlaced': False,
-            'player2CardPlaced': False,
+            'player1CardPlaced': False,  # プレイヤー1のカード配置状態
+            'player2CardPlaced': False,  # プレイヤー2のカード配置状態
             'player1BetAmount': 0,
             'player2BetAmount': 0,
             'player1PlacedCard': None,
