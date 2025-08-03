@@ -539,12 +539,15 @@ public class OnlineGameManager : MonoBehaviour
             Debug.Log($"OnlineGameManager - Successfully parsed response. GameId: {setCardResponse.gameId}, GamePhase: {setCardResponse.gamePhase}");
             Debug.Log($"OnlineGameManager - Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
             Debug.Log($"OnlineGameManager - Player1CardValue: {setCardResponse.player1CardValue}, Player2CardValue: {setCardResponse.player2CardValue}");
+            Debug.Log($"OnlineGameManager - Player1CardPlaced: {setCardResponse.player1CardPlaced}, Player2CardPlaced: {setCardResponse.player2CardPlaced}");
             
             // カード配置後はセット不可
             canSetCard = false;
             Debug.Log("OnlineGameManager - Set canSetCard to false");
             
             // 両者セット済みかチェック
+            Debug.Log($"OnlineGameManager - Checking both players set condition: player1Set={setCardResponse.player1Set}, player2Set={setCardResponse.player2Set}");
+            
             if (setCardResponse.player1Set && setCardResponse.player2Set)
             {
                 Debug.Log("OnlineGameManager - Both players have set their cards!");

@@ -48,10 +48,12 @@ def lambda_handler(event, context):
         update_attrs['player1Set'] = True
         update_attrs['player1CardValue'] = card_value
         update_attrs['player1CardPlaced'] = True
+        print(f"Player1 card set: cardValue={card_value}, player1Set=True, player1CardPlaced=True")
     elif player_id == item.get('player2Id'):
         update_attrs['player2Set'] = True
         update_attrs['player2CardValue'] = card_value
         update_attrs['player2CardPlaced'] = True
+        print(f"Player2 card set: cardValue={card_value}, player2Set=True, player2CardPlaced=True")
     else:
         return {
             'statusCode': 400,
@@ -99,6 +101,8 @@ def lambda_handler(event, context):
     item = convert_decimals(item)
     
     print(f"Final game state - gamePhase: {item.get('gamePhase')}, player1Set: {item.get('player1Set')}, player2Set: {item.get('player2Set')}")
+    print(f"Final game state - player1CardPlaced: {item.get('player1CardPlaced')}, player2CardPlaced: {item.get('player2CardPlaced')}")
+    print(f"Final game state - player1CardValue: {item.get('player1CardValue')}, player2CardValue: {item.get('player2CardValue')}")
     
     return {
         'statusCode': 200,
