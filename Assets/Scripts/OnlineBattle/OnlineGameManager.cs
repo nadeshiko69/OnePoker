@@ -496,6 +496,7 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.Log($"OnlineGameManager - SetCard API call started");
         Debug.Log($"OnlineGameManager - SetCard method entered with gameId: {gameId}, playerId: {playerId}, cardValue: {cardValue}");
+        Debug.Log($"OnlineGameManager - This will update Player{(playerId == gameData.playerId ? "1" : "2")}Set");
         
         string url = $"{HttpManager.ApiBaseUrl}/update-state";
         string jsonBody = JsonUtility.ToJson(new SetCardRequest
