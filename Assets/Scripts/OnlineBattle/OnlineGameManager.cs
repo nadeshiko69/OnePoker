@@ -38,6 +38,7 @@ public class OnlineGameManager : MonoBehaviour
 
     // ゲームフェーズ管理
     private bool isSetPhaseActive = false;
+    private bool isRevealPhaseActive = false;
     private bool canSetCard = false;
     private string currentGameId = "";
     private string currentPlayerId = "";
@@ -226,6 +227,13 @@ public class OnlineGameManager : MonoBehaviour
         {
             yield return new WaitForSeconds(0.1f); // 0.1秒ごとに状態確認（短縮）
             
+            // revealフェーズになったら監視を停止
+            if (isRevealPhaseActive)
+            {
+                Debug.Log("OnlineGameManager - Reveal phase active, stopping phase monitoring");
+                break;
+            }
+            
             if (!string.IsNullOrEmpty(currentGameId) && !string.IsNullOrEmpty(currentPlayerId))
             {
                 StartCoroutine(CheckGamePhase());
@@ -288,6 +296,16 @@ public class OnlineGameManager : MonoBehaviour
         Debug.Log($"OnlineGameManager - Handling phase change to: {newPhase}");
         Debug.Log($"OnlineGameManager - Current state: isSetPhaseActive={isSetPhaseActive}, canSetCard={canSetCard}");
         
+        // 現在のフェーズを記録
+        string currentPhase = isSetPhaseActive ? "set_phase" : (isRevealPhaseActive ? "reveal" : "unknown");
+        
+        // 同じフェーズの場合は処理をスキップ
+        if (currentPhase == newPhase)
+        {
+            Debug.Log($"OnlineGameManager - Phase {newPhase} already active, skipping");
+            return;
+        }
+        
         switch (newPhase)
         {
             case "set_phase":
@@ -295,6 +313,7 @@ public class OnlineGameManager : MonoBehaviour
                 if (!isSetPhaseActive)
                 {
                     isSetPhaseActive = true;
+                    isRevealPhaseActive = false;
                     canSetCard = false;
                     Debug.Log("OnlineGameManager - Activating set phase");
                     if (panelManager != null)
@@ -344,11 +363,22 @@ public class OnlineGameManager : MonoBehaviour
                 break;
 
             case "reveal":
-                if (panelManager != null)
+                if (!isRevealPhaseActive)
                 {
-                    panelManager.ShowRevealPhasePanel();
-                    Debug.Log("OnlineGameManager - Reveal Phase started");
-                    Debug.Log("OnlineGameManager - Lambda function: reveal phase activated");
+                    isRevealPhaseActive = true;
+                    isSetPhaseActive = false;
+                    canSetCard = false;
+                    
+                    if (panelManager != null)
+                    {
+                        panelManager.ShowRevealPhasePanel();
+                        Debug.Log("OnlineGameManager - Reveal Phase started");
+                        Debug.Log("OnlineGameManager - Lambda function: reveal phase activated");
+                    }
+                }
+                else
+                {
+                    Debug.Log("OnlineGameManager - Reveal phase already active, skipping");
                 }
                 break;
                 
