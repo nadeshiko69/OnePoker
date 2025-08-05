@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class OnlinePanelManager : MonoBehaviour
 {
+    [Header("◎　Phase Display")]
+    public TextMeshProUGUI phaseText;
+
     [Header("◎　Start Match")]
     public GameObject matchStartPanel;
     public TextMeshProUGUI playerNameText;
@@ -62,6 +65,10 @@ public class OnlinePanelManager : MonoBehaviour
     public TextMeshProUGUI callButtonText;
     public Button dropButton;
     
+    [Header("◎　Set Complete")]
+    public GameObject setCompletePanel;
+    public TextMeshProUGUI setCompleteText;
+
     [Header("◎　Open Phase")]
     public GameObject openPanel;
     public GameObject dropPanel;
@@ -96,6 +103,15 @@ public class OnlinePanelManager : MonoBehaviour
         if (obstructPanel != null) obstructPanel.SetActive(false);
         if (matchStartPanel != null) matchStartPanel.SetActive(false);
         if (startPhasePanel != null) startPhasePanel.SetActive(false);
+        if (setCompletePanel != null) 
+        {
+            setCompletePanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - setCompletePanel initialized and set to inactive");
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - setCompletePanel is null in Start()");
+        }
         if (matchResultPanel != null) matchResultPanel.SetActive(false);
 
         Debug.Log("OnlinePanelManager - All panels set to inactive");
@@ -464,7 +480,31 @@ public class OnlinePanelManager : MonoBehaviour
     // 特定のフェーズ用のパネル表示メソッド
     public void ShowBettingPhasePanel()
     {
-        ShowStartPhasePanel("Betting Phase", "ベット額を設定してください");
+        Debug.Log("OnlinePanelManager - ShowBettingPhasePanel called");
+        
+        // スキルボタンを非表示
+        VisibleSkillButtons(false);
+        VisibleSkillSelectButtons(false);
+        VisibleChangeCardButtons(false);
+        
+        // ベットボタンを表示
+        VisibleBetButtons(true);
+        
+        // ベッティングパネルを表示（3秒後に自動非表示）
+        ShowStartPhasePanel("Betting Phase", "ベット額を設定してください", 3f);
+        
+        Debug.Log("OnlinePanelManager - Betting Phase UI setup completed");
+    }
+
+    public void HideBettingPhasePanel()
+    {
+        Debug.Log("OnlinePanelManager - HideBettingPhasePanel called");
+        
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - Betting Phase panel hidden");
+        }
     }
 
     public void ShowRevealPhasePanel()
@@ -475,5 +515,80 @@ public class OnlinePanelManager : MonoBehaviour
     public void ShowGameOverPanel(string result)
     {
         ShowStartPhasePanel("Game Over", result);
+    }
+
+    public void ShowSetCompletePanel()
+    {
+        Debug.Log($"OnlinePanelManager - ShowSetCompletePanel called, setCompletePanel: {setCompletePanel != null}");
+        
+        // 他のパネルを一時的に非表示にしてテスト
+        if (confirmationPanel != null) confirmationPanel.SetActive(false);
+        if (startPhasePanel != null) startPhasePanel.SetActive(false);
+        
+        if (setCompletePanel != null)
+        {
+            Debug.Log($"OnlinePanelManager - setCompletePanel is active: {setCompletePanel.activeInHierarchy}");
+            setCompletePanel.SetActive(true);
+            Debug.Log($"OnlinePanelManager - setCompletePanel activated, now active: {setCompletePanel.activeInHierarchy}");
+            
+            if (setCompleteText != null)
+            {
+                setCompleteText.text = "お互いのセットが完了しました";
+                Debug.Log($"OnlinePanelManager - setCompleteText set to: {setCompleteText.text}");
+            }
+            else
+            {
+                Debug.LogError("OnlinePanelManager - setCompleteText is null!");
+            }
+            
+            Debug.Log("OnlinePanelManager - Set Complete Panel shown");
+        }
+        else
+        {
+            Debug.LogError("OnlinePanelManager - setCompletePanel is null! Please assign it in the Inspector.");
+        }
+    }
+
+    public void HideSetCompletePanel()
+    {
+        if (setCompletePanel != null)
+        {
+            setCompletePanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - Set Complete Panel hidden");
+        }
+    }
+
+    // フェーズテキストを更新
+    public void UpdatePhaseText(string phase)
+    {
+        if (phaseText != null)
+        {
+            string displayText = "";
+            
+            switch (phase.ToLower())
+            {
+                case "set_phase":
+                    displayText = "SET PHASE";
+                    break;
+                case "betting":
+                case "bet_phase":
+                    displayText = "BET PHASE";
+                    break;
+                case "reveal":
+                case "open_phase":
+                    displayText = "OPEN PHASE";
+                    break;
+                default:
+                    displayText = phase.ToUpper();
+                    break;
+            }
+            
+            phaseText.text = displayText;
+            Debug.Log($"OnlinePanelManager - Phase text updated to: {displayText}");
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - phaseText is null! Please assign it in the Inspector.");
+        }
     }
 }
