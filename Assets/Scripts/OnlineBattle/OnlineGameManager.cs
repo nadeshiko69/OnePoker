@@ -622,25 +622,25 @@ public class OnlineGameManager : MonoBehaviour
         
         try
         {
-            Debug.Log("OnlineGameManager - Attempting to parse response JSON");
+            // Debug.Log("OnlineGameManager - Attempting to parse response JSON");
             // レスポンスをパース
             var setCardResponse = JsonUtility.FromJson<SetCardResponse>(response);
-            Debug.Log($"OnlineGameManager - Successfully parsed response. GameId: {setCardResponse.gameId}, GamePhase: {setCardResponse.gamePhase}");
-            Debug.Log($"OnlineGameManager - Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
-            Debug.Log($"OnlineGameManager - Player1CardValue: {setCardResponse.player1CardValue}, Player2CardValue: {setCardResponse.player2CardValue}");
-            Debug.Log($"OnlineGameManager - Player1CardPlaced: {setCardResponse.player1CardPlaced}, Player2CardPlaced: {setCardResponse.player2CardPlaced}");
+            // Debug.Log($"OnlineGameManager - Successfully parsed response. GameId: {setCardResponse.gameId}, GamePhase: {setCardResponse.gamePhase}");
+            // Debug.Log($"OnlineGameManager - Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
+            // Debug.Log($"OnlineGameManager - Player1CardValue: {setCardResponse.player1CardValue}, Player2CardValue: {setCardResponse.player2CardValue}");
+            // Debug.Log($"OnlineGameManager - Player1CardPlaced: {setCardResponse.player1CardPlaced}, Player2CardPlaced: {setCardResponse.player2CardPlaced}");
             
             // カード配置後はセット不可
             canSetCard = false;
             Debug.Log("OnlineGameManager - Set canSetCard to false");
             
             // 両者セット済みかチェック
-            Debug.Log($"OnlineGameManager - Checking both players set condition: player1Set={setCardResponse.player1Set}, player2Set={setCardResponse.player2Set}");
-            Debug.Log($"OnlineGameManager - Current flags: isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
+            // Debug.Log($"OnlineGameManager - Checking both players set condition: player1Set={setCardResponse.player1Set}, player2Set={setCardResponse.player2Set}");
+            // Debug.Log($"OnlineGameManager - Current flags: isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
             
             if (setCardResponse.player1Set && setCardResponse.player2Set)
             {
-                Debug.Log("OnlineGameManager - Both players have set their cards!");
+                // Debug.Log("OnlineGameManager - Both players have set their cards!");
                 
                 // セット完了フェーズを開始（重複実行を防ぐ）
                 if (!isSetCompletePhaseActive)
@@ -691,18 +691,18 @@ public class OnlineGameManager : MonoBehaviour
             panelManager.HideSetCompletePanel();
         }
         
-        // 相手のカードを表向きにする
-        DisplayOpponentCardFaceUp(player2CardValue);
+        // // 相手のカードを表向きにする
+        // DisplayOpponentCardFaceUp(player2CardValue);
         
-        Debug.Log("OnlineGameManager - About to transition to Betting Phase");
+        // Debug.Log("OnlineGameManager - About to transition to Betting Phase");
         
         // Betting Phaseに遷移
         Debug.Log("OnlineGameManager - About to call HandleGamePhaseChange('betting')");
         HandleGamePhaseChange("betting");
         
-        Debug.Log("OnlineGameManager - HandleGamePhaseChange('betting') completed");
+        // Debug.Log("OnlineGameManager - HandleGamePhaseChange('betting') completed");
         
-        Debug.Log("OnlineGameManager - Setting isSetCompletePhaseActive to false");
+        // Debug.Log("OnlineGameManager - Setting isSetCompletePhaseActive to false");
         isSetCompletePhaseActive = false;
         
         Debug.Log("OnlineGameManager - HandleSetCompletePhase completed");
