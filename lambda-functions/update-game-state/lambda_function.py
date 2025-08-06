@@ -60,7 +60,7 @@ def lambda_handler(event, context):
             'body': json.dumps({'message': 'Invalid playerId'})
         }
 
-    # 3. 両者セット済みならgamePhaseをrevealに
+    # 3. 両者セット済みならgamePhaseをbettingに
     # 現在のプレイヤーがセットした後の状態を計算
     if player_id == item.get('player1Id'):
         player1_set = True  # 今セットしたのでTrue
@@ -72,8 +72,8 @@ def lambda_handler(event, context):
     print(f"Player1Set: {player1_set}, Player2Set: {player2_set}")
     
     if player1_set and player2_set:
-        print("Both players have set their cards, transitioning to reveal phase")
-        update_attrs['gamePhase'] = 'reveal'
+        print("Both players have set their cards, transitioning to betting phase")
+        update_attrs['gamePhase'] = 'betting'  # revealではなくbettingに変更
     else:
         print(f"Waiting for opponent. Player1Set: {player1_set}, Player2Set: {player2_set}")
 
