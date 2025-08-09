@@ -53,6 +53,203 @@ public class OnlineGameManager : MonoBehaviour
     private CardDisplay setPlayerCard;
     public CardDisplay SetPlayerCard => setPlayerCard;
 
+    // ベット関連のフィールド
+    private int currentBetValue = 1; // 現在のベット値（最小1）
+    private int minimumBetValue = 1; // 最小ベット値（相手のレイズに応じて変更）
+    private bool isMyTurn = false; // 自分のターンかどうか
+    private bool hasOpponentActed = false; // 相手がアクション済みかどうか
+
+    // ベット値の管理
+    public int CurrentBetValue => currentBetValue;
+    public int MinimumBetValue => minimumBetValue;
+    public bool IsMyTurn => isMyTurn;
+
+    // ベット値の増減
+    public void IncreaseBetValue()
+    {
+        if (currentBetValue < 10) // 最大10まで
+        {
+            currentBetValue++;
+            Debug.Log($"OnlineGameManager - Bet value increased to: {currentBetValue}");
+            UpdateBetUI();
+        }
+    }
+
+    public void DecreaseBetValue()
+    {
+        if (currentBetValue > minimumBetValue)
+        {
+            currentBetValue--;
+            Debug.Log($"OnlineGameManager - Bet value decreased to: {currentBetValue}");
+            UpdateBetUI();
+        }
+    }
+
+    // ベットUIの更新
+    private void UpdateBetUI()
+    {
+        if (panelManager != null)
+        {
+            // Call/Raiseボタンのテキスト更新
+            panelManager.UpdateCallButtonText(currentBetValue);
+            
+            // ボタンの有効/無効状態更新
+            panelManager.SetBettingButtonInteractable(true);
+        }
+    }
+
+    // ベットアクションの実行
+    public void ExecuteBetAction(string actionType)
+    {
+        Debug.Log($"OnlineGameManager - Executing bet action: {actionType}, betValue: {currentBetValue}");
+        
+        if (!isBettingPhaseActive)
+        {
+            Debug.LogWarning("OnlineGameManager - Betting phase not active, ignoring bet action");
+            return;
+        }
+
+        // AWSにベットアクションを送信
+        SendBetActionToAWS(actionType, currentBetValue);
+    }
+
+    // Call/Raiseアクション
+    public void CallOrRaise()
+    {
+        string actionType = currentBetValue == 1 ? "call" : "raise";
+        ExecuteBetAction(actionType);
+    }
+
+    // Dropアクション
+    public void Drop()
+    {
+        ExecuteBetAction("drop");
+    }
+
+    // AWSにベットアクションを送信
+    private void SendBetActionToAWS(string actionType, int betValue)
+    {
+        Debug.Log($"OnlineGameManager - Sending bet action to AWS: {actionType}, betValue: {betValue}");
+        
+        // HttpManagerを使用してベットアクションを送信
+        HttpManager.Instance.SendBetAction(
+            currentGameId,
+            currentPlayerId,
+            actionType,
+            betValue,
+            OnBetActionSuccess,
+            OnBetActionError
+        );
+    }
+
+    // ベットアクション成功時の処理
+    private void OnBetActionSuccess(string response)
+    {
+        Debug.Log($"OnlineGameManager - Bet action successful: {response}");
+        
+        // レスポンスをパース
+        var betResponse = JsonUtility.FromJson<BetActionResponse>(response);
+        
+        if (betResponse != null)
+        {
+            // ゲーム状態を更新
+            UpdateGameStateFromBetResponse(betResponse);
+            
+            // UIを更新
+            UpdateBettingUI(betResponse);
+        }
+    }
+
+    // ベットアクションエラー時の処理
+    private void OnBetActionError(string error)
+    {
+        Debug.LogError($"OnlineGameManager - Bet action failed: {error}");
+        // エラー時の処理（例：ボタンを再度有効化）
+        if (panelManager != null)
+        {
+            panelManager.SetBettingButtonInteractable(true);
+        }
+    }
+
+    // ベットレスポンスからゲーム状態を更新
+    private void UpdateGameStateFromBetResponse(BetActionResponse response)
+    {
+        // 相手のアクションに応じて処理
+        if (response.opponentAction != null)
+        {
+            HandleOpponentAction(response.opponentAction);
+        }
+        
+        // フェーズ遷移の確認
+        if (response.gamePhase == "reveal")
+        {
+            Debug.Log("OnlineGameManager - Game phase changed to reveal from bet action");
+            HandleGamePhaseChange("reveal");
+        }
+    }
+
+    // 相手のアクションを処理
+    private void HandleOpponentAction(OpponentAction action)
+    {
+        Debug.Log($"OnlineGameManager - Handling opponent action: {action.actionType}, betValue: {action.betValue}");
+        
+        switch (action.actionType)
+        {
+            case "call":
+                ShowOpponentCalledPanel();
+                break;
+            case "raise":
+                ShowOpponentRaisedPanel(action.betValue);
+                minimumBetValue = action.betValue;
+                currentBetValue = action.betValue;
+                UpdateBetUI();
+                break;
+            case "drop":
+                ShowOpponentDroppedPanel();
+                break;
+        }
+    }
+
+    // 相手がコールした時のパネル表示
+    private void ShowOpponentCalledPanel()
+    {
+        if (panelManager != null)
+        {
+            panelManager.ShowOpponentActionPanel("対戦相手がコールしました", 3f);
+        }
+    }
+
+    // 相手がレイズした時のパネル表示
+    private void ShowOpponentRaisedPanel(int betValue)
+    {
+        if (panelManager != null)
+        {
+            panelManager.ShowOpponentActionPanel($"対戦相手が{betValue}にレイズしました", 3f);
+        }
+    }
+
+    // 相手がドロップした時のパネル表示
+    private void ShowOpponentDroppedPanel()
+    {
+        if (panelManager != null)
+        {
+            panelManager.ShowOpponentActionPanel("対戦相手がドロップしました", 3f);
+        }
+    }
+
+    // ベットUIの更新
+    private void UpdateBettingUI(BetActionResponse response)
+    {
+        if (panelManager != null)
+        {
+            // 自分のターンかどうかを更新
+            isMyTurn = response.isMyTurn;
+            
+            // ボタンの有効/無効状態を更新
+            panelManager.SetBettingButtonInteractable(isMyTurn);
+        }
+    }
+
     void Start()
     {
         Debug.Log("OnlineGameManager.Start() called");
@@ -793,27 +990,34 @@ public class OnlineGameManager : MonoBehaviour
         public bool player2CardPlaced;
     }
 
-    public void PlaceBet(int amount) 
-    { 
-        Debug.Log($"OnlineGameManager - PlaceBet called with amount: {amount}");
-        CurrentBetAmount = amount;
-        // TODO: ベット額をサーバーに通知
+    [System.Serializable]
+    private class BetActionRequest
+    {
+        public string gameId;
+        public string playerId;
+        public string actionType; // "call", "raise", "drop"
+        public int betValue;
     }
-    
-    public int CurrentBetAmount { get; private set; }
-    
-    public void Call() 
-    { 
-        Debug.Log("OnlineGameManager - Call called");
-        // TODO: Call処理を実装
+
+    [System.Serializable]
+    private class BetActionResponse
+    {
+        public string gameId;
+        public string gamePhase;
+        public bool isMyTurn;
+        public int currentBet;
+        public OpponentAction opponentAction;
+        public string message;
     }
-    
-    public void Drop() 
-    { 
-        Debug.Log("OnlineGameManager - Drop called");
-        // TODO: Drop処理を実装
+
+    [System.Serializable]
+    private class OpponentAction
+    {
+        public string actionType; // "call", "raise", "drop"
+        public int betValue;
+        public string playerId;
     }
-    
+
     public void SetOpponentCalled(bool called) { /* TODO: 実装 */ }
     public void RevealCards() { /* TODO: 実装 */ }
     public CardDisplay SetOpponentCard { get; }

@@ -55,6 +55,10 @@ public class OnlinePanelManager : MonoBehaviour
     public Button yesButton;
     public Button noButton;
 
+    [Header("セット完了通知パネル")]
+    public GameObject setCompletePanel;
+    public TextMeshProUGUI setCompleteText;
+
     [Header("◎　Betting Phase")]
     [Header("ベットパネル")]
     public GameObject bettingPanel;
@@ -65,9 +69,9 @@ public class OnlinePanelManager : MonoBehaviour
     public TextMeshProUGUI callButtonText;
     public Button dropButton;
     
-    [Header("◎　Set Complete")]
-    public GameObject setCompletePanel;
-    public TextMeshProUGUI setCompleteText;
+    [Header("相手アクション通知パネル")]
+    public GameObject opponentActionPanel;
+    public TextMeshProUGUI opponentActionText;
 
     [Header("◎　Open Phase")]
     public GameObject openPanel;
@@ -113,6 +117,7 @@ public class OnlinePanelManager : MonoBehaviour
             Debug.LogWarning("OnlinePanelManager - setCompletePanel is null in Start()");
         }
         if (matchResultPanel != null) matchResultPanel.SetActive(false);
+        if (opponentActionPanel != null) opponentActionPanel.SetActive(false);
 
         Debug.Log("OnlinePanelManager - All panels set to inactive");
 
@@ -135,6 +140,31 @@ public class OnlinePanelManager : MonoBehaviour
         else
         {
             Debug.LogError($"OnlinePanelManager - noButton or gameManager is null: noButton={noButton != null}, gameManager={gameManager != null}");
+        }
+
+        // ベットボタンのイベント設定
+        if (betPlusButton != null && gameManager != null)
+        {
+            betPlusButton.onClick.AddListener(gameManager.IncreaseBetValue);
+            Debug.Log("OnlinePanelManager - betPlusButton listener added");
+        }
+        
+        if (betMinusButton != null && gameManager != null)
+        {
+            betMinusButton.onClick.AddListener(gameManager.DecreaseBetValue);
+            Debug.Log("OnlinePanelManager - betMinusButton listener added");
+        }
+        
+        if (callButton != null && gameManager != null)
+        {
+            callButton.onClick.AddListener(gameManager.CallOrRaise);
+            Debug.Log("OnlinePanelManager - callButton listener added");
+        }
+        
+        if (dropButton != null && gameManager != null)
+        {
+            dropButton.onClick.AddListener(gameManager.Drop);
+            Debug.Log("OnlinePanelManager - dropButton listener added");
         }
         
         // 初期化時のボタン表示/非表示設定
@@ -177,18 +207,9 @@ public class OnlinePanelManager : MonoBehaviour
         bettingPanel.SetActive(true);
         StartCoroutine(HideBettingUI());
 
-        // ベット開始時に自動で1をベット
-        gameManager.PlaceBet(1);
-
-        betPlusButton.onClick.RemoveAllListeners();
-        betMinusButton.onClick.RemoveAllListeners();
-        callButton.onClick.RemoveAllListeners();
-        dropButton.onClick.RemoveAllListeners();
-
-        betPlusButton.onClick.AddListener(() => gameManager.PlaceBet(1));
-        betMinusButton.onClick.AddListener(() => gameManager.PlaceBet(-1));
-        callButton.onClick.AddListener(() => StartCoroutine(HandleCall()));
-        dropButton.onClick.AddListener(() => StartCoroutine(HandleDrop()));
+        // ベット開始時に初期値を設定
+        // 新しい実装では、Start()で既にボタンイベントが設定されているため、
+        // ここでは初期化のみ行う
 
         // ObstructスキルのPanel出てたら消す
         if (obstructPanel != null) obstructPanel.SetActive(false);
@@ -227,12 +248,19 @@ public class OnlinePanelManager : MonoBehaviour
         }
     }
 
-    public void UpdateCallButtonText()
+    public void UpdateCallButtonText(int betValue)
     {
         if (callButtonText != null)
         {
-            string action = gameManager.CurrentBetAmount >= 2 ? "Raise" : "Call";
-            callButtonText.text = $"{action} ({gameManager.CurrentBetAmount})";
+            if (betValue == 1)
+            {
+                callButtonText.text = "Call";
+            }
+            else
+            {
+                callButtonText.text = "Raise";
+            }
+            Debug.Log($"OnlinePanelManager - Call button text updated to: {callButtonText.text} (betValue: {betValue})");
         }
     }
 
@@ -249,60 +277,6 @@ public class OnlinePanelManager : MonoBehaviour
     {
         yield return new WaitForSeconds(1f);
         HidePanel(bettingPanel);
-    }
-
-    
-    private IEnumerator HandleCall()
-    {
-        // プレイヤーがコール
-        Debug.Log($"Player calls with {gameManager.CurrentBetAmount} life!");
-        bettingPanel.SetActive(false);
-        UpdateCallButtonText();
-
-        // Callが決定した時点でボタンを非活性にする
-        SetBettingButtonInteractable(false);
-
-        yield return new WaitForSeconds(1f);
-
-        // CPUがコール
-        Debug.Log("Opponent calls!");
-        gameManager.SetOpponentCalled(true);
-        //　CPUのライフを更新する
-        matchManager.UpdateOpponentLife(-gameManager.CurrentBetAmount);
-
-        yield return new WaitForSeconds(1f);
-
-        // オープンのUIを表示しカードオープン
-        openPanel.SetActive(true);
-        yield return new WaitForSeconds(1f);
-        openPanel.SetActive(false);
-        gameManager.RevealCards();
-    }
-
-    private IEnumerator HandleDrop(){
-        // Dropが決定した時点でボタンを非活性にする
-        SetBettingButtonInteractable(false);
-
-        // ドロップのUIを表示
-        bettingPanel.SetActive(false);
-        dropPanel.SetActive(true);
-        yield return new WaitForSeconds(1f);
-        dropPanel.SetActive(false);
-
-        // 負けUIの表示（相手のDropを考慮して後々修正）
-        gameResultPanel.SetActive(true);
-        gameResultText.text = "YOU LOSE...";
-        gameResultText.color = Color.blue;
-        yield return new WaitForSeconds(1f);
-        gameResultPanel.SetActive(false);
-
-        // 相手勝ちとしてライフ更新
-        matchManager.UpdateOpponentLife(gameManager.CurrentBetAmount);
-        resultViewManager.UpdateResultTable(gameManager.SetPlayerCard.GetComponent<CardDisplay>().CardValue, gameManager.SetOpponentCard.GetComponent<CardDisplay>().CardValue, false, false);
-        
-        // 次のゲームへの遷移
-        yield return new WaitForSeconds(1f);
-        matchManager.OnGameComplete();
     }
 
     public void ShowMatchStartPanel(string player1, string player2, float duration)
@@ -519,33 +493,55 @@ public class OnlinePanelManager : MonoBehaviour
 
     public void ShowSetCompletePanel()
     {
-        Debug.Log($"OnlinePanelManager - ShowSetCompletePanel called, setCompletePanel: {setCompletePanel != null}");
-        
-        // 他のパネルを一時的に非表示にしてテスト
-        if (confirmationPanel != null) confirmationPanel.SetActive(false);
-        if (startPhasePanel != null) startPhasePanel.SetActive(false);
-        
         if (setCompletePanel != null)
         {
-            Debug.Log($"OnlinePanelManager - setCompletePanel is active: {setCompletePanel.activeInHierarchy}");
             setCompletePanel.SetActive(true);
-            Debug.Log($"OnlinePanelManager - setCompletePanel activated, now active: {setCompletePanel.activeInHierarchy}");
+            Debug.Log("OnlinePanelManager - Set Complete panel activated");
             
-            if (setCompleteText != null)
-            {
-                setCompleteText.text = "お互いのセットが完了しました";
-                Debug.Log($"OnlinePanelManager - setCompleteText set to: {setCompleteText.text}");
-            }
-            else
-            {
-                Debug.LogError("OnlinePanelManager - setCompleteText is null!");
-            }
-            
-            Debug.Log("OnlinePanelManager - Set Complete Panel shown");
+            // 3秒後に自動的に非表示にする
+            StartCoroutine(AutoHideSetCompletePanelAfterDelay(3f));
         }
         else
         {
-            Debug.LogError("OnlinePanelManager - setCompletePanel is null! Please assign it in the Inspector.");
+            Debug.LogError("OnlinePanelManager - setCompletePanel is null in ShowSetCompletePanel()");
+        }
+    }
+
+    // 相手アクション通知パネルを表示
+    public void ShowOpponentActionPanel(string message, float duration = 3f)
+    {
+        if (opponentActionPanel != null && opponentActionText != null)
+        {
+            opponentActionText.text = message;
+            opponentActionPanel.SetActive(true);
+            Debug.Log($"OnlinePanelManager - Opponent action panel activated: {message}");
+            
+            // 指定時間後に自動的に非表示にする
+            StartCoroutine(AutoHideOpponentActionPanelAfterDelay(duration));
+        }
+        else
+        {
+            Debug.LogError("OnlinePanelManager - opponentActionPanel or opponentActionText is null");
+        }
+    }
+
+    private IEnumerator AutoHideOpponentActionPanelAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (opponentActionPanel != null)
+        {
+            opponentActionPanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - Opponent action panel auto-hidden");
+        }
+    }
+
+    private IEnumerator AutoHideSetCompletePanelAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (setCompletePanel != null)
+        {
+            setCompletePanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - Set Complete panel auto-hidden");
         }
     }
 

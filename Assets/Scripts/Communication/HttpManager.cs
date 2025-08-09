@@ -102,6 +102,36 @@ namespace OnePoker.Network
             );
         }
 
+        public void SendBetAction(
+            string gameId,
+            string playerId,
+            string actionType,
+            int betValue,
+            Action<string> onSuccess,
+            Action<string> onError)
+        {
+            string url = $"{ApiBaseUrl}/bet-action";
+            string jsonBody = JsonUtility.ToJson(new BetActionRequest
+            {
+                gameId = gameId,
+                playerId = playerId,
+                actionType = actionType,
+                betValue = betValue
+            });
+            
+            Debug.Log($"HttpManager - Calling bet-action API: {url}, body: {jsonBody}");
+            
+            Post<BetActionResponse>(
+                url,
+                jsonBody,
+                (response) => {
+                    string responseJson = JsonUtility.ToJson(response);
+                    onSuccess?.Invoke(responseJson);
+                },
+                onError
+            );
+        }
+
         public void UpdateGameState(
             string gameId,
             string playerId,
@@ -183,6 +213,34 @@ namespace OnePoker.Network
         {
             public bool success;
             public string message;
+        }
+
+        [System.Serializable]
+        private class BetActionRequest
+        {
+            public string gameId;
+            public string playerId;
+            public string actionType; // "call", "raise", "drop"
+            public int betValue;
+        }
+
+        [System.Serializable]
+        private class BetActionResponse
+        {
+            public string gameId;
+            public string gamePhase;
+            public bool isMyTurn;
+            public int currentBet;
+            public OpponentAction opponentAction;
+            public string message;
+        }
+
+        [System.Serializable]
+        private class OpponentAction
+        {
+            public string actionType; // "call", "raise", "drop"
+            public int betValue;
+            public string playerId;
         }
 
         private IEnumerator PostCoroutine<TResponse>(
