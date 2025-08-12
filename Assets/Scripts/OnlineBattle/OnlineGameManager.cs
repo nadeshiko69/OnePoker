@@ -432,6 +432,7 @@ public class OnlineGameManager : MonoBehaviour
     private IEnumerator MonitorGamePhase()
     {
         Debug.Log("OnlineGameManager - Starting game phase monitoring coroutine");
+        Debug.Log($"OnlineGameManager - MonitorGamePhase: Initial flags - isSetPhaseActive={isSetPhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isRevealPhaseActive={isRevealPhaseActive}, isSetCompletePhaseActive={isSetCompletePhaseActive}");
         
         while (true)
         {
@@ -441,12 +442,15 @@ public class OnlineGameManager : MonoBehaviour
             if (isSetCompletePhaseActive)
             {
                 Debug.Log($"OnlineGameManager - Set Complete phase active, continuing monitoring: isSetCompletePhaseActive={isSetCompletePhaseActive}");
+                Debug.Log($"OnlineGameManager - MonitorGamePhase: Current flags during set complete - isSetPhaseActive={isSetPhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isRevealPhaseActive={isRevealPhaseActive}");
                 yield return new WaitForSeconds(0.1f);
                 continue;
             }
             
             if (!string.IsNullOrEmpty(currentGameId) && !string.IsNullOrEmpty(currentPlayerId))
             {
+                Debug.Log($"OnlineGameManager - MonitorGamePhase: Checking game phase for gameId: {currentGameId}, playerId: {currentPlayerId}");
+                Debug.Log($"OnlineGameManager - MonitorGamePhase: Current flags before phase check - isSetPhaseActive={isSetPhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isRevealPhaseActive={isRevealPhaseActive}, isSetCompletePhaseActive={isSetCompletePhaseActive}");
                 StartCoroutine(CheckGamePhase());
             }
             else
@@ -504,31 +508,40 @@ public class OnlineGameManager : MonoBehaviour
     // ゲームフェーズ変更を処理
     private void HandleGamePhaseChange(string newPhase)
     {
-        Debug.Log($"OnlineGameManager - Handling phase change to: {newPhase}");
-        Debug.Log($"OnlineGameManager - Current state: isSetPhaseActive={isSetPhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isRevealPhaseActive={isRevealPhaseActive}");
+        Debug.Log($"OnlineGameManager - HandleGamePhaseChange called with newPhase: {newPhase}");
+        Debug.Log($"OnlineGameManager - Current state before change: isSetPhaseActive={isSetPhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isRevealPhaseActive={isRevealPhaseActive}, isSetCompletePhaseActive={isSetCompletePhaseActive}");
+        Debug.Log($"OnlineGameManager - canSetCard: {canSetCard}");
         
         // フェーズテキストを更新
         if (panelManager != null)
         {
             panelManager.UpdatePhaseText(newPhase);
+            Debug.Log($"OnlineGameManager - Phase text updated to: {newPhase}");
+        }
+        else
+        {
+            Debug.LogWarning("OnlineGameManager - panelManager is null in HandleGamePhaseChange");
         }
         
         // 現在のフェーズを記録
-        string currentPhase = isSetPhaseActive ? "set_phase" : (isBettingPhaseActive ? "betting" : (isRevealPhaseActive ? "reveal" : "unknown"));
+        string currentPhase = isSetPhaseActive ? "set_phase" : (isBettingPhaseActive ? "betting" : (isRevealPhaseActive ? "reveal" : (isSetCompletePhaseActive ? "set_complete" : "unknown")));
+        Debug.Log($"OnlineGameManager - Current phase string: {currentPhase}");
         
         // 同じフェーズの場合は処理をスキップ
         if (currentPhase == newPhase)
         {
-            Debug.Log($"OnlineGameManager - Phase {newPhase} already active, skipping");
+            Debug.Log($"OnlineGameManager - Phase {newPhase} already active, skipping phase change");
             return;
         }
         
         // フェーズ遷移の順序をチェック
         if (newPhase == "reveal" && !isBettingPhaseActive)
         {
-            Debug.Log("OnlineGameManager - Skipping reveal phase, betting phase not completed yet");
+            Debug.LogWarning("OnlineGameManager - Skipping reveal phase, betting phase not completed yet");
             return;
         }
+        
+        Debug.Log($"OnlineGameManager - Processing phase change from {currentPhase} to {newPhase}");
         
         switch (newPhase)
         {
@@ -536,10 +549,13 @@ public class OnlineGameManager : MonoBehaviour
                 Debug.Log("OnlineGameManager - Processing set_phase case");
                 if (!isSetPhaseActive)
                 {
+                    Debug.Log("OnlineGameManager - Activating set phase");
                     isSetPhaseActive = true;
                     isRevealPhaseActive = false;
+                    isBettingPhaseActive = false;
+                    isSetCompletePhaseActive = false;
                     canSetCard = false;
-                    Debug.Log("OnlineGameManager - Activating set phase");
+                    Debug.Log("OnlineGameManager - Set phase flags updated: isSetPhaseActive=true, canSetCard=false");
                     if (panelManager != null)
                     {
                         panelManager.ShowStartPhasePanel("Set Phase", "カードをSetZoneにセットしてください");
@@ -558,10 +574,13 @@ public class OnlineGameManager : MonoBehaviour
                 break;
                 
             case "card_placement":
+                Debug.Log("OnlineGameManager - Processing card_placement case");
                 if (isSetPhaseActive)
                 {
+                    Debug.Log("OnlineGameManager - Transitioning from set_phase to card_placement");
                     isSetPhaseActive = false;
                     canSetCard = true;
+                    Debug.Log("OnlineGameManager - Card placement flags updated: isSetPhaseActive=false, canSetCard=true");
                     if (panelManager != null)
                     {
                         panelManager.HideStartPhasePanel();
@@ -572,20 +591,24 @@ public class OnlineGameManager : MonoBehaviour
                 else
                 {
                     // set_phaseをスキップして直接card_placementになった場合
+                    Debug.Log("OnlineGameManager - Direct card_placement phase activated (set_phase was skipped)");
                     canSetCard = true;
-                    Debug.Log("OnlineGameManager - Direct card_placement phase activated");
+                    Debug.Log("OnlineGameManager - Direct card_placement: canSetCard=true");
                 }
                 break;
 
             case "betting":
                 Debug.Log($"OnlineGameManager - Processing betting case, isBettingPhaseActive: {isBettingPhaseActive}");
+                Debug.Log($"OnlineGameManager - Current flags before betting transition: isSetPhaseActive={isSetPhaseActive}, isSetCompletePhaseActive={isSetCompletePhaseActive}, canSetCard={canSetCard}");
                 
                 if (!isBettingPhaseActive)
                 {
                     Debug.Log("OnlineGameManager - Activating Betting Phase");
                     isBettingPhaseActive = true;
                     isSetPhaseActive = false;
+                    isSetCompletePhaseActive = false;
                     canSetCard = false;
+                    Debug.Log("OnlineGameManager - Betting phase flags updated: isBettingPhaseActive=true, isSetPhaseActive=false, isSetCompletePhaseActive=false, canSetCard=false");
                     
                     if (panelManager != null)
                     {
@@ -603,8 +626,6 @@ public class OnlineGameManager : MonoBehaviour
                         {
                             Debug.Log("OnlineGameManager - Phase monitoring already active, skipping restart");
                         }
-                        
-
                     }
                     else
                     {
@@ -618,11 +639,16 @@ public class OnlineGameManager : MonoBehaviour
                 break;
 
             case "reveal":
+                Debug.Log("OnlineGameManager - Processing reveal case");
                 if (!isRevealPhaseActive)
                 {
+                    Debug.Log("OnlineGameManager - Activating reveal phase");
                     isRevealPhaseActive = true;
                     isSetPhaseActive = false;
+                    isBettingPhaseActive = false;
+                    isSetCompletePhaseActive = false;
                     canSetCard = false;
+                    Debug.Log("OnlineGameManager - Reveal phase flags updated: isRevealPhaseActive=true, others=false");
                     
                     if (panelManager != null)
                     {
@@ -638,9 +664,11 @@ public class OnlineGameManager : MonoBehaviour
                 break;
                 
             default:
-                Debug.Log($"OnlineGameManager - Unknown game phase: {newPhase}");
+                Debug.LogWarning($"OnlineGameManager - Unknown game phase: {newPhase}");
                 break;
         }
+        
+        Debug.Log($"OnlineGameManager - HandleGamePhaseChange completed. Final state: isSetPhaseActive={isSetPhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isRevealPhaseActive={isRevealPhaseActive}, isSetCompletePhaseActive={isSetCompletePhaseActive}, canSetCard={canSetCard}");
     }
 
     // カードセット可能かどうかを取得
@@ -819,25 +847,25 @@ public class OnlineGameManager : MonoBehaviour
         
         try
         {
-            // Debug.Log("OnlineGameManager - Attempting to parse response JSON");
             // レスポンスをパース
             var setCardResponse = JsonUtility.FromJson<SetCardResponse>(response);
-            // Debug.Log($"OnlineGameManager - Successfully parsed response. GameId: {setCardResponse.gameId}, GamePhase: {setCardResponse.gamePhase}");
-            // Debug.Log($"OnlineGameManager - Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
-            // Debug.Log($"OnlineGameManager - Player1CardValue: {setCardResponse.player1CardValue}, Player2CardValue: {setCardResponse.player2CardValue}");
-            // Debug.Log($"OnlineGameManager - Player1CardPlaced: {setCardResponse.player1CardPlaced}, Player2CardPlaced: {setCardResponse.player2CardPlaced}");
+            Debug.Log($"OnlineGameManager - Successfully parsed response. GameId: {setCardResponse.gameId}, GamePhase: {setCardResponse.gamePhase}");
+            Debug.Log($"OnlineGameManager - Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
+            Debug.Log($"OnlineGameManager - Player1CardValue: {setCardResponse.player1CardValue}, Player2CardValue: {setCardResponse.player2CardValue}");
+            Debug.Log($"OnlineGameManager - Player1CardPlaced: {setCardResponse.player1CardPlaced}, Player2CardPlaced: {setCardResponse.player2CardPlaced}");
             
             // カード配置後はセット不可
             canSetCard = false;
             Debug.Log("OnlineGameManager - Set canSetCard to false");
             
             // 両者セット済みかチェック
-            // Debug.Log($"OnlineGameManager - Checking both players set condition: player1Set={setCardResponse.player1Set}, player2Set={setCardResponse.player2Set}");
-            // Debug.Log($"OnlineGameManager - Current flags: isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
+            Debug.Log($"OnlineGameManager - Checking both players set condition: player1Set={setCardResponse.player1Set}, player2Set={setCardResponse.player2Set}");
+            Debug.Log($"OnlineGameManager - Current flags: isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
             
             if (setCardResponse.player1Set && setCardResponse.player2Set)
             {
-                // Debug.Log("OnlineGameManager - Both players have set their cards!");
+                Debug.Log("OnlineGameManager - Both players have set their cards!");
+                Debug.Log($"OnlineGameManager - About to start Set Complete Phase. Current flags: isSetCompletePhaseActive={isSetCompletePhaseActive}");
                 
                 // セット完了フェーズを開始（重複実行を防ぐ）
                 if (!isSetCompletePhaseActive)
@@ -847,12 +875,13 @@ public class OnlineGameManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("OnlineGameManager - Set Complete Phase already active, skipping");
+                    Debug.LogWarning("OnlineGameManager - Set Complete Phase already active, skipping duplicate start");
                 }
             }
             else
             {
                 Debug.Log($"OnlineGameManager - Waiting for opponent. Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
+                Debug.Log($"OnlineGameManager - Current flags while waiting: isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
             }
         }
         catch (System.Exception e)
@@ -866,9 +895,11 @@ public class OnlineGameManager : MonoBehaviour
     private IEnumerator HandleSetCompletePhase(int player1CardValue, int player2CardValue)
     {
         Debug.Log($"OnlineGameManager - HandleSetCompletePhase started with player1CardValue: {player1CardValue}, player2CardValue: {player2CardValue}");
+        Debug.Log($"OnlineGameManager - HandleSetCompletePhase: Current flags before starting - isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isSetPhaseActive={isSetPhaseActive}");
         Debug.Log($"OnlineGameManager - HandleSetCompletePhase: isSetCompletePhaseActive will be set to true");
         
         isSetCompletePhaseActive = true;
+        Debug.Log($"OnlineGameManager - HandleSetCompletePhase: isSetCompletePhaseActive set to {isSetCompletePhaseActive}");
         
         // 相手のカードを裏向きで表示
         DisplayOpponentCardFaceDown(player2CardValue);
@@ -877,30 +908,39 @@ public class OnlineGameManager : MonoBehaviour
         if (panelManager != null)
         {
             panelManager.ShowSetCompletePanel();
+            Debug.Log("OnlineGameManager - HandleSetCompletePhase: Set Complete Panel shown");
+        }
+        else
+        {
+            Debug.LogWarning("OnlineGameManager - HandleSetCompletePhase: panelManager is null, cannot show Set Complete Panel");
         }
         
         // セット完了パネルを3秒間表示
+        Debug.Log("OnlineGameManager - HandleSetCompletePhase: Waiting 3 seconds before hiding panel");
         yield return new WaitForSeconds(3f);
         
         // セット完了パネルを非表示
         if (panelManager != null)
         {
             panelManager.HideSetCompletePanel();
+            Debug.Log("OnlineGameManager - HandleSetCompletePhase: Set Complete Panel hidden");
         }
         
-        // // 相手のカードを表向きにする
-        // DisplayOpponentCardFaceUp(player2CardValue);
-        
-        // Debug.Log("OnlineGameManager - About to transition to Betting Phase");
-        
         // Betting Phaseに遷移
-        Debug.Log("OnlineGameManager - About to call HandleGamePhaseChange('betting')");
+        Debug.Log("OnlineGameManager - HandleSetCompletePhase: About to transition to Betting Phase");
+        Debug.Log($"OnlineGameManager - HandleSetCompletePhase: Current flags before transition - isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isSetPhaseActive={isSetPhaseActive}");
+        
+        Debug.Log("OnlineGameManager - HandleSetCompletePhase: Calling HandleGamePhaseChange('betting')");
         HandleGamePhaseChange("betting");
+        Debug.Log("OnlineGameManager - HandleSetCompletePhase: HandleGamePhaseChange('betting') completed");
         
-        // Debug.Log("OnlineGameManager - HandleGamePhaseChange('betting') completed");
+        // フェーズ遷移後の状態を確認
+        Debug.Log($"OnlineGameManager - HandleSetCompletePhase: Flags after transition - isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isSetPhaseActive={isSetPhaseActive}");
         
-        // Debug.Log("OnlineGameManager - Setting isSetCompletePhaseActive to false");
+        // isSetCompletePhaseActiveをfalseに設定
+        Debug.Log("OnlineGameManager - HandleSetCompletePhase: Setting isSetCompletePhaseActive to false");
         isSetCompletePhaseActive = false;
+        Debug.Log($"OnlineGameManager - HandleSetCompletePhase: Final flags - isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isSetPhaseActive={isSetPhaseActive}");
         
         Debug.Log("OnlineGameManager - HandleSetCompletePhase completed");
     }
