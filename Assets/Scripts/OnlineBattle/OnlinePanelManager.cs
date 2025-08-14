@@ -69,6 +69,12 @@ public class OnlinePanelManager : MonoBehaviour
     public TextMeshProUGUI callButtonText;
     public Button dropButton;
     
+    [Header("ベット額表示")]
+    public TextMeshProUGUI betAmountText;
+    
+    [Header("親子表示")]
+    public TextMeshProUGUI parentChildText;
+    
     [Header("相手アクション通知パネル")]
     public GameObject opponentActionPanel;
     public TextMeshProUGUI opponentActionText;
@@ -261,6 +267,80 @@ public class OnlinePanelManager : MonoBehaviour
                 callButtonText.text = "Raise";
             }
             Debug.Log($"OnlinePanelManager - Call button text updated to: {callButtonText.text} (betValue: {betValue})");
+        }
+    }
+
+    // ベット額表示の更新
+    public void UpdateBetAmountDisplay(int betAmount)
+    {
+        if (betAmountText != null)
+        {
+            betAmountText.text = $"ベット額: {betAmount}";
+            Debug.Log($"OnlinePanelManager - Bet amount display updated to: {betAmount}");
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - betAmountText is null! Please assign it in the Inspector.");
+        }
+    }
+
+    // 親子表示の更新
+    public void UpdateParentChildDisplay(bool isParent)
+    {
+        if (parentChildText != null)
+        {
+            parentChildText.text = isParent ? "親" : "子";
+            Debug.Log($"OnlinePanelManager - Parent-Child display updated: {(isParent ? "親" : "子")}");
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - parentChildText is null! Please assign it in the Inspector.");
+        }
+    }
+
+    // 親のターンパネル表示
+    public void ShowParentTurnPanel()
+    {
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(true);
+            if (startPhaseTitle != null) startPhaseTitle.text = "親のターン";
+            if (startPhaseDescription != null) startPhaseDescription.text = "ベット額を設定してください";
+            Debug.Log("OnlinePanelManager - Parent turn panel shown");
+        }
+    }
+
+    // 親のアクション待ちパネル表示
+    public void ShowWaitingForParentPanel()
+    {
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(true);
+            if (startPhaseTitle != null) startPhaseTitle.text = "親のアクション待ち";
+            if (startPhaseDescription != null) startPhaseDescription.text = "親プレイヤーがベット中です...";
+            Debug.Log("OnlinePanelManager - Waiting for parent panel shown");
+        }
+    }
+
+    // 子のアクション待ちパネル表示
+    public void ShowWaitingForChildPanel()
+    {
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(true);
+            if (startPhaseTitle != null) startPhaseTitle.text = "子のアクション待ち";
+            if (startPhaseDescription != null) startPhaseDescription.text = "子プレイヤーがベット中です...";
+            Debug.Log("OnlinePanelManager - Waiting for child panel shown");
+        }
+    }
+
+    // 親のアクション待ちパネルを非表示
+    public void HideWaitingForParentPanel()
+    {
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - Waiting for parent panel hidden");
         }
     }
 

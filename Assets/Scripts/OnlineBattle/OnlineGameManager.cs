@@ -59,10 +59,122 @@ public class OnlineGameManager : MonoBehaviour
     private bool isMyTurn = false; // 自分のターンかどうか
     private bool hasOpponentActed = false; // 相手がアクション済みかどうか
 
+    // 親子システム関連のフィールド
+    private bool isParent = false; // 自分が親かどうか
+    private int currentRound = 0; // 現在のラウンド（1-15）
+    private int parentChangeRound = 3; // 親が交代するラウンド数
+    private bool isParentTurn = false; // 親のターンかどうか
+    private bool waitingForParentAction = false; // 親のアクション待ちかどうか
+    private bool waitingForChildAction = false; // 子のアクション待ちかどうか
+
     // ベット値の管理
     public int CurrentBetValue => currentBetValue;
     public int MinimumBetValue => minimumBetValue;
     public bool IsMyTurn => isMyTurn;
+    public bool IsParent => isParent;
+    public bool IsParentTurn => isParentTurn;
+
+    // 親子システムの初期化
+    private void InitializeParentChildSystem()
+    {
+        // CreateRoomから対戦に遷移する方を先行の親とする
+        // gameData.isPlayer1がtrueの場合、そのプレイヤーが先行の親
+        isParent = gameData.isPlayer1;
+        currentRound = 1;
+        
+        Debug.Log($"OnlineGameManager - Parent-Child system initialized. isParent: {isParent}, currentRound: {currentRound}");
+        
+        // 親子の表示を更新
+        if (panelManager != null)
+        {
+            panelManager.UpdateParentChildDisplay(isParent);
+        }
+    }
+
+    // 親子の交代判定
+    private void CheckParentChange()
+    {
+        if (currentRound % parentChangeRound == 0)
+        {
+            isParent = !isParent;
+            Debug.Log($"OnlineGameManager - Parent changed at round {currentRound}. New parent: {isParent}");
+            
+            if (panelManager != null)
+            {
+                panelManager.UpdateParentChildDisplay(isParent);
+            }
+        }
+    }
+
+    // 親のターンを開始
+    private void StartParentTurn()
+    {
+        if (isParent)
+        {
+            isParentTurn = true;
+            isMyTurn = true;
+            waitingForParentAction = false;
+            waitingForChildAction = false;
+            
+            Debug.Log("OnlineGameManager - Parent turn started. Parent can now bet.");
+            
+            if (panelManager != null)
+            {
+                panelManager.ShowParentTurnPanel();
+                panelManager.SetBettingButtonInteractable(true);
+            }
+        }
+        else
+        {
+            isParentTurn = false;
+            isMyTurn = false;
+            waitingForParentAction = true;
+            waitingForChildAction = false;
+            
+            Debug.Log("OnlineGameManager - Child waiting for parent action.");
+            
+            if (panelManager != null)
+            {
+                panelManager.ShowWaitingForParentPanel();
+                panelManager.SetBettingButtonInteractable(false);
+            }
+        }
+    }
+
+    // 子のターンを開始
+    private void StartChildTurn()
+    {
+        if (!isParent)
+        {
+            isParentTurn = false;
+            isMyTurn = true;
+            waitingForParentAction = false;
+            waitingForChildAction = false;
+            
+            Debug.Log("OnlineGameManager - Child turn started. Child can now bet.");
+            
+            if (panelManager != null)
+            {
+                panelManager.HideWaitingForParentPanel();
+                panelManager.SetBettingButtonInteractable(true);
+            }
+        }
+        else
+        {
+            isParentTurn = true;
+            isMyTurn = false;
+            waitingForParentAction = false;
+            waitingForChildAction = true;
+            
+            Debug.Log("OnlineGameManager - Parent waiting for child action.");
+            
+            if (panelManager != null)
+            {
+                panelManager.ShowWaitingForChildPanel();
+                panelManager.SetBettingButtonInteractable(false);
+            }
+        }
+    }
 
     // ベット値の増減
     public void IncreaseBetValue()
@@ -93,6 +205,9 @@ public class OnlineGameManager : MonoBehaviour
             // Call/Raiseボタンのテキスト更新
             panelManager.UpdateCallButtonText(currentBetValue);
             
+            // ベット額表示の更新
+            panelManager.UpdateBetAmountDisplay(currentBetValue);
+            
             // ボタンの有効/無効状態更新
             panelManager.SetBettingButtonInteractable(true);
         }
@@ -101,7 +216,8 @@ public class OnlineGameManager : MonoBehaviour
     // ベットアクションの実行
     public void ExecuteBetAction(string actionType)
     {
-        Debug.Log($"OnlineGameManager - Executing bet action: {actionType}, betValue: {currentBetValue}");
+        Debug.Log($"OnlineGameManager - ExecuteBetAction called with actionType: {actionType}, betValue: {currentBetValue}");
+        Debug.Log($"OnlineGameManager - Current state: isParent={isParent}, isParentTurn={isParentTurn}, isMyTurn={isMyTurn}");
         
         if (!isBettingPhaseActive)
         {
@@ -109,6 +225,77 @@ public class OnlineGameManager : MonoBehaviour
             return;
         }
 
+        // 自分のターンでない場合は処理しない
+        if (!isMyTurn)
+        {
+            Debug.LogWarning("OnlineGameManager - Not my turn, ignoring bet action");
+            return;
+        }
+
+        // 親子システムに基づいてアクションを処理
+        if (isParent)
+        {
+            HandleParentAction(actionType);
+        }
+        else
+        {
+            HandleChildAction(actionType);
+        }
+    }
+
+    // 親のアクション処理
+    private void HandleParentAction(string actionType)
+    {
+        Debug.Log($"OnlineGameManager - Handling parent action: {actionType}");
+        
+        switch (actionType)
+        {
+            case "call":
+                // 親がコールした場合、子のターンに移行
+                Debug.Log("OnlineGameManager - Parent called, starting child turn");
+                StartChildTurn();
+                break;
+                
+            case "raise":
+                // 親がレイズした場合、最低ベット額を更新して子のターンに移行
+                Debug.Log($"OnlineGameManager - Parent raised to {currentBetValue}, updating minimum bet and starting child turn");
+                minimumBetValue = currentBetValue;
+                StartChildTurn();
+                break;
+                
+            case "drop":
+                // 親がドロップした場合、OpenPhaseに移行
+                Debug.Log("OnlineGameManager - Parent dropped, transitioning to OpenPhase");
+                HandleGamePhaseChange("reveal");
+                break;
+        }
+        
+        // AWSにベットアクションを送信
+        SendBetActionToAWS(actionType, currentBetValue);
+    }
+
+    // 子のアクション処理
+    private void HandleChildAction(string actionType)
+    {
+        Debug.Log($"OnlineGameManager - Handling child action: {actionType}");
+        
+        switch (actionType)
+        {
+            case "call":
+            case "drop":
+                // 子がコールまたはドロップした場合、OpenPhaseに移行
+                Debug.Log($"OnlineGameManager - Child {actionType}, transitioning to OpenPhase");
+                HandleGamePhaseChange("reveal");
+                break;
+                
+            case "raise":
+                // 子がレイズした場合、親のターンに戻る
+                Debug.Log($"OnlineGameManager - Child raised to {currentBetValue}, returning to parent turn");
+                minimumBetValue = currentBetValue;
+                StartParentTurn();
+                break;
+        }
+        
         // AWSにベットアクションを送信
         SendBetActionToAWS(actionType, currentBetValue);
     }
@@ -318,6 +505,9 @@ public class OnlineGameManager : MonoBehaviour
         // デバッグ用：カードセットを有効化
         canSetCard = true;
         Debug.Log("OnlineGameManager - Card set enabled for testing in Start()");
+
+        // 親子システムの初期化
+        InitializeParentChildSystem();
 
         // マッチング完了パネル表示後にゲームフェーズ監視を開始
         if (panelManager != null && gameData != null)
@@ -609,6 +799,12 @@ public class OnlineGameManager : MonoBehaviour
                     isSetCompletePhaseActive = false;
                     canSetCard = false;
                     Debug.Log("OnlineGameManager - Betting phase flags updated: isBettingPhaseActive=true, isSetPhaseActive=false, isSetCompletePhaseActive=false, canSetCard=false");
+                    
+                    // 親子システムの初期化
+                    InitializeParentChildSystem();
+                    
+                    // 親のターンを開始
+                    StartParentTurn();
                     
                     if (panelManager != null)
                     {
