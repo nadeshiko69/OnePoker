@@ -88,6 +88,7 @@ public class OnlineGameManager : MonoBehaviour
         if (panelManager != null)
         {
             panelManager.UpdateParentChildDisplay(isParent);
+            panelManager.UpdatePlayerRoleDisplay(isParent);
         }
     }
 
@@ -102,8 +103,25 @@ public class OnlineGameManager : MonoBehaviour
             if (panelManager != null)
             {
                 panelManager.UpdateParentChildDisplay(isParent);
+                panelManager.UpdatePlayerRoleDisplay(isParent);
             }
         }
+    }
+
+    // ラウンド終了時の処理
+    private void OnRoundEnd()
+    {
+        Debug.Log($"OnlineGameManager - Round {currentRound} ended");
+        
+        // 親子交代をチェック
+        CheckParentChange();
+        
+        // 次のラウンドに進む
+        currentRound++;
+        Debug.Log($"OnlineGameManager - Moving to round {currentRound}");
+        
+        // 新しいラウンドの親子システムを初期化
+        InitializeParentChildSystem();
     }
 
     // 親のターンを開始

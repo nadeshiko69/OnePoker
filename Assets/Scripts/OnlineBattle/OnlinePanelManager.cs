@@ -5,8 +5,13 @@ using UnityEngine.UI;
 
 public class OnlinePanelManager : MonoBehaviour
 {
-    [Header("◎　Phase Display")]
+    [Header("Phase Display")]
     public TextMeshProUGUI phaseText;
+    
+    [Header("プレイヤーロール表示")]
+    public TextMeshProUGUI playerRoleText;
+    public TextMeshProUGUI opponentRoleText;
+    
 
     [Header("◎　Start Match")]
     public GameObject matchStartPanel;
@@ -295,6 +300,30 @@ public class OnlinePanelManager : MonoBehaviour
         else
         {
             Debug.LogWarning("OnlinePanelManager - parentChildText is null! Please assign it in the Inspector.");
+        }
+    }
+
+    // プレイヤーロール表示の更新
+    public void UpdatePlayerRoleDisplay(bool isParent)
+    {
+        if (playerRoleText != null)
+        {
+            playerRoleText.text = isParent ? "Dealer" : "Player";
+            Debug.Log($"OnlinePanelManager - Player role display updated: {(isParent ? "Dealer" : "Player")}");
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - playerRoleText is null! Please assign it in the Inspector.");
+        }
+        
+        if (opponentRoleText != null)
+        {
+            opponentRoleText.text = isParent ? "Player" : "Dealer";
+            Debug.Log($"OnlinePanelManager - Opponent role display updated: {(isParent ? "Player" : "Dealer")}");
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - opponentRoleText is null! Please assign it in the Inspector.");
         }
     }
 
