@@ -26,6 +26,13 @@ public class CardDisplay : MonoBehaviour
         Debug.Log($"CardDisplay.SetCardValue called: value={value}, gameObject={gameObject.name}");
     }
 
+    // カードを裏向きにする
+    public void SetCardFaceDown(bool faceDown)
+    {
+        SetCard(!faceDown); // SetCardメソッドはfaceUpを期待するので、逆の値を渡す
+        Debug.Log($"CardDisplay.SetCardFaceDown called: faceDown={faceDown}, cardValue={cardValue}, gameObject={gameObject.name}");
+    }
+
     // カードを設定
     public void SetCard(bool faceUp)
     {

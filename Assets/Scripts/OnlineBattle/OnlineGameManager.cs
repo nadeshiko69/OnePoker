@@ -67,6 +67,10 @@ public class OnlineGameManager : MonoBehaviour
     private bool waitingForParentAction = false; // 親のアクション待ちかどうか
     private bool waitingForChildAction = false; // 子のアクション待ちかどうか
 
+    // プレハブ参照
+    [Header("Prefabs")]
+    public GameObject cardPrefab; // カードプレハブ（Inspectorで設定）
+
     // ベット値の管理
     public int CurrentBetValue => currentBetValue;
     public int MinimumBetValue => minimumBetValue;
@@ -821,6 +825,9 @@ public class OnlineGameManager : MonoBehaviour
                     // 親子システムの初期化
                     InitializeParentChildSystem();
                     
+                    // 相手のカードが表示されているか確認し、必要に応じて表示
+                    EnsureOpponentCardDisplayed();
+                    
                     // 親のターンを開始
                     StartParentTurn();
                     
@@ -1163,7 +1170,109 @@ public class OnlineGameManager : MonoBehaviour
     private void DisplayOpponentCardFaceDown(int cardValue)
     {
         Debug.Log($"OnlineGameManager - DisplayOpponentCardFaceDown called with cardValue: {cardValue}");
-        // TODO: 相手のSetZoneに裏向きカードを配置
+        
+        // 相手側のDropZoneを探す
+        OnlineDropZone opponentZone = FindOpponentDropZone();
+        
+        if (opponentZone != null)
+        {
+            // カードプレハブを生成して相手側のDropZoneに配置
+            CreateOpponentCard(cardValue, opponentZone);
+            Debug.Log($"OnlineGameManager - Opponent card {cardValue} displayed face down in opponent zone");
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - Could not find opponent DropZone");
+        }
+    }
+
+    // 相手側のDropZoneを探す
+    private OnlineDropZone FindOpponentDropZone()
+    {
+        OnlineDropZone[] dropZones = FindObjectsOfType<OnlineDropZone>();
+        
+        foreach (OnlineDropZone zone in dropZones)
+        {
+            if (!zone.isPlayerZone) // 相手側のDropZone
+            {
+                Debug.Log($"OnlineGameManager - Found opponent DropZone: {zone.name}");
+                return zone;
+            }
+        }
+        
+        Debug.LogWarning("OnlineGameManager - No opponent DropZone found");
+        return null;
+    }
+
+    // 相手のカードを生成して配置
+    private void CreateOpponentCard(int cardValue, OnlineDropZone opponentZone)
+    {
+        // カードプレハブを確認
+        if (cardPrefab == null)
+        {
+            Debug.LogError("OnlineGameManager - cardPrefab is null! Please assign it in the Inspector.");
+            return;
+        }
+        
+        // カードを生成
+        GameObject cardObject = Instantiate(cardPrefab, opponentZone.transform);
+        CardDisplay cardDisplay = cardObject.GetComponent<CardDisplay>();
+        
+        if (cardDisplay != null)
+        {
+            // カードの値を設定
+            cardDisplay.SetCardValue(cardValue);
+            
+            // 裏向きにする
+            cardDisplay.SetCardFaceDown(true);
+            
+            // 位置を調整
+            cardObject.transform.localPosition = Vector3.zero;
+            
+            Debug.Log($"OnlineGameManager - Opponent card {cardValue} created and placed in opponent zone");
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - CardDisplay component not found on card prefab");
+        }
+    }
+
+    // 相手のカードが確実に表示されているか確認
+    private void EnsureOpponentCardDisplayed()
+    {
+        Debug.Log("OnlineGameManager - Ensuring opponent card is displayed");
+        
+        // 相手側のDropZoneを探す
+        OnlineDropZone opponentZone = FindOpponentDropZone();
+        
+        if (opponentZone != null)
+        {
+            // 既にカードが配置されているかチェック
+            CardDisplay existingCard = opponentZone.GetComponentInChildren<CardDisplay>();
+            
+            if (existingCard == null)
+            {
+                // カードが配置されていない場合、相手のカード値を取得して表示
+                if (gameData != null)
+                {
+                    int opponentCardValue = isPlayer1 ? gameData.player2Cards[0] : gameData.player1Cards[0];
+                    Debug.Log($"OnlineGameManager - No opponent card found, creating one with value: {opponentCardValue}");
+                    CreateOpponentCard(opponentCardValue, opponentZone);
+                }
+                else
+                {
+                    Debug.LogWarning("OnlineGameManager - gameData is null, cannot determine opponent card value");
+                }
+            }
+            else
+            {
+                Debug.Log("OnlineGameManager - Opponent card already displayed");
+            }
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - Could not find opponent DropZone for card display check");
+        }
     }
 
     // 相手のカードを表向きで表示

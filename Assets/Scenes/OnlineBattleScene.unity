@@ -12826,6 +12826,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerLifeText: {fileID: 819376135}
   opponentLifeText: {fileID: 2024170839}
+  cardPrefab: {fileID: 8622914166395771307, guid: 4c3356f803bb4c54490226619374d4f7, type: 3}
 --- !u!1 &1908348653
 GameObject:
   m_ObjectHideFlags: 0
