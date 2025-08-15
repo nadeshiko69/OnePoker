@@ -68,9 +68,9 @@ public static class OnlineBattleStarter
             Debug.Log($"[OnlineBattleStarter] 💾 ゲームデータ保存完了 - PlayerPrefsに保存");
             Debug.Log($"[OnlineBattleStarter] 保存されたJSON: {gameDataJson}");
 
-            // 3秒待ってシーン遷移
-            Debug.Log($"[OnlineBattleStarter] ⏰ 3秒後にシーン遷移開始...");
-            yield return new WaitForSeconds(3f);
+            // 1秒待ってシーン遷移
+            Debug.Log($"[OnlineBattleStarter] ⏰ 1秒後にシーン遷移開始...");
+            yield return new WaitForSeconds(1f);
             
             Debug.Log($"[OnlineBattleStarter] 🎮 OnlineBattleSceneに遷移開始");
             SceneManager.LoadScene("OnlineBattleScene");

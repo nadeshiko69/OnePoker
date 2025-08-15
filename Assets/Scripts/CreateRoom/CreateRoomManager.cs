@@ -275,7 +275,7 @@ public class CreateRoomManager : MonoBehaviour
         Debug.Log($"[CreateRoom] ShowMatchedPanel() - マッチング完了パネル表示");
         if (waitingPanel != null) waitingPanel.SetActive(false);
         if (matchedPanel != null) matchedPanel.SetActive(true);
-        if (matchedText != null) matchedText.text = $"Matched with {opponentId}!";
+        if (matchedText != null) matchedText.text = $"マッチング成立！\n相手: {opponentId}\nゲーム開始中...";
         
         // タイマーを停止
         StopTimer();

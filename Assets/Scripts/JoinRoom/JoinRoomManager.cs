@@ -56,6 +56,11 @@ public class JoinRoomManager : MonoBehaviour
         
         roomCode = code;
         Debug.Log($"[JoinRoom] 部屋参加リクエスト開始 - roomCode: {roomCode}");
+        
+        // 確定ボタンを非活性化
+        submitButton.interactable = false;
+        messageText.text = "マッチング中...";
+        
         StartCoroutine(JoinRoomRequest(code));
     }
 
@@ -79,14 +84,32 @@ public class JoinRoomManager : MonoBehaviour
             Debug.Log($"[JoinRoom] JoinRoom API成功 - response: {request.downloadHandler.text}");
             var response = JsonUtility.FromJson<JoinRoomResponse>(request.downloadHandler.text);
             
-            Debug.Log($"[JoinRoom] レスポンス解析 - message: {response.message}, player1Id: {response.player1Id}");
+            Debug.Log($"[JoinRoom] レスポンス解析 - message: {response.message}, player1Id: {response.player1Id}, player2Id: {response.player2Id}");
             
             if (response.message == "Matched successfully")
             {
                 // マッチング成功
-                Debug.Log($"[JoinRoom] 🎉 マッチング成立！opponentId: {response.player1Id}");
+                Debug.Log($"[JoinRoom] 🎉 マッチング成立！player1Id: {response.player1Id}, player2Id: {response.player2Id}");
                 isMatched = true;
-                opponentId = response.player1Id; // 自分はplayer2
+                
+                // 相手のIDを正しく取得（自分がplayer2の場合、相手はplayer1）
+                // APIレスポンスにplayer1Idが含まれていない場合の対処
+                if (!string.IsNullOrEmpty(response.player1Id))
+                {
+                    opponentId = response.player1Id;
+                }
+                else
+                {
+                    // 一時的な対処：CreateRoom側のプレイヤーIDを推測
+                    // 実際の運用では、Lambda関数を修正してplayer1Idを返すようにする
+                    Debug.LogWarning("[JoinRoom] APIレスポンスにplayer1Idが含まれていません。一時的な対処を行います。");
+                    opponentId = "対戦相手"; // 仮の名前
+                }
+                
+                Debug.Log($"[JoinRoom] 相手のID: {opponentId}");
+                
+                // 成功メッセージを表示
+                messageText.text = $"マッチングしました！相手: {opponentId}";
                 
                 // UIを更新
                 ShowMatchedPanel();
@@ -100,7 +123,10 @@ public class JoinRoomManager : MonoBehaviour
             else
             {
                 Debug.Log($"[JoinRoom] マッチング待ち状態 - message: {response.message}");
-                messageText.text = "マッチング成功";
+                messageText.text = "マッチング待ち中...";
+                
+                // 確定ボタンを再度活性化
+                submitButton.interactable = true;
             }
         }
         else
@@ -108,6 +134,9 @@ public class JoinRoomManager : MonoBehaviour
             Debug.LogError($"[JoinRoom] JoinRoom API失敗 - {request.error}");
             Debug.LogError($"[JoinRoom] エラーレスポンス: {request.downloadHandler.text}");
             messageText.text = "マッチング失敗: " + request.downloadHandler.text;
+            
+            // 確定ボタンを再度活性化
+            submitButton.interactable = true;
         }
     }
 
@@ -117,9 +146,21 @@ public class JoinRoomManager : MonoBehaviour
     private void ShowMatchedPanel()
     {
         Debug.Log($"[JoinRoom] ShowMatchedPanel() - マッチング完了パネル表示");
+        Debug.Log($"[JoinRoom] ShowMatchedPanel - opponentId: {opponentId}");
+        
         if (inputPanel != null) inputPanel.SetActive(false);
         if (matchedPanel != null) matchedPanel.SetActive(true);
-        if (matchedText != null) matchedText.text = "Matched! Starting game...";
+        
+        if (matchedText != null)
+        {
+            string displayText = $"マッチング完了！\n相手: {opponentId}\nゲーム開始中...";
+            matchedText.text = displayText;
+            Debug.Log($"[JoinRoom] ShowMatchedPanel - 表示テキスト: {displayText}");
+        }
+        else
+        {
+            Debug.LogWarning("[JoinRoom] ShowMatchedPanel - matchedText is null");
+        }
     }
 
     [System.Serializable]

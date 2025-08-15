@@ -36,7 +36,12 @@ def lambda_handler(event, context):
         }
     )
 
+    # マッチング成功時にプレイヤーIDも返す
     return {
         'statusCode': 200,
-        'body': json.dumps({ 'message': 'Matched successfully' })
+        'body': json.dumps({ 
+            'message': 'Matched successfully',
+            'player1Id': item['hostPlayerId'],  # ホストプレイヤーID
+            'player2Id': guest_player_id        # ゲストプレイヤーID
+        })
     }
