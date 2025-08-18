@@ -80,6 +80,10 @@ public class OnlinePanelManager : MonoBehaviour
     [Header("親子表示")]
     public TextMeshProUGUI parentChildText;
     
+    [Header("親プレイヤーBet中パネル")]
+    public GameObject parentBettingPanel;
+    public TextMeshProUGUI parentBettingText;
+    
     [Header("相手アクション通知パネル")]
     public GameObject opponentActionPanel;
     public TextMeshProUGUI opponentActionText;
@@ -129,6 +133,7 @@ public class OnlinePanelManager : MonoBehaviour
         }
         if (matchResultPanel != null) matchResultPanel.SetActive(false);
         if (opponentActionPanel != null) opponentActionPanel.SetActive(false);
+        if (parentBettingPanel != null) parentBettingPanel.SetActive(false);
 
         Debug.Log("OnlinePanelManager - All panels set to inactive");
 
@@ -370,6 +375,38 @@ public class OnlinePanelManager : MonoBehaviour
         {
             startPhasePanel.SetActive(false);
             Debug.Log("OnlinePanelManager - Waiting for parent panel hidden");
+        }
+        
+        // 親プレイヤーBet中パネルも非表示
+        if (parentBettingPanel != null)
+        {
+            parentBettingPanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - Parent betting panel hidden");
+        }
+    }
+    
+    // 親プレイヤーBet中パネルを表示
+    public void ShowParentBettingPanel()
+    {
+        if (parentBettingPanel != null && parentBettingText != null)
+        {
+            parentBettingText.text = "親プレイヤーがBet中です...";
+            parentBettingPanel.SetActive(true);
+            Debug.Log("OnlinePanelManager - Parent betting panel shown");
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - parentBettingPanel or parentBettingText is null");
+        }
+    }
+    
+    // 親プレイヤーBet中パネルを非表示
+    public void HideParentBettingPanel()
+    {
+        if (parentBettingPanel != null)
+        {
+            parentBettingPanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - Parent betting panel hidden");
         }
     }
 

@@ -5,6 +5,7 @@ using TMPro;
 using System.Collections.Generic;
 using System;
 using OnePoker.Network;
+using UnityEngine.Networking; // Added for UnityWebRequest
 
 public class OnlineGameManager : MonoBehaviour
 {
@@ -66,6 +67,11 @@ public class OnlineGameManager : MonoBehaviour
     private bool isParentTurn = false; // 親のターンかどうか
     private bool waitingForParentAction = false; // 親のアクション待ちかどうか
     private bool waitingForChildAction = false; // 子のアクション待ちかどうか
+    
+    // 親のBet完了監視関連のフィールド
+    private Coroutine parentBetMonitorCoroutine;
+    private string notifyBetCompleteUrl = "https://your-api-gateway-url/dev/notify-bet-complete";
+    private string checkParentBetStatusUrl = "https://your-api-gateway-url/dev/check-parent-bet-status";
 
     // プレハブ参照
     [Header("Prefabs")]
@@ -158,6 +164,7 @@ public class OnlineGameManager : MonoBehaviour
             if (panelManager != null)
             {
                 panelManager.ShowWaitingForParentPanel();
+                panelManager.ShowParentBettingPanel(); // 親プレイヤーBet中パネルを表示
                 panelManager.SetBettingButtonInteractable(false);
             }
         }
@@ -178,6 +185,7 @@ public class OnlineGameManager : MonoBehaviour
             if (panelManager != null)
             {
                 panelManager.HideWaitingForParentPanel();
+                panelManager.HideParentBettingPanel(); // 親プレイヤーBet中パネルを非表示
                 panelManager.SetBettingButtonInteractable(true);
             }
         }
@@ -195,6 +203,139 @@ public class OnlineGameManager : MonoBehaviour
                 panelManager.ShowWaitingForChildPanel();
                 panelManager.SetBettingButtonInteractable(false);
             }
+        }
+        
+        // 子プレイヤーの場合、親のBet完了を監視開始
+        if (!isParent)
+        {
+            StartParentBetMonitoring();
+        }
+    }
+    
+    // 親のBet完了監視を開始
+    private void StartParentBetMonitoring()
+    {
+        if (isParent)
+        {
+            Debug.Log("OnlineGameManager - Parent player, skipping bet monitoring");
+            return;
+        }
+        
+        Debug.Log("OnlineGameManager - Starting parent bet monitoring for child player");
+        
+        // 既存の監視を停止
+        if (parentBetMonitorCoroutine != null)
+        {
+            StopCoroutine(parentBetMonitorCoroutine);
+        }
+        
+        // 新しい監視を開始
+        parentBetMonitorCoroutine = StartCoroutine(MonitorParentBetStatus());
+    }
+    
+    // 親のBet完了状態を監視
+    private IEnumerator MonitorParentBetStatus()
+    {
+        Debug.Log("OnlineGameManager - Parent bet monitoring started");
+        
+        while (waitingForParentAction)
+        {
+            yield return new WaitForSeconds(1f); // 1秒ごとに確認
+            
+            // 親のBet完了状態を確認
+            yield return StartCoroutine(CheckParentBetStatus());
+        }
+        
+        Debug.Log("OnlineGameManager - Parent bet monitoring stopped");
+    }
+    
+    // 親のBet完了状態を確認
+    private IEnumerator CheckParentBetStatus()
+    {
+        if (gameData == null)
+        {
+            Debug.LogWarning("OnlineGameManager - gameData is null, cannot check parent bet status");
+            yield break;
+        }
+        
+        var requestData = new CheckParentBetStatusRequest
+        {
+            roomCode = gameData.roomCode
+        };
+        
+        string jsonBody = JsonUtility.ToJson(requestData);
+        Debug.Log($"OnlineGameManager - Checking parent bet status: {jsonBody}");
+        
+        var request = new UnityWebRequest(checkParentBetStatusUrl, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        
+        yield return request.SendWebRequest();
+        
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log($"OnlineGameManager - Parent bet status check successful: {request.downloadHandler.text}");
+            
+            try
+            {
+                var response = JsonUtility.FromJson<ParentBetStatusResponse>(request.downloadHandler.text);
+                
+                if (response.parentBetComplete)
+                {
+                    Debug.Log($"OnlineGameManager - Parent bet completed: {response.parentBetAction}, amount: {response.parentBetAmount}");
+                    
+                    // 親のBet完了を処理
+                    HandleParentBetComplete(response.parentBetAction, response.parentBetAmount);
+                    
+                    // 監視を停止
+                    waitingForParentAction = false;
+                    if (parentBetMonitorCoroutine != null)
+                    {
+                        StopCoroutine(parentBetMonitorCoroutine);
+                        parentBetMonitorCoroutine = null;
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"OnlineGameManager - Error parsing parent bet status response: {e.Message}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"OnlineGameManager - Parent bet status check failed: {request.error}");
+        }
+    }
+    
+    // 親のBet完了を処理
+    private void HandleParentBetComplete(string betAction, int betAmount)
+    {
+        Debug.Log($"OnlineGameManager - Handling parent bet completion: {betAction}, amount: {betAmount}");
+        
+        switch (betAction)
+        {
+            case "call":
+                // 親がコールした場合、子のターンを開始
+                Debug.Log("OnlineGameManager - Parent called, starting child turn");
+                StartChildTurn();
+                break;
+                
+            case "raise":
+                // 親がレイズした場合、最低ベット額を更新して子のターンを開始
+                Debug.Log($"OnlineGameManager - Parent raised to {betAmount}, updating minimum bet and starting child turn");
+                minimumBetValue = betAmount;
+                currentBetValue = betAmount;
+                StartChildTurn();
+                UpdateBetUI();
+                break;
+                
+            case "drop":
+                // 親がドロップした場合、OpenPhaseに移行
+                Debug.Log("OnlineGameManager - Parent dropped, transitioning to OpenPhase");
+                HandleGamePhaseChange("reveal");
+                break;
         }
     }
 
@@ -292,6 +433,9 @@ public class OnlineGameManager : MonoBehaviour
                 break;
         }
         
+        // 親のBet完了をDynamo側に通知
+        NotifyParentBetComplete(actionType, currentBetValue);
+        
         // AWSにベットアクションを送信
         SendBetActionToAWS(actionType, currentBetValue);
     }
@@ -349,6 +493,54 @@ public class OnlineGameManager : MonoBehaviour
             OnBetActionSuccess,
             OnBetActionError
         );
+    }
+    
+    // 親のBet完了をDynamo側に通知
+    private void NotifyParentBetComplete(string actionType, int betValue)
+    {
+        if (!isParent)
+        {
+            Debug.Log("OnlineGameManager - Not parent, skipping bet completion notification");
+            return;
+        }
+        
+        Debug.Log($"OnlineGameManager - Notifying parent bet completion: {actionType}, betValue: {betValue}");
+        
+        // 通知用のJSONデータを作成
+        var notificationData = new ParentBetCompleteRequest
+        {
+            roomCode = gameData.roomCode,
+            playerId = playerId,
+            betAction = actionType,
+            betAmount = betValue
+        };
+        
+        string jsonBody = JsonUtility.ToJson(notificationData);
+        Debug.Log($"OnlineGameManager - Parent bet completion notification JSON: {jsonBody}");
+        
+        // HTTP POSTリクエストを送信
+        StartCoroutine(SendParentBetCompleteNotification(jsonBody));
+    }
+    
+    // 親のBet完了通知を送信
+    private IEnumerator SendParentBetCompleteNotification(string jsonBody)
+    {
+        var request = new UnityWebRequest(notifyBetCompleteUrl, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        
+        yield return request.SendWebRequest();
+        
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log($"OnlineGameManager - Parent bet completion notification successful: {request.downloadHandler.text}");
+        }
+        else
+        {
+            Debug.LogError($"OnlineGameManager - Parent bet completion notification failed: {request.error}");
+        }
     }
 
     // ベットアクション成功時の処理
@@ -1379,6 +1571,31 @@ public class OnlineGameManager : MonoBehaviour
         public string actionType; // "call", "raise", "drop"
         public int betValue;
         public string playerId;
+    }
+
+    [System.Serializable]
+    private class ParentBetCompleteRequest
+    {
+        public string roomCode;
+        public string playerId;
+        public string betAction; // "call", "raise", "drop"
+        public int betAmount;
+    }
+    
+    [System.Serializable]
+    private class CheckParentBetStatusRequest
+    {
+        public string roomCode;
+    }
+    
+    [System.Serializable]
+    private class ParentBetStatusResponse
+    {
+        public bool parentBetComplete;
+        public string parentBetAction;
+        public int parentBetAmount;
+        public int minimumBetAmount;
+        public string message;
     }
 
     public void SetOpponentCalled(bool called) { /* TODO: 実装 */ }

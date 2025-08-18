@@ -20,6 +20,8 @@ if ([string]::IsNullOrEmpty($FunctionName)) {
     Write-Host "  - get-game-state"
     Write-Host "  - update-game-state"
     Write-Host "  - update-game-action"
+    Write-Host "  - notify-bet-complete"
+    Write-Host "  - check-parent-bet-status"
     exit 1
 }
 
