@@ -1639,6 +1639,12 @@ MonoBehaviour:
   dropButton: {fileID: 1908348655}
   betAmountText: {fileID: 0}
   parentChildText: {fileID: 0}
+  parentBettingPanel: {fileID: 0}
+  parentBettingText: {fileID: 0}
+  opponent_updown1: {fileID: 472008774}
+  opponent_updown2: {fileID: 233535103}
+  player_updown1: {fileID: 1342001793}
+  player_updown2: {fileID: 1226284695}
   opponentActionPanel: {fileID: 53676985}
   opponentActionText: {fileID: 2014128534}
   openPanel: {fileID: 1139368100}

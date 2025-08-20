@@ -723,6 +723,12 @@ public class OnlineGameManager : MonoBehaviour
         // 親子システムの初期化
         InitializeParentChildSystem();
 
+        // HIGH/LOW表示をクリア
+        if (panelManager != null)
+        {
+            panelManager.ClearHighLowDisplay();
+        }
+
         // マッチング完了パネル表示後にゲームフェーズ監視を開始
         if (panelManager != null && gameData != null)
         {
@@ -1075,6 +1081,24 @@ public class OnlineGameManager : MonoBehaviour
                     Debug.Log("OnlineGameManager - Reveal phase already active, skipping");
                 }
                 break;
+
+            case "open_phase":
+                Debug.Log("OnlineGameManager - Processing open_phase case");
+                if (panelManager != null)
+                {
+                    // HIGH/LOW表示をクリア
+                    panelManager.ClearHighLowDisplay();
+                    Debug.Log("OnlineGameManager - HIGH/LOW display cleared for open phase");
+                    
+                    panelManager.ShowOpenPhasePanel();
+                    Debug.Log("OnlineGameManager - Open Phase started");
+                    Debug.Log("OnlineGameManager - Lambda function: open_phase activated");
+                }
+                else
+                {
+                    Debug.LogError("OnlineGameManager - panelManager is null in open_phase case");
+                }
+                break;
                 
             default:
                 Debug.LogWarning($"OnlineGameManager - Unknown game phase: {newPhase}");
@@ -1265,7 +1289,7 @@ public class OnlineGameManager : MonoBehaviour
             Debug.Log($"OnlineGameManager - Successfully parsed response. GameId: {setCardResponse.gameId}, GamePhase: {setCardResponse.gamePhase}");
             Debug.Log($"OnlineGameManager - Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
             Debug.Log($"OnlineGameManager - Player1CardValue: {setCardResponse.player1CardValue}, Player2CardValue: {setCardResponse.player2CardValue}");
-            Debug.Log($"OnlineGameManager - Player1CardPlaced: {setCardResponse.player1CardPlaced}, Player2CardPlaced: {setCardResponse.player2CardPlaced}");
+            Debug.Log($"OnlineGameManager - Player1CardPlaced: {setCardResponse.player1CardPlaced}, Player2CardValue: {setCardResponse.player2CardValue}");
             
             // カード配置後はセット不可
             canSetCard = false;
@@ -1316,6 +1340,34 @@ public class OnlineGameManager : MonoBehaviour
         
         // 相手のカードを裏向きで表示
         DisplayOpponentCardFaceDown(player2CardValue);
+        
+        // HIGH/LOW表示を更新
+        if (panelManager != null)
+        {
+            // 自分のカードのHIGH/LOW表示を更新
+            if (isPlayer1)
+            {
+                // 2枚のカードの値を取得
+                int playerCard1 = gameData.player1Cards[0];
+                int playerCard2 = gameData.player1Cards[1];
+                int opponentCard1 = gameData.player2Cards[0];
+                int opponentCard2 = gameData.player2Cards[1];
+                
+                panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
+                panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
+            }
+            else
+            {
+                // 2枚のカードの値を取得
+                int playerCard1 = gameData.player2Cards[0];
+                int playerCard2 = gameData.player2Cards[1];
+                int opponentCard1 = gameData.player1Cards[0];
+                int opponentCard2 = gameData.player1Cards[1];
+                
+                panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
+                panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
+            }
+        }
         
         // セット完了パネルを表示
         if (panelManager != null)

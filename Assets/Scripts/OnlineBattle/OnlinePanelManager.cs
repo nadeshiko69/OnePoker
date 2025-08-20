@@ -84,6 +84,12 @@ public class OnlinePanelManager : MonoBehaviour
     public GameObject parentBettingPanel;
     public TextMeshProUGUI parentBettingText;
     
+    [Header("HIGH/LOW表示")]
+    public TextMeshProUGUI opponent_updown1;
+    public TextMeshProUGUI opponent_updown2;
+    public TextMeshProUGUI player_updown1;
+    public TextMeshProUGUI player_updown2;
+    
     [Header("相手アクション通知パネル")]
     public GameObject opponentActionPanel;
     public TextMeshProUGUI opponentActionText;
@@ -311,25 +317,86 @@ public class OnlinePanelManager : MonoBehaviour
     // プレイヤーロール表示の更新
     public void UpdatePlayerRoleDisplay(bool isParent)
     {
-        if (playerRoleText != null)
+        if (playerRoleText != null && opponentRoleText != null)
         {
-            playerRoleText.text = isParent ? "Dealer" : "Player";
-            Debug.Log($"OnlinePanelManager - Player role display updated: {(isParent ? "Dealer" : "Player")}");
+            if (isParent)
+            {
+                playerRoleText.text = "Dealer";
+                opponentRoleText.text = "Player";
+            }
+            else
+            {
+                playerRoleText.text = "Player";
+                opponentRoleText.text = "Dealer";
+            }
+        }
+    }
+
+    // HIGH/LOW判定メソッド
+    public string GetCardHighLow(int cardValue)
+    {
+        // 2-7: LOW, 8-K,A: HIGH
+        if (cardValue >= 2 && cardValue <= 7)
+        {
+            return "LOW";
         }
         else
         {
-            Debug.LogWarning("OnlinePanelManager - playerRoleText is null! Please assign it in the Inspector.");
+            return "HIGH";
         }
-        
-        if (opponentRoleText != null)
+    }
+
+    // プレイヤーのHIGH/LOW表示を更新
+    public void UpdatePlayerHighLowDisplay(int card1Value, int card2Value)
+    {
+        if (player_updown1 != null && player_updown2 != null)
         {
-            opponentRoleText.text = isParent ? "Player" : "Dealer";
-            Debug.Log($"OnlinePanelManager - Opponent role display updated: {(isParent ? "Player" : "Dealer")}");
+            string card1HighLow = GetCardHighLow(card1Value);
+            string card2HighLow = GetCardHighLow(card2Value);
+            
+            // LOW/HIGHの組み合わせは表示しない
+            if (card1HighLow == "LOW" && card2HighLow == "HIGH")
+            {
+                player_updown1.text = "";
+                player_updown2.text = "";
+            }
+            else
+            {
+                player_updown1.text = card1HighLow;
+                player_updown2.text = card2HighLow;
+            }
         }
-        else
+    }
+
+    // 相手プレイヤーのHIGH/LOW表示を更新
+    public void UpdateOpponentHighLowDisplay(int card1Value, int card2Value)
+    {
+        if (opponent_updown1 != null && opponent_updown2 != null)
         {
-            Debug.LogWarning("OnlinePanelManager - opponentRoleText is null! Please assign it in the Inspector.");
+            string card1HighLow = GetCardHighLow(card1Value);
+            string card2HighLow = GetCardHighLow(card2Value);
+            
+            // LOW/HIGHの組み合わせは表示しない
+            if (card1HighLow == "LOW" && card2HighLow == "HIGH")
+            {
+                opponent_updown1.text = "";
+                opponent_updown2.text = "";
+            }
+            else
+            {
+                opponent_updown1.text = card1HighLow;
+                opponent_updown2.text = card2HighLow;
+            }
         }
+    }
+
+    // HIGH/LOW表示をクリア
+    public void ClearHighLowDisplay()
+    {
+        if (player_updown1 != null) player_updown1.text = "";
+        if (player_updown2 != null) player_updown2.text = "";
+        if (opponent_updown1 != null) opponent_updown1.text = "";
+        if (opponent_updown2 != null) opponent_updown2.text = "";
     }
 
     // 親のターンパネル表示
@@ -697,6 +764,20 @@ public class OnlinePanelManager : MonoBehaviour
         {
             setCompletePanel.SetActive(false);
             Debug.Log("OnlinePanelManager - Set Complete Panel hidden");
+        }
+    }
+
+    // Open Phaseパネルを表示
+    public void ShowOpenPhasePanel()
+    {
+        if (openPanel != null)
+        {
+            openPanel.SetActive(true);
+            Debug.Log("OnlinePanelManager - Open Phase panel activated");
+        }
+        else
+        {
+            Debug.LogError("OnlinePanelManager - openPanel is null in ShowOpenPhasePanel()");
         }
     }
 
