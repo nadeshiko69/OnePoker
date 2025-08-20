@@ -1344,6 +1344,16 @@ public class OnlineGameManager : MonoBehaviour
         // HIGH/LOW表示を更新
         if (panelManager != null)
         {
+            Debug.Log($"=== HIGH/LOW表示更新調査開始 ===");
+            Debug.Log($"現在のプレイヤー: isPlayer1={isPlayer1}");
+            Debug.Log($"gameDataの状態: {gameData != null}");
+            
+            if (gameData != null)
+            {
+                Debug.Log($"gameData.player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
+                Debug.Log($"gameData.player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+            }
+            
             // 自分のカードのHIGH/LOW表示を更新
             if (isPlayer1)
             {
@@ -1352,6 +1362,11 @@ public class OnlineGameManager : MonoBehaviour
                 int playerCard2 = gameData.player1Cards[1];
                 int opponentCard1 = gameData.player2Cards[0];
                 int opponentCard2 = gameData.player2Cards[1];
+                
+                Debug.Log($"Player1の場合:");
+                Debug.Log($"  自分のカード: [{playerCard1}, {playerCard2}]");
+                Debug.Log($"  相手のカード: [{opponentCard1}, {opponentCard2}]");
+                Debug.Log($"  カードの型: playerCard1={playerCard1.GetType()}, playerCard2={playerCard2.GetType()}");
                 
                 panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
                 panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
@@ -1364,9 +1379,19 @@ public class OnlineGameManager : MonoBehaviour
                 int opponentCard1 = gameData.player1Cards[0];
                 int opponentCard2 = gameData.player1Cards[1];
                 
+                Debug.Log($"Player2の場合:");
+                Debug.Log($"  自分のカード: [{playerCard1}, {playerCard2}]");
+                Debug.Log($"  相手のカード: [{opponentCard1}, {opponentCard2}]");
+                Debug.Log($"  カードの型: playerCard1={playerCard1.GetType()}, playerCard2={playerCard2.GetType()}");
+                
                 panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
                 panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
             }
+            Debug.Log($"=== HIGH/LOW表示更新調査完了 ===");
+        }
+        else
+        {
+            Debug.LogError("panelManagerがnullです！");
         }
         
         // セット完了パネルを表示

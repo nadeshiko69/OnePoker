@@ -335,13 +335,21 @@ public class OnlinePanelManager : MonoBehaviour
     // HIGH/LOW判定メソッド
     public string GetCardHighLow(int cardValue)
     {
+        Debug.Log($"=== GetCardHighLow調査開始 ===");
+        Debug.Log($"入力されたカード値: {cardValue}");
+        Debug.Log($"カード値の型: {cardValue.GetType()}");
+        Debug.Log($"2との比較: {cardValue} >= 2 = {cardValue >= 2}");
+        Debug.Log($"7との比較: {cardValue} <= 7 = {cardValue <= 7}");
+        
         // 2-7: LOW, 8-K,A: HIGH
         if (cardValue >= 2 && cardValue <= 7)
         {
+            Debug.Log($"判定結果: {cardValue} -> LOW (2-7の範囲内)");
             return "LOW";
         }
         else
         {
+            Debug.Log($"判定結果: {cardValue} -> HIGH (2-7の範囲外)");
             return "HIGH";
         }
     }
@@ -349,54 +357,104 @@ public class OnlinePanelManager : MonoBehaviour
     // プレイヤーのHIGH/LOW表示を更新
     public void UpdatePlayerHighLowDisplay(int card1Value, int card2Value)
     {
+        Debug.Log($"=== UpdatePlayerHighLowDisplay調査開始 ===");
+        Debug.Log($"入力値: card1Value={card1Value}, card2Value={card2Value}");
+        Debug.Log($"card1Valueの型: {card1Value.GetType()}");
+        Debug.Log($"card2Valueの型: {card2Value.GetType()}");
+        
         if (player_updown1 != null && player_updown2 != null)
         {
+            Debug.Log($"UI要素の状態: player_updown1={player_updown1 != null}, player_updown2={player_updown2 != null}");
+            
             string card1HighLow = GetCardHighLow(card1Value);
             string card2HighLow = GetCardHighLow(card2Value);
+            
+            Debug.Log($"HIGH/LOW判定結果: card1={card1Value}->{card1HighLow}, card2={card2Value}->{card2HighLow}");
             
             // LOW/HIGHの組み合わせは表示しない
             if (card1HighLow == "LOW" && card2HighLow == "HIGH")
             {
+                Debug.Log("LOW/HIGH組み合わせ検出: 表示をクリア");
                 player_updown1.text = "";
                 player_updown2.text = "";
+                Debug.Log($"UI更新完了: player_updown1.text='{player_updown1.text}', player_updown2.text='{player_updown2.text}'");
             }
             else
             {
+                Debug.Log($"通常表示: {card1HighLow}/{card2HighLow}");
                 player_updown1.text = card1HighLow;
                 player_updown2.text = card2HighLow;
+                Debug.Log($"UI更新完了: player_updown1.text='{player_updown1.text}', player_updown2.text='{player_updown2.text}'");
             }
         }
+        else
+        {
+            Debug.LogError($"UI要素がnull: player_updown1={player_updown1 != null}, player_updown2={player_updown2 != null}");
+        }
+        Debug.Log($"=== UpdatePlayerHighLowDisplay調査完了 ===");
     }
 
     // 相手プレイヤーのHIGH/LOW表示を更新
     public void UpdateOpponentHighLowDisplay(int card1Value, int card2Value)
     {
+        Debug.Log($"=== UpdateOpponentHighLowDisplay調査開始 ===");
+        Debug.Log($"入力値: card1Value={card1Value}, card2Value={card2Value}");
+        Debug.Log($"card1Valueの型: {card1Value.GetType()}");
+        Debug.Log($"card2Valueの型: {card2Value.GetType()}");
+        
         if (opponent_updown1 != null && opponent_updown2 != null)
         {
+            Debug.Log($"UI要素の状態: opponent_updown1={opponent_updown1 != null}, opponent_updown2={opponent_updown2 != null}");
+            
             string card1HighLow = GetCardHighLow(card1Value);
             string card2HighLow = GetCardHighLow(card2Value);
+            
+            Debug.Log($"HIGH/LOW判定結果: card1={card1Value}->{card1HighLow}, card2={card2Value}->{card2HighLow}");
             
             // LOW/HIGHの組み合わせは表示しない
             if (card1HighLow == "LOW" && card2HighLow == "HIGH")
             {
+                Debug.Log("LOW/HIGH組み合わせ検出: 表示をクリア");
                 opponent_updown1.text = "";
                 opponent_updown2.text = "";
+                Debug.Log($"UI更新完了: opponent_updown1.text='{opponent_updown1.text}', opponent_updown2.text='{opponent_updown2.text}'");
             }
             else
             {
+                Debug.Log($"通常表示: {card1HighLow}/{card2HighLow}");
                 opponent_updown1.text = card1HighLow;
                 opponent_updown2.text = card2HighLow;
+                Debug.Log($"UI更新完了: opponent_updown1.text='{opponent_updown1.text}', opponent_updown2.text='{opponent_updown2.text}'");
             }
         }
+        else
+        {
+            Debug.LogError($"UI要素がnull: opponent_updown1={opponent_updown1 != null}, opponent_updown2={opponent_updown2 != null}");
+        }
+        Debug.Log($"=== UpdateOpponentHighLowDisplay調査完了 ===");
     }
 
     // HIGH/LOW表示をクリア
     public void ClearHighLowDisplay()
     {
+        Debug.Log("=== ClearHighLowDisplay実行 ===");
+        Debug.Log($"クリア前の状態:");
+        Debug.Log($"  player_updown1.text = '{player_updown1?.text ?? "null"}'");
+        Debug.Log($"  player_updown2.text = '{player_updown2?.text ?? "null"}'");
+        Debug.Log($"  opponent_updown1.text = '{opponent_updown1?.text ?? "null"}'");
+        Debug.Log($"  opponent_updown2.text = '{opponent_updown2?.text ?? "null"}'");
+        
         if (player_updown1 != null) player_updown1.text = "";
         if (player_updown2 != null) player_updown2.text = "";
         if (opponent_updown1 != null) opponent_updown1.text = "";
         if (opponent_updown2 != null) opponent_updown2.text = "";
+        
+        Debug.Log($"クリア後の状態:");
+        Debug.Log($"  player_updown1.text = '{player_updown1?.text ?? "null"}'");
+        Debug.Log($"  player_updown2.text = '{player_updown2?.text ?? "null"}'");
+        Debug.Log($"  opponent_updown1.text = '{opponent_updown1?.text ?? "null"}'");
+        Debug.Log($"  opponent_updown2.text = '{opponent_updown2?.text ?? "null"}'");
+        Debug.Log("=== ClearHighLowDisplay完了 ===");
     }
 
     // 親のターンパネル表示
@@ -815,3 +873,5 @@ public class OnlinePanelManager : MonoBehaviour
         }
     }
 }
+
+
