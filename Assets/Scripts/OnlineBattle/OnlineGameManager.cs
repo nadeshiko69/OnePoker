@@ -678,9 +678,30 @@ public class OnlineGameManager : MonoBehaviour
             
             if (gameData != null)
             {
-                Debug.Log($"GameData - isPlayer1: {gameData.isPlayer1}, playerId: {gameData.playerId}, opponentId: {gameData.opponentId}");
-                Debug.Log($"GameData - player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
-                Debug.Log($"GameData - player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+                Debug.Log($"=== gameData詳細情報 ===");
+                Debug.Log($"[GAMEDATA_DEBUG] GameData - isPlayer1: {gameData.isPlayer1}, playerId: {gameData.playerId}, opponentId: {gameData.opponentId}");
+                Debug.Log($"[GAMEDATA_DEBUG] GameData - gameId: {gameData.gameId}, roomCode: {gameData.roomCode}");
+                Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
+                Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+                
+                if (gameData.player1Cards != null)
+                {
+                    Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards.Length: {gameData.player1Cards.Length}");
+                    for (int i = 0; i < gameData.player1Cards.Length; i++)
+                    {
+                        Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards[{i}]: {gameData.player1Cards[i]} (型: {gameData.player1Cards[i].GetType()})");
+                    }
+                }
+                
+                if (gameData.player2Cards != null)
+                {
+                    Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards.Length: {gameData.player2Cards.Length}");
+                    for (int i = 0; i < gameData.player2Cards.Length; i++)
+                    {
+                        Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards[{i}]: {gameData.player2Cards[i]} (型: {gameData.player2Cards[i].GetType()})");
+                    }
+                }
+                Debug.Log($"=== gameData詳細情報完了 ===");
                 
                 if (handManager != null)
                 {
@@ -1280,124 +1301,126 @@ public class OnlineGameManager : MonoBehaviour
     // カード配置成功時のコールバック
     private void OnCardPlacementSuccess(string response)
     {
-        Debug.Log($"OnlineGameManager - OnCardPlacementSuccess method entered with response: {response}");
+        Debug.Log($"=== OnCardPlacementSuccess開始 ===");
+        Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - OnCardPlacementSuccess called with response: {response}");
+        Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - 現在の状態:");
+        Debug.Log($"[CARD_PLACEMENT_DEBUG]   isSetPhaseActive: {isSetPhaseActive}");
+        Debug.Log($"[CARD_PLACEMENT_DEBUG]   isSetCompletePhaseActive: {isSetCompletePhaseActive}");
+        Debug.Log($"[CARD_PLACEMENT_DEBUG]   isBettingPhaseActive: {isBettingPhaseActive}");
+        Debug.Log($"[CARD_PLACEMENT_DEBUG]   gameData: {gameData != null}");
+        if (gameData != null)
+        {
+            Debug.Log($"[CARD_PLACEMENT_DEBUG]   gameData.player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
+            Debug.Log($"[CARD_PLACEMENT_DEBUG]   gameData.player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+        }
         
         try
         {
-            // レスポンスをパース
             var setCardResponse = JsonUtility.FromJson<SetCardResponse>(response);
-            Debug.Log($"OnlineGameManager - Successfully parsed response. GameId: {setCardResponse.gameId}, GamePhase: {setCardResponse.gamePhase}");
-            Debug.Log($"OnlineGameManager - Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
-            Debug.Log($"OnlineGameManager - Player1CardValue: {setCardResponse.player1CardValue}, Player2CardValue: {setCardResponse.player2CardValue}");
-            Debug.Log($"OnlineGameManager - Player1CardPlaced: {setCardResponse.player1CardPlaced}, Player2CardValue: {setCardResponse.player2CardValue}");
+            Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Parsed response - player1Set: {setCardResponse.player1Set}, player2Set: {setCardResponse.player2Set}");
+            Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Parsed response - player1CardValue: {setCardResponse.player1CardValue}, player2CardValue: {setCardResponse.player2CardValue}");
             
-            // カード配置後はセット不可
-            canSetCard = false;
-            Debug.Log("OnlineGameManager - Set canSetCard to false");
-            
-            // 両者セット済みかチェック
-            Debug.Log($"OnlineGameManager - Checking both players set condition: player1Set={setCardResponse.player1Set}, player2Set={setCardResponse.player2Set}");
-            Debug.Log($"OnlineGameManager - Current flags: isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
-            
+            // 両プレイヤーがカードをセットしたかチェック
             if (setCardResponse.player1Set && setCardResponse.player2Set)
             {
-                Debug.Log("OnlineGameManager - Both players have set their cards!");
-                Debug.Log($"OnlineGameManager - About to start Set Complete Phase. Current flags: isSetCompletePhaseActive={isSetCompletePhaseActive}");
+                Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Both players have set cards!");
+                Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - About to start Set Complete Phase. Current flags: isSetCompletePhaseActive={isSetCompletePhaseActive}");
                 
                 // セット完了フェーズを開始（重複実行を防ぐ）
                 if (!isSetCompletePhaseActive)
                 {
-                    Debug.Log("OnlineGameManager - Starting Set Complete Phase");
-                    Debug.Log($"OnlineGameManager - 呼び出し前の状態確認:");
-                    Debug.Log($"  setCardResponse.player1CardValue: {setCardResponse.player1CardValue}");
-                    Debug.Log($"  setCardResponse.player2CardValue: {setCardResponse.player2CardValue}");
-                    Debug.Log($"  isSetCompletePhaseActive: {isSetCompletePhaseActive}");
+                    Debug.Log("[CARD_PLACEMENT_DEBUG] OnlineGameManager - Starting Set Complete Phase");
+                    Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - 呼び出し前の状態確認:");
+                    Debug.Log($"[CARD_PLACEMENT_DEBUG]   setCardResponse.player1CardValue: {setCardResponse.player1CardValue}");
+                    Debug.Log($"[CARD_PLACEMENT_DEBUG]   setCardResponse.player2CardValue: {setCardResponse.player2CardValue}");
+                    Debug.Log($"[CARD_PLACEMENT_DEBUG]   isSetCompletePhaseActive: {isSetCompletePhaseActive}");
                     
                     StartCoroutine(HandleSetCompletePhase(setCardResponse.player1CardValue, setCardResponse.player2CardValue));
                     
-                    Debug.Log("OnlineGameManager - HandleSetCompletePhase呼び出し完了");
+                    Debug.Log("[CARD_PLACEMENT_DEBUG] OnlineGameManager - HandleSetCompletePhase呼び出し完了");
                 }
                 else
                 {
-                    Debug.LogWarning("OnlineGameManager - Set Complete Phase already active, skipping duplicate start");
+                    Debug.LogWarning("[CARD_PLACEMENT_DEBUG] OnlineGameManager - Set Complete Phase already active, skipping duplicate start");
                 }
             }
             else
             {
-                Debug.Log($"OnlineGameManager - Waiting for opponent. Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
-                Debug.Log($"OnlineGameManager - Current flags while waiting: isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
+                Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Waiting for opponent. Player1Set: {setCardResponse.player1Set}, Player2Set: {setCardResponse.player2Set}");
+                Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Current flags while waiting: isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"OnlineGameManager - Error parsing card placement response: {e.Message}");
-            Debug.LogError($"OnlineGameManager - Full exception: {e}");
+            Debug.LogError($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Error parsing card placement response: {e.Message}");
+            Debug.LogError($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Full exception: {e}");
         }
+        Debug.Log($"=== OnCardPlacementSuccess完了 ===");
     }
 
     // セット完了フェーズの処理
     private IEnumerator HandleSetCompletePhase(int player1CardValue, int player2CardValue)
     {
         Debug.Log($"=== HandleSetCompletePhase開始 ===");
-        Debug.Log($"OnlineGameManager - HandleSetCompletePhase started with player1CardValue: {player1CardValue}, player2CardValue: {player2CardValue}");
-        Debug.Log($"OnlineGameManager - HandleSetCompletePhase: Current flags before starting - isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isSetPhaseActive={isSetPhaseActive}");
-        Debug.Log($"OnlineGameManager - HandleSetCompletePhase: isSetCompletePhaseActive will be set to true");
+        Debug.Log($"[SET_COMPLETE_DEBUG] OnlineGameManager - HandleSetCompletePhase started with player1CardValue: {player1CardValue}, player2CardValue: {player2CardValue}");
+        Debug.Log($"[SET_COMPLETE_DEBUG] OnlineGameManager - HandleSetCompletePhase: Current flags before starting - isSetCompletePhaseActive={isSetCompletePhaseActive}, isBettingPhaseActive={isBettingPhaseActive}, isSetPhaseActive={isSetPhaseActive}");
+        Debug.Log($"[SET_COMPLETE_DEBUG] OnlineGameManager - HandleSetCompletePhase: isSetCompletePhaseActive will be set to true");
         
         isSetCompletePhaseActive = true;
-        Debug.Log($"OnlineGameManager - HandleSetCompletePhase: isSetCompletePhaseActive set to {isSetCompletePhaseActive}");
+        Debug.Log($"[SET_COMPLETE_DEBUG] OnlineGameManager - HandleSetCompletePhase: isSetCompletePhaseActive set to {isSetCompletePhaseActive}");
         
         // フラグをリセット
         isSetPhaseActive = false;
         isBettingPhaseActive = false;
         
-        Debug.Log($"HandleSetCompletePhase: フラグリセット完了 - isSetPhaseActive={isSetPhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
+        Debug.Log($"[SET_COMPLETE_DEBUG] HandleSetCompletePhase: フラグリセット完了 - isSetPhaseActive={isSetPhaseActive}, isBettingPhaseActive={isBettingPhaseActive}");
         
         // gameDataの状態を確認
-        Debug.Log($"HandleSetCompletePhase: gameDataの状態確認");
-        Debug.Log($"  gameData: {gameData != null}");
+        Debug.Log($"[SET_COMPLETE_DEBUG] HandleSetCompletePhase: gameDataの状態確認");
+        Debug.Log($"[SET_COMPLETE_DEBUG]   gameData: {gameData != null}");
         if (gameData != null)
         {
-            Debug.Log($"  gameData.player1Cards: {gameData.player1Cards != null}");
+            Debug.Log($"[SET_COMPLETE_DEBUG]   gameData.player1Cards: {gameData.player1Cards != null}");
             if (gameData.player1Cards != null)
             {
-                Debug.Log($"  gameData.player1Cards.Length: {gameData.player1Cards.Length}");
+                Debug.Log($"[SET_COMPLETE_DEBUG]   gameData.player1Cards.Length: {gameData.player1Cards.Length}");
                 if (gameData.player1Cards.Length > 0)
                 {
-                    Debug.Log($"  gameData.player1Cards[0]: {gameData.player1Cards[0]}");
-                    Debug.Log($"  gameData.player1Cards[1]: {gameData.player1Cards[1]}");
+                    Debug.Log($"[SET_COMPLETE_DEBUG]   gameData.player1Cards[0]: {gameData.player1Cards[0]}");
+                    Debug.Log($"[SET_COMPLETE_DEBUG]   gameData.player1Cards[1]: {gameData.player1Cards[1]}");
                 }
             }
-            Debug.Log($"  gameData.player2Cards: {gameData.player2Cards != null}");
+            Debug.Log($"[SET_COMPLETE_DEBUG]   gameData.player2Cards: {gameData.player2Cards != null}");
             if (gameData.player2Cards != null)
             {
-                Debug.Log($"  gameData.player2Cards.Length: {gameData.player2Cards.Length}");
+                Debug.Log($"[SET_COMPLETE_DEBUG]   gameData.player2Cards.Length: {gameData.player2Cards.Length}");
                 if (gameData.player2Cards.Length > 0)
                 {
-                    Debug.Log($"  gameData.player2Cards[0]: {gameData.player2Cards[0]}");
-                    Debug.Log($"  gameData.player2Cards[1]: {gameData.player2Cards[1]}");
+                    Debug.Log($"[SET_COMPLETE_DEBUG]   gameData.player2Cards[0]: {gameData.player2Cards[0]}");
+                    Debug.Log($"[SET_COMPLETE_DEBUG]   gameData.player2Cards[1]: {gameData.player2Cards[1]}");
                 }
             }
         }
         
         // panelManagerの状態を確認
-        Debug.Log($"HandleSetCompletePhase: panelManagerの状態確認");
-        Debug.Log($"  panelManager: {panelManager != null}");
+        Debug.Log($"[SET_COMPLETE_DEBUG] HandleSetCompletePhase: panelManagerの状態確認");
+        Debug.Log($"[SET_COMPLETE_DEBUG]   panelManager: {panelManager != null}");
         
         // 相手のカードを裏向きで表示
-        Debug.Log($"HandleSetCompletePhase: DisplayOpponentCardFaceDown呼び出し");
+        Debug.Log($"[SET_COMPLETE_DEBUG] HandleSetCompletePhase: DisplayOpponentCardFaceDown呼び出し");
         DisplayOpponentCardFaceDown(player2CardValue);
         
         // HIGH/LOW表示を更新
         if (panelManager != null)
         {
-            Debug.Log($"=== HIGH/LOW表示更新開始 ===");
-            Debug.Log($"現在のプレイヤー: isPlayer1={isPlayer1}");
+            Debug.Log($"[HIGH_LOW_DEBUG] === HIGH/LOW表示更新開始 ===");
+            Debug.Log($"[HIGH_LOW_DEBUG] 現在のプレイヤー: isPlayer1={isPlayer1}");
             // Debug.Log($"gameDataの状態: {gameData != null}");
             
             if (gameData != null)
             {
-                Debug.Log($"gameData.player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
-                Debug.Log($"gameData.player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+                Debug.Log($"[HIGH_LOW_DEBUG] gameData.player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
+                Debug.Log($"[HIGH_LOW_DEBUG] gameData.player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
             }
             
             // 自分のカードのHIGH/LOW表示を更新
@@ -1409,9 +1432,9 @@ public class OnlineGameManager : MonoBehaviour
                 int opponentCard1 = gameData.player2Cards[0];
                 int opponentCard2 = gameData.player2Cards[1];
                 
-                Debug.Log($"Player1の場合:");
-                Debug.Log($"  自分のカード: [{playerCard1}, {playerCard2}]");
-                Debug.Log($"  相手のカード: [{opponentCard1}, {opponentCard2}]");
+                Debug.Log($"[HIGH_LOW_DEBUG] Player1の場合:");
+                Debug.Log($"[HIGH_LOW_DEBUG]   自分のカード: [{playerCard1}, {playerCard2}]");
+                Debug.Log($"[HIGH_LOW_DEBUG]   相手のカード: [{opponentCard1}, {opponentCard2}]");
                 // Debug.Log($"  カードの型: playerCard1={playerCard1.GetType()}, playerCard2={playerCard2.GetType()}");
                 
                 panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
@@ -1425,19 +1448,19 @@ public class OnlineGameManager : MonoBehaviour
                 int opponentCard1 = gameData.player1Cards[0];
                 int opponentCard2 = gameData.player1Cards[1];
                 
-                Debug.Log($"Player2の場合:");
-                Debug.Log($"  自分のカード: [{playerCard1}, {playerCard2}]");
-                Debug.Log($"  相手のカード: [{opponentCard1}, {opponentCard2}]");
+                Debug.Log($"[HIGH_LOW_DEBUG] Player2の場合:");
+                Debug.Log($"[HIGH_LOW_DEBUG]   自分のカード: [{playerCard1}, {playerCard2}]");
+                Debug.Log($"[HIGH_LOW_DEBUG]   相手のカード: [{opponentCard1}, {opponentCard2}]");
                 // Debug.Log($"  カードの型: playerCard1={playerCard1.GetType()}, playerCard2={playerCard2.GetType()}");
                 
                 panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
                 panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
             }
-            Debug.Log($"=== HIGH/LOW表示更新完了 ===");
+            Debug.Log($"[HIGH_LOW_DEBUG] === HIGH/LOW表示更新完了 ===");
         }
         else
         {
-            Debug.LogError("panelManagerがnullです！");
+            Debug.LogError("[HIGH_LOW_DEBUG] panelManagerがnullです！");
         }
         
         // セット完了パネルを表示
