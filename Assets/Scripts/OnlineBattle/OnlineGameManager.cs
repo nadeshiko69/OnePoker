@@ -717,6 +717,43 @@ public class OnlineGameManager : MonoBehaviour
 
                     handManager.SetPlayerHand(myHand);
                     handManager.SetOpponentHand(opponentHand);
+                    
+                    // 手札設定完了後、HIGH/LOW表示を更新
+                    if (panelManager != null)
+                    {
+                        Debug.Log($"[START_HIGH_LOW_DEBUG] === Start()でのHIGH/LOW表示更新開始 ===");
+                        Debug.Log($"[START_HIGH_LOW_DEBUG] 現在のプレイヤー: isPlayer1={isPlayer1}");
+                        Debug.Log($"[START_HIGH_LOW_DEBUG] 手札設定完了:");
+                        Debug.Log($"[START_HIGH_LOW_DEBUG]   自分の手札: {(myHand != null ? string.Join(",", myHand) : "null")}");
+                        Debug.Log($"[START_HIGH_LOW_DEBUG]   相手の手札: {(opponentHand != null ? string.Join(",", opponentHand) : "null")}");
+                        
+                        // HIGH/LOW表示を更新
+                        if (myHand != null && myHand.Length >= 2 && opponentHand != null && opponentHand.Length >= 2)
+                        {
+                            int playerCard1 = myHand[0];
+                            int playerCard2 = myHand[1];
+                            int opponentCard1 = opponentHand[0];
+                            int opponentCard2 = opponentHand[1];
+                            
+                            Debug.Log($"[START_HIGH_LOW_DEBUG] カード値取得完了:");
+                            Debug.Log($"[START_HIGH_LOW_DEBUG]   自分のカード: [{playerCard1}, {playerCard2}]");
+                            Debug.Log($"[START_HIGH_LOW_DEBUG]   相手のカード: [{opponentCard1}, {opponentCard2}]");
+                            
+                            panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
+                            panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
+                            
+                            Debug.Log($"[START_HIGH_LOW_DEBUG] HIGH/LOW表示更新完了");
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[START_HIGH_LOW_DEBUG] 手札が不足しています: myHand.Length={myHand?.Length}, opponentHand.Length={opponentHand?.Length}");
+                        }
+                        Debug.Log($"[START_HIGH_LOW_DEBUG] === Start()でのHIGH/LOW表示更新完了 ===");
+                    }
+                    else
+                    {
+                        Debug.LogError($"[START_HIGH_LOW_DEBUG] panelManagerがnullです！");
+                    }
                 }
                 else
                 {
@@ -1173,33 +1210,43 @@ public class OnlineGameManager : MonoBehaviour
     // カード配置を確定
     public void ConfirmPlacement()
     {
-        Debug.Log("OnlineGameManager - ConfirmPlacement method entered!");
-        Debug.Log($"OnlineGameManager - ConfirmPlacement called for card: {currentCard?.CardValue}");
+        Debug.Log($"[CARD_CONFIRM_DEBUG] === ConfirmPlacement開始 ===");
+        Debug.Log($"[CARD_CONFIRM_DEBUG] OnlineGameManager - ConfirmPlacement method entered!");
+        Debug.Log($"[CARD_CONFIRM_DEBUG] OnlineGameManager - ConfirmPlacement called for card: {currentCard?.CardValue}");
         
         if (currentCard != null && currentZone != null)
         {
+            Debug.Log($"[CARD_CONFIRM_DEBUG] カードとゾーンの状態確認:");
+            Debug.Log($"[CARD_CONFIRM_DEBUG]   currentCard: {currentCard != null}");
+            Debug.Log($"[CARD_CONFIRM_DEBUG]   currentZone: {currentZone != null}");
+            Debug.Log($"[CARD_CONFIRM_DEBUG]   currentCard.CardValue: {currentCard.CardValue}");
+            Debug.Log($"[CARD_CONFIRM_DEBUG]   currentZone.isPlayerZone: {currentZone.isPlayerZone}");
+            
             // カードをDropZoneの子にする（親子関係をセット）
             currentCard.transform.SetParent(currentZone.transform);
             currentCard.transform.localPosition = Vector3.zero;
 
             // 配置されたカードを記録
             setPlayerCard = currentCard;
+            Debug.Log($"[CARD_CONFIRM_DEBUG] setPlayerCard設定完了: {setPlayerCard.CardValue}");
 
             // 確認パネルを非表示
             if (panelManager != null)
             {
                 panelManager.confirmationPanel.SetActive(false);
+                Debug.Log($"[CARD_CONFIRM_DEBUG] 確認パネル非表示完了");
             }
             
             // カード配置完了をサーバーに通知
+            Debug.Log($"[CARD_CONFIRM_DEBUG] NotifyCardPlacement呼び出し開始");
             StartCoroutine(NotifyCardPlacement(currentCard.CardValue));
         }
         else
         {
-            Debug.LogError("OnlineGameManager - currentCard or currentZone is null!");
+            Debug.LogError($"[CARD_CONFIRM_DEBUG] currentCard or currentZone is null!");
+            Debug.LogError($"[CARD_CONFIRM_DEBUG] currentCard: {currentCard != null}, currentZone: {currentZone != null}");
         }
-
-        ResetPlacementState();
+        Debug.Log($"[CARD_CONFIRM_DEBUG] === ConfirmPlacement完了 ===");
     }
 
     // カード配置をキャンセル
@@ -1246,13 +1293,25 @@ public class OnlineGameManager : MonoBehaviour
     // サーバーにカード配置を通知
     private IEnumerator NotifyCardPlacement(int cardValue)
     {
-        Debug.Log($"OnlineGameManager - NotifyCardPlacement called with cardValue: {cardValue}");
-        Debug.Log($"OnlineGameManager - currentGameId: {currentGameId}, currentPlayerId: {currentPlayerId}");
+        Debug.Log($"[CARD_NOTIFY_DEBUG] === NotifyCardPlacement開始 ===");
+        Debug.Log($"[CARD_NOTIFY_DEBUG] OnlineGameManager - NotifyCardPlacement called with cardValue: {cardValue}");
+        Debug.Log($"[CARD_NOTIFY_DEBUG] 現在の状態:");
+        Debug.Log($"[CARD_NOTIFY_DEBUG]   isSetPhaseActive: {isSetPhaseActive}");
+        Debug.Log($"[CARD_NOTIFY_DEBUG]   isSetCompletePhaseActive: {isSetCompletePhaseActive}");
+        Debug.Log($"[CARD_NOTIFY_DEBUG]   gameData: {gameData != null}");
+        if (gameData != null)
+        {
+            Debug.Log($"[CARD_NOTIFY_DEBUG]   gameData.gameId: {gameData.gameId}");
+            Debug.Log($"[CARD_NOTIFY_DEBUG]   gameData.playerId: {gameData.playerId}");
+            Debug.Log($"[CARD_NOTIFY_DEBUG]   gameData.isPlayer1: {gameData.isPlayer1}");
+        }
         
-        // SetCard APIを呼び出してカード配置を通知
-        SetCard(currentGameId, currentPlayerId, cardValue, OnCardPlacementSuccess, OnCardPlacementError);
+        // 既存のSetCardメソッドを使用
+        Debug.Log($"[CARD_NOTIFY_DEBUG] 既存のSetCardメソッドを呼び出し");
+        SetCard(gameData.gameId, gameData.playerId, cardValue, OnCardPlacementSuccess, OnCardPlacementError);
         
-        Debug.Log($"OnlineGameManager - SetCard API call completed");
+        Debug.Log($"[CARD_NOTIFY_DEBUG] SetCardメソッド呼び出し完了");
+        Debug.Log($"[CARD_NOTIFY_DEBUG] === NotifyCardPlacement完了 ===");
         
         yield return null;
     }
@@ -1265,9 +1324,10 @@ public class OnlineGameManager : MonoBehaviour
         Action<string> onSuccess,
         Action<string> onError)
     {
-        Debug.Log($"OnlineGameManager - SetCard API call started");
-        Debug.Log($"OnlineGameManager - SetCard method entered with gameId: {gameId}, playerId: {playerId}, cardValue: {cardValue}");
-        Debug.Log($"OnlineGameManager - This will update Player{(playerId == gameData.playerId ? "1" : "2")}Set");
+        Debug.Log($"[SET_CARD_DEBUG] === SetCard開始 ===");
+        Debug.Log($"[SET_CARD_DEBUG] OnlineGameManager - SetCard API call started");
+        Debug.Log($"[SET_CARD_DEBUG] OnlineGameManager - SetCard method entered with gameId: {gameId}, playerId: {playerId}, cardValue: {cardValue}");
+        Debug.Log($"[SET_CARD_DEBUG] OnlineGameManager - This will update Player{(playerId == gameData.playerId ? "1" : "2")}Set");
         
         string url = $"{HttpManager.ApiBaseUrl}/update-state";
         string jsonBody = JsonUtility.ToJson(new SetCardRequest
@@ -1277,25 +1337,32 @@ public class OnlineGameManager : MonoBehaviour
             cardValue = cardValue
         });
         
-        Debug.Log($"OnlineGameManager - Calling set-card API: {url}, body: {jsonBody}");
-        Debug.Log($"OnlineGameManager - About to call HttpManager.Post with onSuccess and onError callbacks");
+        Debug.Log($"[SET_CARD_DEBUG] API呼び出し詳細:");
+        Debug.Log($"[SET_CARD_DEBUG]   URL: {url}");
+        Debug.Log($"[SET_CARD_DEBUG]   JSON: {jsonBody}");
+        Debug.Log($"[SET_CARD_DEBUG]   onSuccess: {onSuccess != null}");
+        Debug.Log($"[SET_CARD_DEBUG]   onError: {onError != null}");
         
+        Debug.Log($"[SET_CARD_DEBUG] HttpManager.Post呼び出し開始");
         HttpManager.Instance.Post<SetCardResponse>(
             url,
             jsonBody,
             (response) => {
-                Debug.Log($"OnlineGameManager - SetCard API success callback triggered");
+                Debug.Log($"[SET_CARD_DEBUG] ✅ SetCard API成功");
                 string responseJson = JsonUtility.ToJson(response);
-                Debug.Log($"OnlineGameManager - Response JSON: {responseJson}");
+                Debug.Log($"[SET_CARD_DEBUG] レスポンスJSON: {responseJson}");
+                Debug.Log($"[SET_CARD_DEBUG] onSuccessコールバック呼び出し");
                 onSuccess?.Invoke(responseJson);
             },
             (error) => {
-                Debug.LogError($"OnlineGameManager - SetCard API error callback triggered: {error}");
+                Debug.LogError($"[SET_CARD_DEBUG] ❌ SetCard API失敗: {error}");
+                Debug.LogError($"[SET_CARD_DEBUG] onErrorコールバック呼び出し");
                 onError?.Invoke(error);
             }
         );
         
-        Debug.Log($"OnlineGameManager - SetCard method completed, API call initiated");
+        Debug.Log($"[SET_CARD_DEBUG] SetCardメソッド完了、API呼び出し開始済み");
+        Debug.Log($"[SET_CARD_DEBUG] === SetCard完了 ===");
     }
 
     // カード配置成功時のコールバック
@@ -1410,58 +1477,8 @@ public class OnlineGameManager : MonoBehaviour
         Debug.Log($"[SET_COMPLETE_DEBUG] HandleSetCompletePhase: DisplayOpponentCardFaceDown呼び出し");
         DisplayOpponentCardFaceDown(player2CardValue);
         
-        // HIGH/LOW表示を更新
-        if (panelManager != null)
-        {
-            Debug.Log($"[HIGH_LOW_DEBUG] === HIGH/LOW表示更新開始 ===");
-            Debug.Log($"[HIGH_LOW_DEBUG] 現在のプレイヤー: isPlayer1={isPlayer1}");
-            // Debug.Log($"gameDataの状態: {gameData != null}");
-            
-            if (gameData != null)
-            {
-                Debug.Log($"[HIGH_LOW_DEBUG] gameData.player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
-                Debug.Log($"[HIGH_LOW_DEBUG] gameData.player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
-            }
-            
-            // 自分のカードのHIGH/LOW表示を更新
-            if (isPlayer1)
-            {
-                // 2枚のカードの値を取得
-                int playerCard1 = gameData.player1Cards[0];
-                int playerCard2 = gameData.player1Cards[1];
-                int opponentCard1 = gameData.player2Cards[0];
-                int opponentCard2 = gameData.player2Cards[1];
-                
-                Debug.Log($"[HIGH_LOW_DEBUG] Player1の場合:");
-                Debug.Log($"[HIGH_LOW_DEBUG]   自分のカード: [{playerCard1}, {playerCard2}]");
-                Debug.Log($"[HIGH_LOW_DEBUG]   相手のカード: [{opponentCard1}, {opponentCard2}]");
-                // Debug.Log($"  カードの型: playerCard1={playerCard1.GetType()}, playerCard2={playerCard2.GetType()}");
-                
-                panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
-                panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
-            }
-            else
-            {
-                // 2枚のカードの値を取得
-                int playerCard1 = gameData.player2Cards[0];
-                int playerCard2 = gameData.player2Cards[1];
-                int opponentCard1 = gameData.player1Cards[0];
-                int opponentCard2 = gameData.player1Cards[1];
-                
-                Debug.Log($"[HIGH_LOW_DEBUG] Player2の場合:");
-                Debug.Log($"[HIGH_LOW_DEBUG]   自分のカード: [{playerCard1}, {playerCard2}]");
-                Debug.Log($"[HIGH_LOW_DEBUG]   相手のカード: [{opponentCard1}, {opponentCard2}]");
-                // Debug.Log($"  カードの型: playerCard1={playerCard1.GetType()}, playerCard2={playerCard2.GetType()}");
-                
-                panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
-                panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
-            }
-            Debug.Log($"[HIGH_LOW_DEBUG] === HIGH/LOW表示更新完了 ===");
-        }
-        else
-        {
-            Debug.LogError("[HIGH_LOW_DEBUG] panelManagerがnullです！");
-        }
+        // HIGH/LOW表示はStart()で手札設定完了時に更新済みのため、ここでは更新しない
+        Debug.Log($"[SET_COMPLETE_DEBUG] HIGH/LOW表示はStart()で更新済みのため、ここでは更新しません");
         
         // セット完了パネルを表示
         if (panelManager != null)
@@ -1623,11 +1640,8 @@ public class OnlineGameManager : MonoBehaviour
     // カード配置エラー時のコールバック
     private void OnCardPlacementError(string error)
     {
-        Debug.LogError($"OnlineGameManager - OnCardPlacementError method entered with error: {error}");
-        Debug.LogError($"OnlineGameManager - Card placement failed: {error}");
-        // エラーの場合はカードを元の位置に戻す
-        Debug.Log("OnlineGameManager - Calling CancelPlacement due to error");
-        CancelPlacement();
+        Debug.LogError($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - OnCardPlacementError called with error: {error}");
+        Debug.LogError($"[CARD_PLACEMENT_DEBUG] カード配置API呼び出しでエラーが発生しました");
     }
 
     // カード配置・スキル・ベットなどのイベントは
