@@ -653,22 +653,34 @@ public class OnlineGameManager : MonoBehaviour
 
     void Start()
     {
+        Debug.Log($"[START_DEBUG] === OnlineGameManager.Start()開始 ===");
         Debug.Log("OnlineGameManager.Start() called");
         
         // 各マネージャの取得
+        Debug.Log($"[START_DEBUG] 各マネージャの取得開始");
         matchManager = FindObjectOfType<OnlineMatchManager>();
         resultViewManager = FindObjectOfType<OnlineResultViewManager>();
         panelManager = FindObjectOfType<OnlinePanelManager>();
         skillManager = FindObjectOfType<OnlineSkillManager>();
         handManager = FindObjectOfType<OnlineHandManager>();
 
+        Debug.Log($"[START_DEBUG] 各マネージャの取得結果:");
+        Debug.Log($"[START_DEBUG]   matchManager: {matchManager != null}");
+        Debug.Log($"[START_DEBUG]   resultViewManager: {resultViewManager != null}");
+        Debug.Log($"[START_DEBUG]   panelManager: {panelManager != null}");
+        Debug.Log($"[START_DEBUG]   skillManager: {skillManager != null}");
+        Debug.Log($"[START_DEBUG]   handManager: {handManager != null}");
+
         Debug.Log($"Managers found - matchManager: {matchManager != null}, resultViewManager: {resultViewManager != null}, panelManager: {panelManager != null}, skillManager: {skillManager != null}, handManager: {handManager != null}");
 
         // gameDataをクラスフィールドとして初期化
         gameData = null;
+        Debug.Log($"[START_DEBUG] gameData初期化完了: {gameData == null}");
 
         // OnlineGameDataから手札・プレイヤー情報を取得
+        Debug.Log($"[START_DEBUG] PlayerPrefsからOnlineGameData読み込み開始");
         string gameDataJson = PlayerPrefs.GetString("OnlineGameData", "");
+        Debug.Log($"[START_DEBUG] PlayerPrefsから読み込まれたJSON: {gameDataJson}");
         Debug.Log($"OnlineGameData from PlayerPrefs: {gameDataJson}");
         
         if (!string.IsNullOrEmpty(gameDataJson))
