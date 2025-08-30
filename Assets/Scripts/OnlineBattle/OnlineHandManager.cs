@@ -10,8 +10,8 @@ public class OnlineHandManager : MonoBehaviour
     // プレイヤーの手札をUIに反映
     public void SetPlayerHand(int[] cardIds)
     {
-        Debug.Log($"SetPlayerHand called with cardIds: {(cardIds != null ? string.Join(",", cardIds) : "null")}");
-        Debug.Log($"playerCard1: {playerCard1 != null}, playerCard2: {playerCard2 != null}");
+        Debug.Log($"[START_DEBUG] SetPlayerHand called with cardIds: {(cardIds != null ? string.Join(",", cardIds) : "null")}");
+        Debug.Log($"[START_DEBUG] playerCard1: {playerCard1 != null}, playerCard2: {playerCard2 != null}");
         
         if (playerCard1 != null)
         {
@@ -52,15 +52,13 @@ public class OnlineHandManager : MonoBehaviour
         {
             Debug.LogError("playerCard2 is null!");
         }
-        
-        Debug.Log("SetPlayerHand completed");
     }
 
     // 相手の手札をUIに反映（初期は裏向き）
     public void SetOpponentHand(int[] cardIds)
     {
-        Debug.Log($"SetOpponentHand called with cardIds: {(cardIds != null ? string.Join(",", cardIds) : "null")}");
-        Debug.Log($"opponentCard1: {opponentCard1 != null}, opponentCard2: {opponentCard2 != null}");
+        Debug.Log($"[START_DEBUG] SetOpponentHand called with cardIds: {(cardIds != null ? string.Join(",", cardIds) : "null")}");
+        Debug.Log($"[START_DEBUG] opponentCard1: {opponentCard1 != null}, opponentCard2: {opponentCard2 != null}");
         
         if (opponentCard1 != null)
         {
@@ -101,8 +99,6 @@ public class OnlineHandManager : MonoBehaviour
         {
             Debug.LogError("opponentCard2 is null!");
         }
-        
-        Debug.Log("SetOpponentHand completed");
     }
 
     // 指定されたカードがプレイヤーのカードかどうかを判定

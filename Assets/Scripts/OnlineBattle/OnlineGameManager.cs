@@ -84,6 +84,32 @@ public class OnlineGameManager : MonoBehaviour
     public bool IsParent => isParent;
     public bool IsParentTurn => isParentTurn;
 
+    void Start()
+    {
+        Debug.Log("[START_DEBUG] OnlineGameManager.Start() called");
+        
+        // 各マネージャーの初期化
+        InitializeManagers();        
+        // gameDataの初期化と読み込み
+        InitializeGameData();
+        
+        // gameDataが正常に読み込まれた場合のみ処理を続行
+        if (gameData != null)
+        {
+            // 手札の設定とHIGH/LOW表示の更新
+            SetupHandsAndHighLowDisplay();           
+            // 初期設定の完了処理
+            CompleteInitialization();           
+            // 初期ゲームフェーズ監視の開始
+            InitializeGamePhaseMonitoring();
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - gameData is null");
+        }
+    }
+
+
     // 親子システムの初期化
     private void InitializeParentChildSystem()
     {
@@ -651,126 +677,39 @@ public class OnlineGameManager : MonoBehaviour
         }
     }
 
-    void Start()
+    // 各マネージャーの初期化
+    private void InitializeManagers()
     {
-        Debug.Log($"[START_DEBUG] === OnlineGameManager.Start()開始 ===");
-        Debug.Log("OnlineGameManager.Start() called");
-        
-        // 各マネージャの取得
-        Debug.Log($"[START_DEBUG] 各マネージャの取得開始");
+        Debug.Log("[START_DEBUG] OnlineGameManager.InitializeManagers() called");
         matchManager = FindObjectOfType<OnlineMatchManager>();
         resultViewManager = FindObjectOfType<OnlineResultViewManager>();
         panelManager = FindObjectOfType<OnlinePanelManager>();
         skillManager = FindObjectOfType<OnlineSkillManager>();
         handManager = FindObjectOfType<OnlineHandManager>();
+    }
 
-        Debug.Log($"[START_DEBUG] 各マネージャの取得結果:");
-        Debug.Log($"[START_DEBUG]   matchManager: {matchManager != null}");
-        Debug.Log($"[START_DEBUG]   resultViewManager: {resultViewManager != null}");
-        Debug.Log($"[START_DEBUG]   panelManager: {panelManager != null}");
-        Debug.Log($"[START_DEBUG]   skillManager: {skillManager != null}");
-        Debug.Log($"[START_DEBUG]   handManager: {handManager != null}");
-
-        Debug.Log($"Managers found - matchManager: {matchManager != null}, resultViewManager: {resultViewManager != null}, panelManager: {panelManager != null}, skillManager: {skillManager != null}, handManager: {handManager != null}");
-
+    // gameDataの初期化と読み込み
+    private void InitializeGameData()
+    {
+        Debug.Log("[START_DEBUG] OnlineGameManager.InitializeGameData() called");
         // gameDataをクラスフィールドとして初期化
         gameData = null;
-        Debug.Log($"[START_DEBUG] gameData初期化完了: {gameData == null}");
+        // Debug.Log($"[START_DEBUG] gameData初期化完了: {gameData == null}");
 
         // OnlineGameDataから手札・プレイヤー情報を取得
-        Debug.Log($"[START_DEBUG] PlayerPrefsからOnlineGameData読み込み開始");
+        // Debug.Log($"[START_DEBUG] PlayerPrefsからOnlineGameData読み込み開始");
         string gameDataJson = PlayerPrefs.GetString("OnlineGameData", "");
-        Debug.Log($"[START_DEBUG] PlayerPrefsから読み込まれたJSON: {gameDataJson}");
-        Debug.Log($"OnlineGameData from PlayerPrefs: {gameDataJson}");
+        Debug.Log($"[START_DEBUG] JSON in PlayerPrefs: {gameDataJson}");
+        // Debug.Log($"OnlineGameData from PlayerPrefs: {gameDataJson}");
         
         if (!string.IsNullOrEmpty(gameDataJson))
         {
             this.gameData = JsonUtility.FromJson<OnlineGameDataWithCards>(gameDataJson);
-            Debug.Log($"Parsed gameData: {gameData != null}");
+            // Debug.Log($"Parsed gameData: {gameData != null}");
             
             if (gameData != null)
             {
-                Debug.Log($"=== gameData詳細情報 ===");
-                Debug.Log($"[GAMEDATA_DEBUG] GameData - isPlayer1: {gameData.isPlayer1}, playerId: {gameData.playerId}, opponentId: {gameData.opponentId}");
-                Debug.Log($"[GAMEDATA_DEBUG] GameData - gameId: {gameData.gameId}, roomCode: {gameData.roomCode}");
-                Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
-                Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
-                
-                if (gameData.player1Cards != null)
-                {
-                    Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards.Length: {gameData.player1Cards.Length}");
-                    for (int i = 0; i < gameData.player1Cards.Length; i++)
-                    {
-                        Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards[{i}]: {gameData.player1Cards[i]} (型: {gameData.player1Cards[i].GetType()})");
-                    }
-                }
-                
-                if (gameData.player2Cards != null)
-                {
-                    Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards.Length: {gameData.player2Cards.Length}");
-                    for (int i = 0; i < gameData.player2Cards.Length; i++)
-                    {
-                        Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards[{i}]: {gameData.player2Cards[i]} (型: {gameData.player2Cards[i].GetType()})");
-                    }
-                }
-                Debug.Log($"=== gameData詳細情報完了 ===");
-                
-                if (handManager != null)
-                {
-                    isPlayer1 = gameData.isPlayer1;
-                    playerId = gameData.playerId;
-                    opponentId = gameData.opponentId;
-
-                    // 手札をセット
-                    myHand = isPlayer1 ? gameData.player1Cards : gameData.player2Cards;
-                    opponentHand = isPlayer1 ? gameData.player2Cards : gameData.player1Cards;
-
-                    Debug.Log($"Setting hands - myHand: {(myHand != null ? string.Join(",", myHand) : "null")}, opponentHand: {(opponentHand != null ? string.Join(",", opponentHand) : "null")}");
-
-                    handManager.SetPlayerHand(myHand);
-                    handManager.SetOpponentHand(opponentHand);
-                    
-                    // 手札設定完了後、HIGH/LOW表示を更新
-                    if (panelManager != null)
-                    {
-                        Debug.Log($"[START_HIGH_LOW_DEBUG] === Start()でのHIGH/LOW表示更新開始 ===");
-                        Debug.Log($"[START_HIGH_LOW_DEBUG] 現在のプレイヤー: isPlayer1={isPlayer1}");
-                        Debug.Log($"[START_HIGH_LOW_DEBUG] 手札設定完了:");
-                        Debug.Log($"[START_HIGH_LOW_DEBUG]   自分の手札: {(myHand != null ? string.Join(",", myHand) : "null")}");
-                        Debug.Log($"[START_HIGH_LOW_DEBUG]   相手の手札: {(opponentHand != null ? string.Join(",", opponentHand) : "null")}");
-                        
-                        // HIGH/LOW表示を更新
-                        if (myHand != null && myHand.Length >= 2 && opponentHand != null && opponentHand.Length >= 2)
-                        {
-                            int playerCard1 = myHand[0];
-                            int playerCard2 = myHand[1];
-                            int opponentCard1 = opponentHand[0];
-                            int opponentCard2 = opponentHand[1];
-                            
-                            Debug.Log($"[START_HIGH_LOW_DEBUG] カード値取得完了:");
-                            Debug.Log($"[START_HIGH_LOW_DEBUG]   自分のカード: [{playerCard1}, {playerCard2}]");
-                            Debug.Log($"[START_HIGH_LOW_DEBUG]   相手のカード: [{opponentCard1}, {opponentCard2}]");
-                            
-                            panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
-                            panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
-                            
-                            Debug.Log($"[START_HIGH_LOW_DEBUG] HIGH/LOW表示更新完了");
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"[START_HIGH_LOW_DEBUG] 手札が不足しています: myHand.Length={myHand?.Length}, opponentHand.Length={opponentHand?.Length}");
-                        }
-                        Debug.Log($"[START_HIGH_LOW_DEBUG] === Start()でのHIGH/LOW表示更新完了 ===");
-                    }
-                    else
-                    {
-                        Debug.LogError($"[START_HIGH_LOW_DEBUG] panelManagerがnullです！");
-                    }
-                }
-                else
-                {
-                    Debug.LogError("handManager is null!");
-                }
+                LogGameDataDetails();
             }
             else
             {
@@ -781,15 +720,106 @@ public class OnlineGameManager : MonoBehaviour
         {
             Debug.LogWarning("OnlineGameData is empty in PlayerPrefs");
         }
+    }
 
+    // gameDataの詳細情報をログ出力
+    private void LogGameDataDetails()
+    {
+        Debug.Log($"=== gameData詳細情報 ===");
+        Debug.Log($"[GAMEDATA_DEBUG] GameData - isPlayer1: {gameData.isPlayer1}, playerId: {gameData.playerId}, opponentId: {gameData.opponentId}");
+        Debug.Log($"[GAMEDATA_DEBUG] GameData - gameId: {gameData.gameId}, roomCode: {gameData.roomCode}");
+        Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
+        Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+        
+        if (gameData.player1Cards != null)
+        {
+            // Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards.Length: {gameData.player1Cards.Length}");
+            for (int i = 0; i < gameData.player1Cards.Length; i++)
+            {
+                Debug.Log($"[GAMEDATA_DEBUG] GameData - player1Cards[{i}]: {gameData.player1Cards[i]}");
+            }
+        }
+        
+        if (gameData.player2Cards != null)
+        {
+            // Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards.Length: {gameData.player2Cards.Length}");
+            for (int i = 0; i < gameData.player2Cards.Length; i++)
+            {
+                Debug.Log($"[GAMEDATA_DEBUG] GameData - player2Cards[{i}]: {gameData.player2Cards[i]}");
+            }
+        }
+    }
+
+    // 手札の設定とHIGH/LOW表示の更新
+    private void SetupHandsAndHighLowDisplay()
+    {
+        Debug.Log("[START_DEBUG] OnlineGameManager.SetupHandsAndHighLowDisplay() called");
+        if (handManager != null)
+        {
+            isPlayer1 = gameData.isPlayer1;
+            playerId = gameData.playerId;
+            opponentId = gameData.opponentId;
+
+            // 手札をセット
+            myHand = isPlayer1 ? gameData.player1Cards : gameData.player2Cards;
+            opponentHand = isPlayer1 ? gameData.player2Cards : gameData.player1Cards;
+
+            Debug.Log($"Setting hands - myHand: {(myHand != null ? string.Join(",", myHand) : "null")}, opponentHand: {(opponentHand != null ? string.Join(",", opponentHand) : "null")}");
+
+            handManager.SetPlayerHand(myHand);
+            handManager.SetOpponentHand(opponentHand);
+            
+            // 手札設定完了後、HIGH/LOW表示を更新
+            UpdateHighLowDisplay();
+        }
+        else
+        {
+            Debug.LogError("handManager is null!");
+        }
+    }
+
+    // HIGH/LOW表示の更新
+    private void UpdateHighLowDisplay()
+    {
+        Debug.Log("[START_DEBUG] OnlineGameManager.UpdateHighLowDisplay() called");
+        if (panelManager != null)
+        {
+            Debug.Log($"自分の手札: {(myHand != null ? string.Join(",", myHand) : "null")}");
+            Debug.Log($"相手の手札: {(opponentHand != null ? string.Join(",", opponentHand) : "null")}");
+            
+            // HIGH/LOW表示を更新
+            if (myHand != null && myHand.Length >= 2 && opponentHand != null && opponentHand.Length >= 2)
+            {
+                int playerCard1 = myHand[0];
+                int playerCard2 = myHand[1];
+                int opponentCard1 = opponentHand[0];
+                int opponentCard2 = opponentHand[1];
+                
+                Debug.Log($"自分のカード: [{playerCard1}, {playerCard2}]");
+                Debug.Log($"相手のカード: [{opponentCard1}, {opponentCard2}]");
+                
+                panelManager.UpdatePlayerHighLowDisplay(playerCard1, playerCard2);
+                panelManager.UpdateOpponentHighLowDisplay(opponentCard1, opponentCard2);
+            }
+            else
+            {
+                Debug.LogWarning($"手札が不足しています: myHand.Length={myHand?.Length}, opponentHand.Length={opponentHand?.Length}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"[START_DEBUG] panelManagerがnullです！");
+        }
+    }
+
+    // 初期設定の完了処理
+    private void CompleteInitialization()
+    {
+        Debug.Log("[START_DEBUG] OnlineGameManager.CompleteInitialization() called");
         // ライフUI初期化
         UpdateLifeUI();
-        Debug.Log("OnlineGameManager.Start() completed");
-
         // デバッグ用：カードセットを有効化
         canSetCard = true;
-        Debug.Log("OnlineGameManager - Card set enabled for testing in Start()");
-
         // 親子システムの初期化
         InitializeParentChildSystem();
 
@@ -798,7 +828,11 @@ public class OnlineGameManager : MonoBehaviour
         {
             panelManager.ClearHighLowDisplay();
         }
+    }
 
+    // 初期ゲームフェーズ監視の開始
+    private void InitializeGamePhaseMonitoring()
+    {
         // マッチング完了パネル表示後にゲームフェーズ監視を開始
         if (panelManager != null && gameData != null)
         {
@@ -832,6 +866,7 @@ public class OnlineGameManager : MonoBehaviour
     // ライフUIの更新
     public void UpdateLifeUI()
     {
+        Debug.Log("[START_DEBUG] OnlineGameManager.UpdateLifeUI() called");
         if (playerLifeText != null)
             playerLifeText.text = $"Life: {matchManager.PlayerLife}";
         if (opponentLifeText != null)

@@ -39,7 +39,7 @@ public class CreateRoomManager : MonoBehaviour
     
     void Start()
     {
-        Debug.Log($"[CreateRoom] Start() - 部屋作成開始");
+        // Debug.Log($"[CreateRoom] Start() - 部屋作成開始");
         StartCoroutine(CreateRoom());
         
         // タイマーを初期化
@@ -50,7 +50,7 @@ public class CreateRoomManager : MonoBehaviour
         StartTimer();
         
         // マッチング状態のチェックを開始
-        Debug.Log($"[CreateRoom] マッチング状態チェック開始");
+        // Debug.Log($"[CreateRoom] マッチング状態チェック開始");
         StartCoroutine(CheckMatchingStatus());
     }
     
@@ -155,7 +155,7 @@ public class CreateRoomManager : MonoBehaviour
 
     private IEnumerator CreateRoom()
     {
-        Debug.Log($"[CreateRoom] CreateRoom() - 部屋作成API呼び出し開始");
+        // Debug.Log($"[CreateRoom] CreateRoom() - 部屋作成API呼び出し開始");
         
         // PlayerPrefsからUserData(JSON)を取得し、usernameをパース
         string userDataJson = PlayerPrefs.GetString("UserData", "");
@@ -166,7 +166,7 @@ public class CreateRoomManager : MonoBehaviour
             playerId = userData.username;
         }
         
-        Debug.Log($"[CreateRoom] プレイヤーID: {playerId}");
+        // Debug.Log($"[CreateRoom] プレイヤーID: {playerId}");
         
         string json = "{\"playerId\":\"" + playerId + "\"}";
 
@@ -180,7 +180,7 @@ public class CreateRoomManager : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log($"[CreateRoom] 部屋作成API成功 - response: {request.downloadHandler.text}");
+            // Debug.Log($"[CreateRoom] 部屋作成API成功 - response: {request.downloadHandler.text}");
             var response = JsonUtility.FromJson<RoomCodeResponse>(request.downloadHandler.text);
             roomCode = response.code;
             roomNumberText.text = roomCode;
@@ -198,7 +198,7 @@ public class CreateRoomManager : MonoBehaviour
     /// </summary>
     private IEnumerator CheckMatchingStatus()
     {
-        Debug.Log($"[CreateRoom] CheckMatchingStatus() - マッチング監視開始");
+        // Debug.Log($"[CreateRoom] CheckMatchingStatus() - マッチング監視開始");
         int checkCount = 0;
         
         while (!isMatched)
@@ -208,16 +208,16 @@ public class CreateRoomManager : MonoBehaviour
             
             if (!string.IsNullOrEmpty(roomCode))
             {
-                Debug.Log($"[CreateRoom] マッチングチェック #{checkCount} - roomCode: {roomCode}");
+                // Debug.Log($"[CreateRoom] マッチングチェック #{checkCount} - roomCode: {roomCode}");
                 yield return StartCoroutine(CheckMatchStatus());
             }
             else
             {
-                Debug.LogWarning($"[CreateRoom] マッチングチェック #{checkCount} - roomCodeが空です");
+                // Debug.LogWarning($"[CreateRoom] マッチングチェック #{checkCount} - roomCodeが空です");
             }
         }
         
-        Debug.Log($"[CreateRoom] CheckMatchingStatus() - マッチング監視終了");
+        // Debug.Log($"[CreateRoom] CheckMatchingStatus() - マッチング監視終了");
     }
 
     /// <summary>
@@ -226,7 +226,7 @@ public class CreateRoomManager : MonoBehaviour
     private IEnumerator CheckMatchStatus()
     {
         string url = $"{checkMatchUrl}?roomCode={roomCode}";
-        Debug.Log($"[CreateRoom] CheckMatchStatus() - API呼び出し: {url}");
+        // Debug.Log($"[CreateRoom] CheckMatchStatus() - API呼び出し: {url}");
         
         using (UnityWebRequest request = UnityWebRequest.Get(url))
         {
@@ -234,10 +234,10 @@ public class CreateRoomManager : MonoBehaviour
 
             if (request.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log($"[CreateRoom] CheckMatchStatus API成功 - response: {request.downloadHandler.text}");
+                // Debug.Log($"[CreateRoom] CheckMatchStatus API成功 - response: {request.downloadHandler.text}");
                 var response = JsonUtility.FromJson<MatchStatusResponse>(request.downloadHandler.text);
                 
-                Debug.Log($"[CreateRoom] マッチング状態 - status: {response.status}, guestPlayerId: {response.guestPlayerId}");
+                // Debug.Log($"[CreateRoom] マッチング状態 - status: {response.status}, guestPlayerId: {response.guestPlayerId}");
                 
                 if (response.status == "matched")
                 {
@@ -257,12 +257,12 @@ public class CreateRoomManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log($"[CreateRoom] まだマッチング待ち - status: {response.status}");
+                    // Debug.Log($"[CreateRoom] まだマッチング待ち - status: {response.status}");
                 }
             }
             else
             {
-                Debug.LogError($"[CreateRoom] CheckMatchStatus API失敗 - {request.error}");
+                // Debug.LogError($"[CreateRoom] CheckMatchStatus API失敗 - {request.error}");
             }
         }
     }
@@ -272,14 +272,14 @@ public class CreateRoomManager : MonoBehaviour
     /// </summary>
     private void ShowMatchedPanel()
     {
-        Debug.Log($"[CreateRoom] ShowMatchedPanel() - マッチング完了パネル表示");
+        // Debug.Log($"[CreateRoom] ShowMatchedPanel() - マッチング完了パネル表示");
         if (waitingPanel != null) waitingPanel.SetActive(false);
         if (matchedPanel != null) matchedPanel.SetActive(true);
         if (matchedText != null) matchedText.text = $"マッチング成立！\n相手: {opponentId}\nゲーム開始中...";
         
         // タイマーを停止
         StopTimer();
-        Debug.Log($"[CreateRoom] タイマー停止");
+        // Debug.Log($"[CreateRoom] タイマー停止");
     }
 
     [System.Serializable]

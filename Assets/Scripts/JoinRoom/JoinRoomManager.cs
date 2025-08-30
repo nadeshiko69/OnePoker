@@ -27,7 +27,7 @@ public class JoinRoomManager : MonoBehaviour
 
     private void Start()
     {
-        Debug.Log($"[JoinRoom] Start() - 部屋参加画面初期化");
+        // Debug.Log($"[JoinRoom] Start() - 部屋参加画面初期化");
         submitButton.onClick.AddListener(OnSubmit);
         
         // PlayerPrefsからUserData(JSON)を取得し、usernameをパース
@@ -39,23 +39,23 @@ public class JoinRoomManager : MonoBehaviour
             playerId = userData.username;
         }
         
-        Debug.Log($"[JoinRoom] プレイヤーID: {playerId}");
+        // Debug.Log($"[JoinRoom] プレイヤーID: {playerId}");
     }
 
     private void OnSubmit()
     {
         string code = inputRoomCode.text;
-        Debug.Log($"[JoinRoom] OnSubmit() - 入力されたコード: {code}");
+        // Debug.Log($"[JoinRoom] OnSubmit() - 入力されたコード: {code}");
         
         if (code.Length != 6)
         {
-            Debug.LogWarning($"[JoinRoom] コード長エラー - 長さ: {code.Length}, 期待値: 6");
+            // Debug.LogWarning($"[JoinRoom] コード長エラー - 長さ: {code.Length}, 期待値: 6");
             messageText.text = "6桁の数字を入力してください";
             return;
         }
         
         roomCode = code;
-        Debug.Log($"[JoinRoom] 部屋参加リクエスト開始 - roomCode: {roomCode}");
+        // Debug.Log($"[JoinRoom] 部屋参加リクエスト開始 - roomCode: {roomCode}");
         
         // 確定ボタンを非活性化
         submitButton.interactable = false;
@@ -66,10 +66,10 @@ public class JoinRoomManager : MonoBehaviour
 
     private IEnumerator JoinRoomRequest(string code)
     {
-        Debug.Log($"[JoinRoom] JoinRoomRequest() - API呼び出し開始");
+        // Debug.Log($"[JoinRoom] JoinRoomRequest() - API呼び出し開始");
         
         var json = JsonUtility.ToJson(new JoinRoomRequestData { code = code, playerId = playerId });
-        Debug.Log($"[JoinRoom] リクエストJSON: {json}");
+        // Debug.Log($"[JoinRoom] リクエストJSON: {json}");
         
         var request = new UnityWebRequest(joinUrl, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
@@ -81,15 +81,15 @@ public class JoinRoomManager : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log($"[JoinRoom] JoinRoom API成功 - response: {request.downloadHandler.text}");
+            // Debug.Log($"[JoinRoom] JoinRoom API成功 - response: {request.downloadHandler.text}");
             var response = JsonUtility.FromJson<JoinRoomResponse>(request.downloadHandler.text);
             
-            Debug.Log($"[JoinRoom] レスポンス解析 - message: {response.message}, player1Id: {response.player1Id}, player2Id: {response.player2Id}");
+            // Debug.Log($"[JoinRoom] レスポンス解析 - message: {response.message}, player1Id: {response.player1Id}, player2Id: {response.player2Id}");
             
             if (response.message == "Matched successfully")
             {
                 // マッチング成功
-                Debug.Log($"[JoinRoom] 🎉 マッチング成立！player1Id: {response.player1Id}, player2Id: {response.player2Id}");
+                // Debug.Log($"[JoinRoom] 🎉 マッチング成立！player1Id: {response.player1Id}, player2Id: {response.player2Id}");
                 isMatched = true;
                 
                 // 相手のIDを正しく取得（自分がplayer2の場合、相手はplayer1）
@@ -106,7 +106,7 @@ public class JoinRoomManager : MonoBehaviour
                     opponentId = "対戦相手"; // 仮の名前
                 }
                 
-                Debug.Log($"[JoinRoom] 相手のID: {opponentId}");
+                // Debug.Log($"[JoinRoom] 相手のID: {opponentId}");
                 
                 // 成功メッセージを表示
                 messageText.text = $"マッチングしました！相手: {opponentId}";
@@ -115,14 +115,14 @@ public class JoinRoomManager : MonoBehaviour
                 ShowMatchedPanel();
                 
                 // ゲーム開始処理を共通クラスで実行
-                Debug.Log($"[JoinRoom] ゲーム開始処理開始 - roomCode: {roomCode}, playerId: {playerId}, opponentId: {opponentId}");
+                // Debug.Log($"[JoinRoom] ゲーム開始処理開始 - roomCode: {roomCode}, playerId: {playerId}, opponentId: {opponentId}");
                 yield return StartCoroutine(
                     OnlineBattleStarter.StartGameAndTransition(
                         startGameUrl, roomCode, playerId, opponentId, false));
             }
             else
             {
-                Debug.Log($"[JoinRoom] マッチング待ち状態 - message: {response.message}");
+                // Debug.Log($"[JoinRoom] マッチング待ち状態 - message: {response.message}");
                 messageText.text = "マッチング待ち中...";
                 
                 // 確定ボタンを再度活性化
@@ -145,8 +145,8 @@ public class JoinRoomManager : MonoBehaviour
     /// </summary>
     private void ShowMatchedPanel()
     {
-        Debug.Log($"[JoinRoom] ShowMatchedPanel() - マッチング完了パネル表示");
-        Debug.Log($"[JoinRoom] ShowMatchedPanel - opponentId: {opponentId}");
+        // Debug.Log($"[JoinRoom] ShowMatchedPanel() - マッチング完了パネル表示");
+        // Debug.Log($"[JoinRoom] ShowMatchedPanel - opponentId: {opponentId}");
         
         if (inputPanel != null) inputPanel.SetActive(false);
         if (matchedPanel != null) matchedPanel.SetActive(true);
@@ -155,7 +155,7 @@ public class JoinRoomManager : MonoBehaviour
         {
             string displayText = $"マッチング完了！\n相手: {opponentId}\nゲーム開始中...";
             matchedText.text = displayText;
-            Debug.Log($"[JoinRoom] ShowMatchedPanel - 表示テキスト: {displayText}");
+            // Debug.Log($"[JoinRoom] ShowMatchedPanel - 表示テキスト: {displayText}");
         }
         else
         {
