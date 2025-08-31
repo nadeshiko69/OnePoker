@@ -838,7 +838,7 @@ public class OnlineGameManager : MonoBehaviour
         {
             string playerName = gameData.playerId;
             string opponentName = gameData.opponentId;
-            Debug.Log($"[MatchStartPanel] playerName: {playerName}, opponentName: {opponentName}");
+            Debug.Log($"[START_DEBUG] playerName: {playerName}, opponentName: {opponentName}");
             
             // 初期フェーズテキストを設定
             if (panelManager != null)
@@ -854,12 +854,12 @@ public class OnlineGameManager : MonoBehaviour
             // panelManagerがnullの場合は即座にゲームフェーズ監視を開始
             currentGameId = gameData.gameId;
             currentPlayerId = gameData.playerId;
-            Debug.Log($"OnlineGameManager - Starting game phase monitoring for gameId: {currentGameId}, playerId: {currentPlayerId}");
+            Debug.Log($"[START_DEBUG] Starting game phase monitoring for gameId: {currentGameId}, playerId: {currentPlayerId}");
             StartGamePhaseMonitoring();
         }
         else
         {
-            Debug.LogError("OnlineGameManager - gameData is null, cannot start phase monitoring");
+            Debug.LogError("OnlineGameManager - gameData is null");
         }
     }
 
@@ -876,15 +876,11 @@ public class OnlineGameManager : MonoBehaviour
     // マッチング完了パネル表示後にゲームフェーズ監視を開始するコルーチン
     private IEnumerator ShowMatchStartPanelAndStartMonitoring(string playerName, string opponentName, float duration)
     {
-        Debug.Log($"OnlineGameManager - Showing match start panel for {duration} seconds");
-        
+        Debug.Log($"[START_DEBUG] Showing match start panel for {duration} seconds");       
         // マッチング完了パネルを表示
-        panelManager.ShowMatchStartPanel(playerName, opponentName, duration);
-        
+        panelManager.ShowMatchStartPanel(playerName, opponentName, duration);       
         // パネル表示時間分待機
         yield return new WaitForSeconds(duration);
-        
-        Debug.Log("OnlineGameManager - Match start panel duration completed, setting phase transition time");
         
         // フェーズ移行時間を設定してからゲームフェーズ監視を開始
         if (gameData != null)
