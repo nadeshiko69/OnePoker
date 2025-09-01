@@ -822,12 +822,6 @@ public class OnlineGameManager : MonoBehaviour
         canSetCard = true;
         // 親子システムの初期化
         InitializeParentChildSystem();
-
-        // HIGH/LOW表示をクリア
-        if (panelManager != null)
-        {
-            panelManager.ClearHighLowDisplay();
-        }
     }
 
     // 初期ゲームフェーズ監視の開始
