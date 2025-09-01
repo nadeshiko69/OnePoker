@@ -818,7 +818,7 @@ public class OnlineGameManager : MonoBehaviour
         Debug.Log("[START_DEBUG] OnlineGameManager.CompleteInitialization() called");
         // ライフUI初期化
         UpdateLifeUI();
-        // デバッグ用：カードセットを有効化
+        // カードセットを有効化
         canSetCard = true;
         // 親子システムの初期化
         InitializeParentChildSystem();
@@ -1059,8 +1059,8 @@ public class OnlineGameManager : MonoBehaviour
                     isRevealPhaseActive = false;
                     isBettingPhaseActive = false;
                     isSetCompletePhaseActive = false;
-                    canSetCard = false;
-                    Debug.Log("OnlineGameManager - Set phase flags updated: isSetPhaseActive=true, canSetCard=false");
+                    canSetCard = true;
+                    Debug.Log("OnlineGameManager - Set phase flags updated.");
                     if (panelManager != null)
                     {
                         panelManager.ShowStartPhasePanel("Set Phase", "カードをSetZoneにセットしてください");
@@ -1210,31 +1210,35 @@ public class OnlineGameManager : MonoBehaviour
         return canSetCard;
     }
 
-    // デバッグ用：カードセット可能フラグを強制的に有効化
-    public void EnableCardSetForTesting()
-    {
-        canSetCard = true;
-        Debug.Log("OnlineGameManager - Card set enabled for testing");
-    }
-
     // カード配置確認パネルを表示
     public void ShowConfirmation(CardDisplay card, OnlineDropZone zone)
     {
         Debug.Log($"OnlineGameManager - ShowConfirmation called for card: {card.CardValue}");
+        
+        // canSetCardがfalseの場合はカード配置を許可しない
+        if (!canSetCard)
+        {
+            Debug.LogWarning($"OnlineGameManager - ShowConfirmation: canSetCard is false, rejecting card placement for card: {card.CardValue}");
+            
+            // カードを元の位置に戻す
+            ReturnCardToOriginalPosition(card);
+            return;
+        }
+        
         currentCard = card;
         currentZone = zone;
         
         if (panelManager != null)
         {
             Debug.Log($"OnlineGameManager - panelManager found, yesButton: {panelManager.yesButton != null}");
-        panelManager.confirmationPanel.SetActive(true);
+            panelManager.confirmationPanel.SetActive(true);
 
-        // リスナーの多重登録防止
-        panelManager.yesButton.onClick.RemoveAllListeners();
-        panelManager.noButton.onClick.RemoveAllListeners();
+            // リスナーの多重登録防止
+            panelManager.yesButton.onClick.RemoveAllListeners();
+            panelManager.noButton.onClick.RemoveAllListeners();
 
-        panelManager.yesButton.onClick.AddListener(ConfirmPlacement);
-        panelManager.noButton.onClick.AddListener(CancelPlacement);
+            panelManager.yesButton.onClick.AddListener(ConfirmPlacement);
+            panelManager.noButton.onClick.AddListener(CancelPlacement);
             
             Debug.Log("OnlineGameManager - Button listeners added successfully");
         }
@@ -1277,6 +1281,7 @@ public class OnlineGameManager : MonoBehaviour
             // カード配置完了をサーバーに通知
             Debug.Log($"[CARD_CONFIRM_DEBUG] NotifyCardPlacement呼び出し開始");
             StartCoroutine(NotifyCardPlacement(currentCard.CardValue));
+            canSetCard = false;
         }
         else
         {
@@ -1319,12 +1324,76 @@ public class OnlineGameManager : MonoBehaviour
         
         if (panelManager != null)
         {
-        panelManager.confirmationPanel.SetActive(false);
+            panelManager.confirmationPanel.SetActive(false);
 
-        // リスナーをリセット
-        panelManager.yesButton.onClick.RemoveAllListeners();
-        panelManager.noButton.onClick.RemoveAllListeners();
+            // リスナーをリセット
+            panelManager.yesButton.onClick.RemoveAllListeners();
+            panelManager.noButton.onClick.RemoveAllListeners();
+        }
     }
+
+    // カードを元の位置（手札）に戻す
+    private void ReturnCardToOriginalPosition(CardDisplay card)
+    {
+        Debug.Log($"OnlineGameManager - ReturnCardToOriginalPosition called for card: {card.CardValue}");
+        
+        if (card != null)
+        {
+            // CardDraggableコンポーネントを取得
+            var drag = card.GetComponent<CardDraggable>();
+            if (drag != null && drag.OriginalParent != null)
+            {
+                // カードを元の親（手札）に戻す
+                card.transform.SetParent(drag.OriginalParent);
+                
+                // 元の位置に戻す
+                if (drag.OriginalPosition != Vector3.zero)
+                {
+                    card.transform.position = drag.OriginalPosition;
+                }
+                else
+                {
+                    // OriginalPositionが設定されていない場合は手札の適切な位置に配置
+                    card.transform.localPosition = Vector3.zero;
+                }
+                
+                Debug.Log($"OnlineGameManager - Card {card.CardValue} returned to original position");
+            }
+            else
+            {
+                Debug.LogWarning($"OnlineGameManager - CardDraggable component or OriginalParent not found for card: {card.CardValue}");
+                
+                // フォールバック: handManagerのplayerCard1またはplayerCard2に戻す
+                if (handManager != null)
+                {
+                    // カードの値に基づいて適切な手札位置に戻す
+                    if (card == handManager.playerCard1 || card.CardValue == handManager.playerCard1?.CardValue)
+                    {
+                        card.transform.SetParent(handManager.playerCard1.transform.parent);
+                        card.transform.position = handManager.playerCard1.transform.position;
+                        Debug.Log($"OnlineGameManager - Card {card.CardValue} returned to playerCard1 position");
+                    }
+                    else if (card == handManager.playerCard2 || card.CardValue == handManager.playerCard2?.CardValue)
+                    {
+                        card.transform.SetParent(handManager.playerCard2.transform.parent);
+                        card.transform.position = handManager.playerCard2.transform.position;
+                        Debug.Log($"OnlineGameManager - Card {card.CardValue} returned to playerCard2 position");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"OnlineGameManager - Card {card.CardValue} could not be matched to any hand position");
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"OnlineGameManager - handManager is null, cannot return card: {card.CardValue}");
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("OnlineGameManager - ReturnCardToOriginalPosition: card is null");
+        }
     }
 
     // サーバーにカード配置を通知
