@@ -487,7 +487,7 @@ public class OnlineGameManager : MonoBehaviour
                 StartParentTurn();
                 break;
         }
-        
+
         // AWSにベットアクションを送信
         SendBetActionToAWS(actionType, currentBetValue);
     }
@@ -754,28 +754,28 @@ public class OnlineGameManager : MonoBehaviour
     private void SetupHandsAndHighLowDisplay()
     {
         Debug.Log("[START_DEBUG] OnlineGameManager.SetupHandsAndHighLowDisplay() called");
-        if (handManager != null)
-        {
-            isPlayer1 = gameData.isPlayer1;
-            playerId = gameData.playerId;
-            opponentId = gameData.opponentId;
+                if (handManager != null)
+                {
+                    isPlayer1 = gameData.isPlayer1;
+                    playerId = gameData.playerId;
+                    opponentId = gameData.opponentId;
 
-            // 手札をセット
-            myHand = isPlayer1 ? gameData.player1Cards : gameData.player2Cards;
-            opponentHand = isPlayer1 ? gameData.player2Cards : gameData.player1Cards;
+                    // 手札をセット
+                    myHand = isPlayer1 ? gameData.player1Cards : gameData.player2Cards;
+                    opponentHand = isPlayer1 ? gameData.player2Cards : gameData.player1Cards;
 
-            Debug.Log($"Setting hands - myHand: {(myHand != null ? string.Join(",", myHand) : "null")}, opponentHand: {(opponentHand != null ? string.Join(",", opponentHand) : "null")}");
+                    Debug.Log($"Setting hands - myHand: {(myHand != null ? string.Join(",", myHand) : "null")}, opponentHand: {(opponentHand != null ? string.Join(",", opponentHand) : "null")}");
 
-            handManager.SetPlayerHand(myHand);
-            handManager.SetOpponentHand(opponentHand);
+                    handManager.SetPlayerHand(myHand);
+                    handManager.SetOpponentHand(opponentHand);
             
             // 手札設定完了後、HIGH/LOW表示を更新
             UpdateHighLowDisplay();
-        }
-        else
-        {
-            Debug.LogError("handManager is null!");
-        }
+                }
+                else
+                {
+                    Debug.LogError("handManager is null!");
+                }
     }
 
     // HIGH/LOW表示の更新
@@ -810,7 +810,7 @@ public class OnlineGameManager : MonoBehaviour
         {
             Debug.LogError($"[START_DEBUG] panelManagerがnullです！");
         }
-    }
+        }
 
     // 初期設定の完了処理
     private void CompleteInitialization()
@@ -872,7 +872,7 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.Log($"[START_DEBUG] Showing match start panel for {duration} seconds");       
         // マッチング完了パネルを表示
-        panelManager.ShowMatchStartPanel(playerName, opponentName, duration);       
+        panelManager.ShowMatchStartPanel(playerName, opponentName, duration);
         // パネル表示時間分待機
         yield return new WaitForSeconds(duration);
         
@@ -1079,27 +1079,10 @@ public class OnlineGameManager : MonoBehaviour
                 break;
                 
             case "card_placement":
-                Debug.Log("OnlineGameManager - Processing card_placement case");
-                if (isSetPhaseActive)
-                {
-                    Debug.Log("OnlineGameManager - Transitioning from set_phase to card_placement");
-                    isSetPhaseActive = false;
-                    canSetCard = true;
-                    Debug.Log("OnlineGameManager - Card placement flags updated: isSetPhaseActive=false, canSetCard=true");
-                    if (panelManager != null)
-                    {
-                        panelManager.HideStartPhasePanel();
-                        Debug.Log("OnlineGameManager - Set Phase ended, card placement enabled");
-                        Debug.Log("OnlineGameManager - Lambda function: card_placement phase activated");
-                    }
-                }
-                else
-                {
-                    // set_phaseをスキップして直接card_placementになった場合
-                    Debug.Log("OnlineGameManager - Direct card_placement phase activated (set_phase was skipped)");
-                    canSetCard = true;
-                    Debug.Log("OnlineGameManager - Direct card_placement: canSetCard=true");
-                }
+                // card_placementはset_phaseと統合されたため、set_phaseとして処理
+                // 遷移処理は削除したが、一応残す。あとでcaseを削除して問題なく動くか確認する。
+                Debug.Log("OnlineGameManager - Processing card_placement case (redirected to set_phase)");
+                HandleGamePhaseChange("set_phase");
                 break;
 
             case "betting":
@@ -1231,14 +1214,14 @@ public class OnlineGameManager : MonoBehaviour
         if (panelManager != null)
         {
             Debug.Log($"OnlineGameManager - panelManager found, yesButton: {panelManager.yesButton != null}");
-            panelManager.confirmationPanel.SetActive(true);
+        panelManager.confirmationPanel.SetActive(true);
 
-            // リスナーの多重登録防止
-            panelManager.yesButton.onClick.RemoveAllListeners();
-            panelManager.noButton.onClick.RemoveAllListeners();
+        // リスナーの多重登録防止
+        panelManager.yesButton.onClick.RemoveAllListeners();
+        panelManager.noButton.onClick.RemoveAllListeners();
 
-            panelManager.yesButton.onClick.AddListener(ConfirmPlacement);
-            panelManager.noButton.onClick.AddListener(CancelPlacement);
+        panelManager.yesButton.onClick.AddListener(ConfirmPlacement);
+        panelManager.noButton.onClick.AddListener(CancelPlacement);
             
             Debug.Log("OnlineGameManager - Button listeners added successfully");
         }
@@ -1324,12 +1307,12 @@ public class OnlineGameManager : MonoBehaviour
         
         if (panelManager != null)
         {
-            panelManager.confirmationPanel.SetActive(false);
+        panelManager.confirmationPanel.SetActive(false);
 
-            // リスナーをリセット
-            panelManager.yesButton.onClick.RemoveAllListeners();
-            panelManager.noButton.onClick.RemoveAllListeners();
-        }
+        // リスナーをリセット
+        panelManager.yesButton.onClick.RemoveAllListeners();
+        panelManager.noButton.onClick.RemoveAllListeners();
+    }
     }
 
     // カードを元の位置（手札）に戻す

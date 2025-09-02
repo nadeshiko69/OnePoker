@@ -69,45 +69,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # デバッグログを追加
         print(f"Game {game_id}: Retrieved game state - gamePhase: {game_state.get('gamePhase')}, phaseTransitionTime: {game_state.get('phaseTransitionTime')}")
         
-        # set_phaseから自動的にcard_placementに移行する処理
-        if game_state['gamePhase'] == 'set_phase':
-            current_time = int(time.time())
-            phase_transition_time = game_state.get('phaseTransitionTime')
-            
-            # フェーズ移行のログを追加
-            print(f"Game {game_id}: current_time={current_time}, phase_transition_time={phase_transition_time}")
-            
-            # phaseTransitionTimeがNoneの場合は移行しない
-            if phase_transition_time is None:
-                print(f"Game {game_id}: phaseTransitionTime is None, staying in set_phase")
-                pass
-            elif current_time >= phase_transition_time:
-                # 自動移行を実行
-                update_expression = 'SET gamePhase = :gamePhase, phaseTransitionTime = :phaseTransitionTime, updatedAt = :updatedAt'
-                expression_attribute_values = {
-                    ':gamePhase': 'card_placement',
-                    ':phaseTransitionTime': None,
-                    ':updatedAt': current_time
-                }
-                
-                table.update_item(
-                    Key={'gameId': game_id},
-                    UpdateExpression=update_expression,
-                    ExpressionAttributeValues=expression_attribute_values
-                )
-                
-                # ゲーム状態を更新
-                game_state['gamePhase'] = 'card_placement'
-                game_state['phaseTransitionTime'] = None
-                game_state['updatedAt'] = current_time
-                
-                print(f"Auto-transitioning from set_phase to card_placement for game {game_id}")
-            else:
-                # まだ移行時間に達していない場合はset_phaseのまま
-                remaining_time = phase_transition_time - current_time
-                print(f"Game {game_id}: Still in set_phase, remaining time: {remaining_time} seconds")
-                # set_phaseのまま返す（移行しない）
-                pass
+        # set_phaseからcard_placementへの自動遷移処理を削除
+        # 現在はset_phaseとcard_placementが統合されているため、自動遷移は不要
         
         # プレイヤーIDに応じて適切な情報を返す
         is_player1 = player_id == game_state['player1Id']
