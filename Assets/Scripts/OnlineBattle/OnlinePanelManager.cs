@@ -77,9 +77,6 @@ public class OnlinePanelManager : MonoBehaviour
     [Header("ベット額表示")]
     public TextMeshProUGUI betAmountText;
     
-    [Header("親子表示")]
-    public TextMeshProUGUI parentChildText;
-    
     [Header("親プレイヤーBet中パネル")]
     public GameObject parentBettingPanel;
     public TextMeshProUGUI parentBettingText;
@@ -129,20 +126,10 @@ public class OnlinePanelManager : MonoBehaviour
         if (obstructPanel != null) obstructPanel.SetActive(false);
         if (matchStartPanel != null) matchStartPanel.SetActive(false);
         if (startPhasePanel != null) startPhasePanel.SetActive(false);
-        if (setCompletePanel != null) 
-        {
-            setCompletePanel.SetActive(false);
-            Debug.Log("OnlinePanelManager - setCompletePanel initialized and set to inactive");
-        }
-        else
-        {
-            Debug.LogWarning("OnlinePanelManager - setCompletePanel is null in Start()");
-        }
+        if (setCompletePanel != null) setCompletePanel.SetActive(false);
         if (matchResultPanel != null) matchResultPanel.SetActive(false);
         if (opponentActionPanel != null) opponentActionPanel.SetActive(false);
         if (parentBettingPanel != null) parentBettingPanel.SetActive(false);
-
-        Debug.Log("OnlinePanelManager - All panels set to inactive");
 
         // ボタンUIの初期化
         if (yesButton != null && gameManager != null)
@@ -298,20 +285,6 @@ public class OnlinePanelManager : MonoBehaviour
         else
         {
             Debug.LogWarning("OnlinePanelManager - betAmountText is null! Please assign it in the Inspector.");
-        }
-    }
-
-    // 親子表示の更新
-    public void UpdateParentChildDisplay(bool isParent)
-    {
-        if (parentChildText != null)
-        {
-            parentChildText.text = isParent ? "親" : "子";
-            Debug.Log($"OnlinePanelManager - Parent-Child display updated: {(isParent ? "親" : "子")}");
-        }
-        else
-        {
-            Debug.LogWarning("OnlinePanelManager - parentChildText is null! Please assign it in the Inspector.");
         }
     }
 

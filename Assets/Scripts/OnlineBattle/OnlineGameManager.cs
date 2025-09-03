@@ -119,13 +119,6 @@ public class OnlineGameManager : MonoBehaviour
         currentRound = 1;
         
         Debug.Log($"OnlineGameManager - Parent-Child system initialized. isParent: {isParent}, currentRound: {currentRound}");
-        
-        // 親子の表示を更新
-        if (panelManager != null)
-        {
-            panelManager.UpdateParentChildDisplay(isParent);
-            panelManager.UpdatePlayerRoleDisplay(isParent);
-        }
     }
 
     // 親子の交代判定
@@ -135,10 +128,9 @@ public class OnlineGameManager : MonoBehaviour
         {
             isParent = !isParent;
             Debug.Log($"OnlineGameManager - Parent changed at round {currentRound}. New parent: {isParent}");
-            
+            // 親子の表示を更新
             if (panelManager != null)
             {
-                panelManager.UpdateParentChildDisplay(isParent);
                 panelManager.UpdatePlayerRoleDisplay(isParent);
             }
         }
