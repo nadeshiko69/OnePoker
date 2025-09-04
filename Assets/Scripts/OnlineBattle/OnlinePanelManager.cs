@@ -21,6 +21,9 @@ public class OnlinePanelManager : MonoBehaviour
     public TextMeshProUGUI playerRate;
     public TextMeshProUGUI opponentRate;
 
+    public TextMeshProUGUI playerLife;
+    public TextMeshProUGUI opponentLife;
+
     [Header("◎　Phase通知用UI")]
     public GameObject startPhasePanel;
     public TextMeshProUGUI startPhaseTitle;
@@ -79,7 +82,6 @@ public class OnlinePanelManager : MonoBehaviour
     
     [Header("親プレイヤーBet中パネル")]
     public GameObject parentBettingPanel;
-    public TextMeshProUGUI parentBettingText;
     
     [Header("HIGH/LOW表示")]
     public TextMeshProUGUI opponent_updown1;
@@ -130,6 +132,7 @@ public class OnlinePanelManager : MonoBehaviour
         if (matchResultPanel != null) matchResultPanel.SetActive(false);
         if (opponentActionPanel != null) opponentActionPanel.SetActive(false);
         if (parentBettingPanel != null) parentBettingPanel.SetActive(false);
+        if (betAmountText != null) betAmountText.gameObject.SetActive(false);
 
         // ボタンUIの初期化
         if (yesButton != null && gameManager != null)
@@ -279,12 +282,12 @@ public class OnlinePanelManager : MonoBehaviour
     {
         if (betAmountText != null)
         {
-            betAmountText.text = $"ベット額: {betAmount}";
-            Debug.Log($"OnlinePanelManager - Bet amount display updated to: {betAmount}");
+            betAmountText.text = $"BET : {betAmount}";
+            Debug.Log($"Bet amount display updated to: {betAmount}");
         }
         else
         {
-            Debug.LogWarning("OnlinePanelManager - betAmountText is null! Please assign it in the Inspector.");
+            Debug.LogWarning("betAmountText is null! Please assign it in the Inspector.");
         }
     }
 
@@ -433,6 +436,13 @@ public class OnlinePanelManager : MonoBehaviour
             if (startPhaseDescription != null) startPhaseDescription.text = "ベット額を設定してください";
             Debug.Log("OnlinePanelManager - Parent turn panel shown");
         }
+
+        // 親のターン時にbetAmountTextを表示
+        if (betAmountText != null)
+        {
+            betAmountText.gameObject.SetActive(true);
+            Debug.Log("OnlinePanelManager - betAmountText activated for parent turn");
+        }
     }
 
     // 親のアクション待ちパネル表示
@@ -479,15 +489,14 @@ public class OnlinePanelManager : MonoBehaviour
     // 親プレイヤーBet中パネルを表示
     public void ShowParentBettingPanel()
     {
-        if (parentBettingPanel != null && parentBettingText != null)
+        if (parentBettingPanel != null)
         {
-            parentBettingText.text = "親プレイヤーがBet中です...";
             parentBettingPanel.SetActive(true);
             Debug.Log("OnlinePanelManager - Parent betting panel shown");
         }
         else
         {
-            Debug.LogWarning("OnlinePanelManager - parentBettingPanel or parentBettingText is null");
+            Debug.LogWarning("OnlinePanelManager - parentBettingPanel is null");
         }
     }
     
@@ -700,6 +709,9 @@ public class OnlinePanelManager : MonoBehaviour
         
         // ベットボタンを表示
         VisibleBetButtons(true);
+        // betAmountTextを表示
+        if (playerLife != null) playerLife.gameObject.SetActive(false);
+        if (betAmountText != null) betAmountText.gameObject.SetActive(true);
         
         // ベッティングパネルを表示（3秒後に自動非表示）
         ShowStartPhasePanel("Betting Phase", "ベット額を設定してください", 3f);
