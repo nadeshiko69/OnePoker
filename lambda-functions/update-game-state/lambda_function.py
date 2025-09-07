@@ -29,8 +29,21 @@ def lambda_handler(event, context):
 
     game_id = body['gameId']
     player_id = body['playerId']
-    card_value = body['cardValue']
+    
+    # card_valueが存在する場合はカードセット処理、betAmountが存在する場合はベット金額更新処理
+    if 'cardValue' in body:
+        card_value = body['cardValue']
+        return handle_card_set(table, game_id, player_id, card_value)
+    elif 'betAmount' in body:
+        bet_amount = body['betAmount']
+        return handle_bet_amount_update(table, game_id, player_id, bet_amount)
+    else:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'message': 'Either cardValue or betAmount must be provided'})
+        }
 
+def handle_card_set(table, game_id, player_id, card_value):
     # 1. 現在のゲーム状態を取得
     response = table.get_item(Key={'gameId': game_id})
     item = response.get('Item')
@@ -107,4 +120,50 @@ def lambda_handler(event, context):
     return {
         'statusCode': 200,
         'body': json.dumps(item)
+    }
+
+def handle_bet_amount_update(table, game_id, player_id, bet_amount):
+    # 1. 現在のゲーム状態を取得
+    response = table.get_item(Key={'gameId': game_id})
+    item = response.get('Item')
+    if not item:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'message': 'Game not found'})
+        }
+
+    # 2. プレイヤーがPlayer1かどうかを確認
+    if player_id != item.get('player1Id'):
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'message': 'Only Player1 can update bet amount'})
+        }
+
+    # 3. Player1BetAmountを更新
+    update_attrs = {
+        'player1BetAmount': bet_amount
+    }
+
+    # 4. 更新実行
+    update_expression = 'SET ' + ', '.join([f'#{k} = :{k}' for k in update_attrs.keys()])
+    expression_attribute_names = {f'#{k}': k for k in update_attrs.keys()}
+    expression_attribute_values = {f':{k}': v for k, v in update_attrs.items()}
+    
+    table.update_item(
+        Key={'gameId': game_id},
+        UpdateExpression=update_expression,
+        ExpressionAttributeNames=expression_attribute_names,
+        ExpressionAttributeValues=expression_attribute_values
+    )
+
+    print(f"Player1BetAmount updated to: {bet_amount}")
+
+    # 5. 更新結果を返却
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'success': True,
+            'message': 'Player1BetAmount updated successfully',
+            'player1BetAmount': bet_amount
+        })
     } 

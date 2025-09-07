@@ -118,7 +118,8 @@ public class OnlineGameManager : MonoBehaviour
         isParent = gameData.isPlayer1;
         currentRound = 1;
         
-        Debug.Log($"Parent-Child system initialized. isParent: {isParent}, currentRound: {currentRound}");
+        Debug.Log($"[CHILD_DEBUG] Parent-Child system initialized. isParent: {isParent}, currentRound: {currentRound}");
+        Debug.Log($"[CHILD_DEBUG] gameData.isPlayer1: {gameData.isPlayer1}");
     }
 
     // 親子の交代判定
@@ -191,30 +192,51 @@ public class OnlineGameManager : MonoBehaviour
     // 子のターンを開始
     private void StartChildTurn()
     {
+        Debug.Log($"[CHILD_DEBUG] StartChildTurn called - isParent: {isParent}");
+        
         if (!isParent)
         {
+            Debug.Log("[CHILD_DEBUG] Child player detected, setting up child turn");
+            
             isParentTurn = false;
             isMyTurn = true;
             waitingForParentAction = false;
             waitingForChildAction = false;
             
-            Debug.Log("Child turn started. Child can now bet.");
+            Debug.Log("[CHILD_DEBUG] Child turn started. Child can now bet.");
             
             if (panelManager != null)
             {
+                Debug.Log("[CHILD_DEBUG] panelManager found, updating UI");
+                
                 panelManager.HideWaitingForParentPanel();
                 panelManager.HideParentBettingPanel(); // 親プレイヤーBet中パネルを非表示
                 panelManager.SetBettingButtonInteractable(true);
+                
+                // 子プレイヤーの場合、betAmountTextを非表示にする
+                if (panelManager.betAmountText != null)
+                {
+                    panelManager.betAmountText.gameObject.SetActive(false);
+                    Debug.Log("[CHILD_DEBUG] Child turn: betAmountText hidden");
+                }
+                
+                Debug.Log("[CHILD_DEBUG] Child UI update completed");
+            }
+            else
+            {
+                Debug.LogError("[CHILD_DEBUG] panelManager is null!");
             }
         }
         else
         {
+            Debug.Log("[CHILD_DEBUG] Parent player detected, setting up parent waiting state");
+            
             isParentTurn = true;
             isMyTurn = false;
             waitingForParentAction = false;
             waitingForChildAction = true;
             
-            Debug.Log("Parent waiting for child action.");
+            Debug.Log("[CHILD_DEBUG] Parent waiting for child action.");
             
             if (panelManager != null)
             {
@@ -226,123 +248,153 @@ public class OnlineGameManager : MonoBehaviour
         // 子プレイヤーの場合、親のBet完了を監視開始
         if (!isParent)
         {
+            Debug.Log("[CHILD_DEBUG] Starting parent bet monitoring for child player");
+            Debug.Log($"[CHILD_DEBUG] Child monitoring state - waitingForParentAction: {waitingForParentAction}");
             StartParentBetMonitoring();
         }
+        
+        Debug.Log("[CHILD_DEBUG] StartChildTurn completed");
     }
     
     // 親のBet完了監視を開始
     private void StartParentBetMonitoring()
     {
+        Debug.Log($"[CHILD_DEBUG] StartParentBetMonitoring called - isParent: {isParent}");
+        
         if (isParent)
         {
-            Debug.Log("Parent player, skipping bet monitoring");
+            Debug.Log("[CHILD_DEBUG] Parent player, skipping bet monitoring");
             return;
         }
         
-        Debug.Log("Starting parent bet monitoring for child player");
+        Debug.Log("[CHILD_DEBUG] Starting parent bet monitoring for child player");
+        Debug.Log($"[CHILD_DEBUG] Current state - waitingForParentAction: {waitingForParentAction}");
         
         // 既存の監視を停止
         if (parentBetMonitorCoroutine != null)
         {
+            Debug.Log("[CHILD_DEBUG] Stopping existing parent bet monitoring");
             StopCoroutine(parentBetMonitorCoroutine);
         }
         
         // 新しい監視を開始
+        Debug.Log("[CHILD_DEBUG] Starting new parent bet monitoring coroutine");
         parentBetMonitorCoroutine = StartCoroutine(MonitorParentBetStatus());
     }
     
     // 親のBet完了状態を監視
     private IEnumerator MonitorParentBetStatus()
     {
-        Debug.Log("Parent bet monitoring started");
+        Debug.Log("[CHILD_DEBUG] Parent bet monitoring started");
+        Debug.Log($"[CHILD_DEBUG] Initial state - waitingForParentAction: {waitingForParentAction}, isParent: {isParent}");
         
         while (waitingForParentAction)
         {
+            Debug.Log("[CHILD_DEBUG] Checking parent bet status...");
             yield return new WaitForSeconds(1f); // 1秒ごとに確認
             
             // 親のBet完了状態を確認
             yield return StartCoroutine(CheckParentBetStatus());
         }
         
-        Debug.Log("Parent bet monitoring stopped");
+        Debug.Log("[CHILD_DEBUG] Parent bet monitoring stopped");
     }
     
     // 親のBet完了状態を確認
     private IEnumerator CheckParentBetStatus()
     {
+        Debug.Log("[CHILD_DEBUG] CheckParentBetStatus called");
+        
         if (gameData == null)
         {
-            Debug.LogWarning("gameData is null, cannot check parent bet status");
+            Debug.LogWarning("[CHILD_DEBUG] gameData is null, cannot check parent bet status");
             yield break;
         }
         
-        var requestData = new CheckParentBetStatusRequest
+        Debug.Log($"[CHILD_DEBUG] Calling GetGameState - gameId: {gameData.gameId}, playerId: {gameData.playerId}");
+        
+        // DynamoDBのGamestatesテーブルからPlayer1BetAmountを確認
+        HttpManager.Instance.GetGameState(
+            gameData.gameId,
+            gameData.playerId,
+            OnParentBetStatusReceived,
+            OnParentBetStatusError
+        );
+        
+        yield return null;
+    }
+    
+    // 親のBet状態を受信した時の処理
+    private void OnParentBetStatusReceived(string response)
+    {
+        try
         {
-            roomCode = gameData.roomCode
-        };
-        
-        string jsonBody = JsonUtility.ToJson(requestData);
-        Debug.Log($"Checking parent bet status: {jsonBody}");
-        
-        var request = new UnityWebRequest(checkParentBetStatusUrl, "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-        
-        yield return request.SendWebRequest();
-        
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            Debug.Log($"Parent bet status check successful: {request.downloadHandler.text}");
+            Debug.Log($"[CHILD_DEBUG] Parent bet status received: {response}");
             
-            try
+            // JSONをパース
+            var gameState = JsonUtility.FromJson<GameStateResponse>(response);
+            
+            Debug.Log($"[CHILD_DEBUG] Parsed gameState: {gameState != null}");
+            if (gameState != null)
             {
-                var response = JsonUtility.FromJson<ParentBetStatusResponse>(request.downloadHandler.text);
+                Debug.Log($"[CHILD_DEBUG] player1BetAmount: {gameState.player1BetAmount}");
+                Debug.Log($"[CHILD_DEBUG] waitingForParentAction: {waitingForParentAction}");
+                Debug.Log($"[CHILD_DEBUG] isParent: {isParent}");
+            }
+            
+            if (gameState != null && gameState.player1BetAmount > 0)
+            {
+                Debug.Log($"[CHILD_DEBUG] Parent bet amount found: {gameState.player1BetAmount}");
+                Debug.Log($"[CHILD_DEBUG] Calling HandleParentBetComplete");
                 
-                if (response.parentBetComplete)
+                // 親のBet完了を処理
+                HandleParentBetComplete("call", gameState.player1BetAmount);
+                
+                Debug.Log($"[CHILD_DEBUG] HandleParentBetComplete completed");
+                
+                // 監視を停止
+                waitingForParentAction = false;
+                if (parentBetMonitorCoroutine != null)
                 {
-                    Debug.Log($"Parent bet completed: {response.parentBetAction}, amount: {response.parentBetAmount}");
-                    
-                    // 親のBet完了を処理
-                    HandleParentBetComplete(response.parentBetAction, response.parentBetAmount);
-                    
-                    // 監視を停止
-                    waitingForParentAction = false;
-                    if (parentBetMonitorCoroutine != null)
-                    {
-                        StopCoroutine(parentBetMonitorCoroutine);
-                        parentBetMonitorCoroutine = null;
-                    }
+                    StopCoroutine(parentBetMonitorCoroutine);
+                    parentBetMonitorCoroutine = null;
+                    Debug.Log($"[CHILD_DEBUG] Parent bet monitoring stopped");
                 }
             }
-            catch (System.Exception e)
+            else
             {
-                Debug.LogError($"Error parsing parent bet status response: {e.Message}");
+                Debug.Log($"[CHILD_DEBUG] Parent bet amount not found or zero, continuing to wait");
             }
         }
-        else
+        catch (System.Exception e)
         {
-            Debug.LogError($"Parent bet status check failed: {request.error}");
+            Debug.LogError($"[CHILD_DEBUG] Error parsing parent bet status: {e.Message}");
         }
+    }
+    
+    // 親のBet状態エラー時の処理
+    private void OnParentBetStatusError(string error)
+    {
+        Debug.LogError($"Parent bet status error: {error}");
     }
     
     // 親のBet完了を処理
     private void HandleParentBetComplete(string betAction, int betAmount)
     {
-        Debug.Log($"Handling parent bet completion: {betAction}, amount: {betAmount}");
+        Debug.Log($"[CHILD_DEBUG] Handling parent bet completion: {betAction}, amount: {betAmount}");
+        Debug.Log($"[CHILD_DEBUG] Current state - isParent: {isParent}, waitingForParentAction: {waitingForParentAction}");
         
         switch (betAction)
         {
             case "call":
                 // 親がコールした場合、子のターンを開始
-                Debug.Log("Parent called, starting child turn");
+                Debug.Log("[CHILD_DEBUG] Parent called, starting child turn");
                 StartChildTurn();
                 break;
                 
             case "raise":
                 // 親がレイズした場合、最低ベット額を更新して子のターンを開始
-                Debug.Log($"Parent raised to {betAmount}, updating minimum bet and starting child turn");
+                Debug.Log($"[CHILD_DEBUG] Parent raised to {betAmount}, updating minimum bet and starting child turn");
                 minimumBetValue = betAmount;
                 currentBetValue = betAmount;
                 StartChildTurn();
@@ -351,10 +403,12 @@ public class OnlineGameManager : MonoBehaviour
                 
             case "drop":
                 // 親がドロップした場合、OpenPhaseに移行
-                Debug.Log("Parent dropped, transitioning to OpenPhase");
+                Debug.Log("[CHILD_DEBUG] Parent dropped, transitioning to OpenPhase");
                 HandleGamePhaseChange("reveal");
                 break;
         }
+        
+        Debug.Log($"[CHILD_DEBUG] HandleParentBetComplete completed for action: {betAction}");
     }
 
     // ベット値の増減
@@ -432,15 +486,17 @@ public class OnlineGameManager : MonoBehaviour
         switch (actionType)
         {
             case "call":
-                // 親がコールした場合、子のターンに移行
-                Debug.Log("Parent called, starting child turn");
+                // 親がコールした場合、DynamoDBのGamestatesテーブルにBet値を登録
+                Debug.Log($"Parent called with bet value: {currentBetValue}");
+                UpdatePlayerBetAmountInGameState(currentBetValue);
                 StartChildTurn();
                 break;
                 
             case "raise":
-                // 親がレイズした場合、最低ベット額を更新して子のターンに移行
+                // 親がレイズした場合、最低ベット額を更新してDynamoDBにBet値を登録
                 Debug.Log($"Parent raised to {currentBetValue}, updating minimum bet and starting child turn");
                 minimumBetValue = currentBetValue;
+                UpdatePlayerBetAmountInGameState(currentBetValue);
                 StartChildTurn();
                 break;
                 
@@ -510,6 +566,27 @@ public class OnlineGameManager : MonoBehaviour
             betValue,
             OnBetActionSuccess,
             OnBetActionError
+        );
+    }
+    
+    // DynamoDBのGamestatesテーブルにPlayer1BetAmountを更新
+    private void UpdatePlayerBetAmountInGameState(int betAmount)
+    {
+        if (gameData == null)
+        {
+            Debug.LogError("gameData is null, cannot update bet amount in game state");
+            return;
+        }
+        
+        Debug.Log($"Updating Player1BetAmount in GameStates table: {betAmount}");
+        
+        // update-game-state APIを呼び出してPlayer1BetAmountを更新
+        HttpManager.Instance.UpdatePlayerBetAmount(
+            gameData.gameId,
+            gameData.playerId,
+            betAmount,
+            OnBetAmountUpdateSuccess,
+            OnBetAmountUpdateError
         );
     }
     
@@ -588,6 +665,18 @@ public class OnlineGameManager : MonoBehaviour
         {
             panelManager.SetBettingButtonInteractable(true);
         }
+    }
+    
+    // Bet金額更新成功時の処理
+    private void OnBetAmountUpdateSuccess(string response)
+    {
+        Debug.Log($"Bet amount updated successfully: {response}");
+    }
+    
+    // Bet金額更新エラー時の処理
+    private void OnBetAmountUpdateError(string error)
+    {
+        Debug.LogError($"Failed to update bet amount: {error}");
     }
 
     // ベットレスポンスからゲーム状態を更新
@@ -1004,7 +1093,7 @@ public class OnlineGameManager : MonoBehaviour
 
     // ゲームフェーズ変更を処理
     private void HandleGamePhaseChange(string newPhase)
-    { 
+    {
         // フェーズテキストを更新
         if (panelManager != null)
         {
@@ -1364,7 +1453,7 @@ public class OnlineGameManager : MonoBehaviour
         else
         {
             Debug.LogError("ReturnCardToOriginalPosition: card is null");
-        }
+    }
     }
 
     // サーバーにカード配置を通知
@@ -1757,6 +1846,7 @@ public class OnlineGameManager : MonoBehaviour
         public bool opponentCardPlaced;
         public int? opponentPlacedCardId;
         public string updatedAt;
+        public int player1BetAmount; // 親のBet金額
     }
 
     [System.Serializable]

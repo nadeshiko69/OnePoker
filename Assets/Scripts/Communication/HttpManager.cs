@@ -162,6 +162,34 @@ namespace OnePoker.Network
             );
         }
 
+        public void UpdatePlayerBetAmount(
+            string gameId,
+            string playerId,
+            int betAmount,
+            Action<string> onSuccess,
+            Action<string> onError)
+        {
+            string url = $"{ApiBaseUrl}/update-state";
+            string jsonBody = JsonUtility.ToJson(new UpdatePlayerBetAmountRequest
+            {
+                gameId = gameId,
+                playerId = playerId,
+                betAmount = betAmount
+            });
+            
+            Debug.Log($"HttpManager - Calling update-state API for bet amount: {url}, body: {jsonBody}");
+            
+            Post<UpdatePlayerBetAmountResponse>(
+                url,
+                jsonBody,
+                (response) => {
+                    string responseJson = JsonUtility.ToJson(response);
+                    onSuccess?.Invoke(responseJson);
+                },
+                onError
+            );
+        }
+
         [System.Serializable]
         private class GameStateResponse
         {
@@ -181,6 +209,7 @@ namespace OnePoker.Network
             public bool opponentCardPlaced;
             public int? opponentPlacedCardId;
             public string updatedAt;
+            public int player1BetAmount; // 親のBet金額
         }
 
         [System.Serializable]
@@ -213,6 +242,22 @@ namespace OnePoker.Network
         {
             public bool success;
             public string message;
+        }
+
+        [System.Serializable]
+        private class UpdatePlayerBetAmountRequest
+        {
+            public string gameId;
+            public string playerId;
+            public int betAmount;
+        }
+
+        [System.Serializable]
+        private class UpdatePlayerBetAmountResponse
+        {
+            public bool success;
+            public string message;
+            public int player1BetAmount;
         }
 
         [System.Serializable]
