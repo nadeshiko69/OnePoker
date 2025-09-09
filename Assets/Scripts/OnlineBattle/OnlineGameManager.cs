@@ -186,6 +186,8 @@ public class OnlineGameManager : MonoBehaviour
                 panelManager.ShowParentBettingPanel(); // 親プレイヤーBet中パネルを表示
                 panelManager.SetBettingButtonInteractable(false);
             }
+
+            StartParentBetMonitoring();
         }
     }
 
