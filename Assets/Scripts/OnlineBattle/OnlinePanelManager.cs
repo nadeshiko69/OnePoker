@@ -465,6 +465,18 @@ public class OnlinePanelManager : MonoBehaviour
         }
     }
 
+    // 親のベット完了通知パネル表示
+    public void ShowParentBetCompletePanel()
+    {
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(true);
+            if (startPhaseTitle != null) startPhaseTitle.text = "Bet Phase";
+            if (startPhaseDescription != null) startPhaseDescription.text = "DEALERのベット完了しました。\nベット額を設定してください。";
+            Debug.Log("OnlinePanelManager - Parent bet complete panel shown");
+        }
+    }
+
     // 子のアクション待ちパネル表示
     public void ShowWaitingForChildPanel()
     {

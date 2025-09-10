@@ -391,7 +391,7 @@ public class OnlineGameManager : MonoBehaviour
             case "call":
                 // 親がコールした場合、子のターンを開始
                 Debug.Log("[CHILD_DEBUG] Parent called, starting child turn");
-                StartChildTurn();
+                StartChildTurnWithDelay();
                 break;
                 
             case "raise":
@@ -399,7 +399,7 @@ public class OnlineGameManager : MonoBehaviour
                 Debug.Log($"[CHILD_DEBUG] Parent raised to {betAmount}, updating minimum bet and starting child turn");
                 minimumBetValue = betAmount;
                 currentBetValue = betAmount;
-                StartChildTurn();
+                StartChildTurnWithDelay();
                 UpdateBetUI();
                 break;
                 
@@ -411,6 +411,31 @@ public class OnlineGameManager : MonoBehaviour
         }
         
         Debug.Log($"[CHILD_DEBUG] HandleParentBetComplete completed for action: {betAction}");
+    }
+
+    // 子のターンを遅延付きで開始（親のベット完了通知を表示してから3秒後にパネルを消す）
+    private void StartChildTurnWithDelay()
+    {
+        Debug.Log("[CHILD_DEBUG] Starting child turn with delay");
+        
+        if (panelManager != null)
+        {
+            // 親のベット完了通知パネルを表示
+            panelManager.ShowParentBetCompletePanel();
+        }
+        
+        // 3秒後に子のターンを開始
+        StartCoroutine(StartChildTurnAfterDelay());
+    }
+    
+    // 3秒後に子のターンを開始するコルーチン
+    private IEnumerator StartChildTurnAfterDelay()
+    {
+        Debug.Log("[CHILD_DEBUG] Waiting 3 seconds before starting child turn");
+        yield return new WaitForSeconds(3f);
+        
+        Debug.Log("[CHILD_DEBUG] Starting child turn after delay");
+        StartChildTurn();
     }
 
     // ベット値の増減
