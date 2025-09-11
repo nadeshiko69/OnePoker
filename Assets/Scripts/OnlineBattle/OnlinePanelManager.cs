@@ -468,12 +468,43 @@ public class OnlinePanelManager : MonoBehaviour
     // 親のベット完了通知パネル表示
     public void ShowParentBetCompletePanel()
     {
+        Debug.Log("[CHILD_DEBUG] ShowParentBetCompletePanel() called");
+        Debug.Log($"[CHILD_DEBUG] startPhasePanel is null: {startPhasePanel == null}");
+        Debug.Log($"[CHILD_DEBUG] startPhaseTitle is null: {startPhaseTitle == null}");
+        Debug.Log($"[CHILD_DEBUG] startPhaseDescription is null: {startPhaseDescription == null}");
+        
         if (startPhasePanel != null)
         {
+            // 他のパネルを非表示にして、このパネルを最前面に表示
+            HideWaitingForParentPanel();
+            HideParentBettingPanel();
+            
             startPhasePanel.SetActive(true);
-            if (startPhaseTitle != null) startPhaseTitle.text = "Bet Phase";
-            if (startPhaseDescription != null) startPhaseDescription.text = "DEALERのベット完了しました。\nベット額を設定してください。";
+            Debug.Log("[CHILD_DEBUG] startPhasePanel activated");
+            
+            // パネルの表示状態を確認
+            Debug.Log($"[CHILD_DEBUG] startPhasePanel.activeInHierarchy: {startPhasePanel.activeInHierarchy}");
+            Debug.Log($"[CHILD_DEBUG] startPhasePanel.activeSelf: {startPhasePanel.activeSelf}");
+            
+            if (startPhaseTitle != null) 
+            {
+                startPhaseTitle.text = "Bet Phase";
+                Debug.Log("[CHILD_DEBUG] startPhaseTitle text set to 'Bet Phase'");
+                Debug.Log($"[CHILD_DEBUG] startPhaseTitle.text: '{startPhaseTitle.text}'");
+            }
+            
+            if (startPhaseDescription != null) 
+            {
+                startPhaseDescription.text = "DEALERのベット完了しました。\nベット額を設定してください。";
+                Debug.Log("[CHILD_DEBUG] startPhaseDescription text set to 'DEALERのベット完了しました。\\nベット額を設定してください。'");
+                Debug.Log($"[CHILD_DEBUG] startPhaseDescription.text: '{startPhaseDescription.text}'");
+            }
+            
             Debug.Log("OnlinePanelManager - Parent bet complete panel shown");
+        }
+        else
+        {
+            Debug.LogError("[CHILD_DEBUG] startPhasePanel is null, cannot show parent bet complete panel");
         }
     }
 

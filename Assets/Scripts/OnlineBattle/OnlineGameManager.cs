@@ -417,11 +417,18 @@ public class OnlineGameManager : MonoBehaviour
     private void StartChildTurnWithDelay()
     {
         Debug.Log("[CHILD_DEBUG] Starting child turn with delay");
+        Debug.Log($"[CHILD_DEBUG] panelManager is null: {panelManager == null}");
         
         if (panelManager != null)
         {
+            Debug.Log("[CHILD_DEBUG] Calling ShowParentBetCompletePanel()");
             // 親のベット完了通知パネルを表示
             panelManager.ShowParentBetCompletePanel();
+            Debug.Log("[CHILD_DEBUG] ShowParentBetCompletePanel() called successfully");
+        }
+        else
+        {
+            Debug.LogError("[CHILD_DEBUG] panelManager is null, cannot show parent bet complete panel");
         }
         
         // 3秒後に子のターンを開始
