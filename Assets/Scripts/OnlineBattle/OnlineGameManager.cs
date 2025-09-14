@@ -1258,6 +1258,19 @@ public class OnlineGameManager : MonoBehaviour
                     canSetCard = false;
                     Debug.Log("Reveal phase flags updated: isRevealPhaseActive=true, others=false");
                     
+                    // 相手のカードを表向きで表示
+                    if (gameData != null)
+                    {
+                        // 相手のカード値を取得
+                        int opponentCardValue = isPlayer1 ? gameData.player2Cards[0] : gameData.player1Cards[0];
+                        Debug.Log($"Displaying opponent card face up: {opponentCardValue}");
+                        DisplayOpponentCardFaceUp(opponentCardValue);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("gameData is null, cannot determine opponent card value for reveal");
+                    }
+                    
                     if (panelManager != null)
                     {
                         panelManager.ShowRevealPhasePanel();
@@ -1834,7 +1847,42 @@ public class OnlineGameManager : MonoBehaviour
     private void DisplayOpponentCardFaceUp(int cardValue)
     {
         Debug.Log($"DisplayOpponentCardFaceUp called with cardValue: {cardValue}");
-        // TODO: 相手のSetZoneのカードを表向きにする
+        
+        // 相手側のDropZoneを探す
+        OnlineDropZone opponentZone = FindOpponentDropZone();
+        
+        if (opponentZone != null)
+        {
+            // 相手側のDropZone内のカードを探す
+            CardDisplay opponentCard = opponentZone.GetComponentInChildren<CardDisplay>();
+            
+            if (opponentCard != null)
+            {
+                // カードの値を設定（新しい値で更新）
+                opponentCard.SetCardValue(cardValue);
+                
+                // 表向きにする
+                opponentCard.SetCardFaceDown(false);
+                
+                Debug.Log($"Opponent card {cardValue} displayed face up in opponent zone");
+            }
+            else
+            {
+                Debug.LogWarning("No opponent card found in opponent zone, creating new one");
+                // カードが見つからない場合は新しく作成
+                CreateOpponentCard(cardValue, opponentZone);
+                // 作成後、表向きにする
+                CardDisplay newOpponentCard = opponentZone.GetComponentInChildren<CardDisplay>();
+                if (newOpponentCard != null)
+                {
+                    newOpponentCard.SetCardFaceDown(false);
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("Could not find opponent DropZone for face up card display");
+        }
     }
 
     // カード配置エラー時のコールバック
