@@ -765,7 +765,7 @@ public class OnlinePanelManager : MonoBehaviour
         if (betAmountText != null) betAmountText.gameObject.SetActive(true);
         
         // ベッティングパネルを表示（3秒後に自動非表示）
-        ShowStartPhasePanel("Betting Phase", "ベット額を設定してください", 3f);
+        ShowStartPhasePanel("Bet Phase", "ベット額を設定してください", 3f);
         
         Debug.Log("OnlinePanelManager - Betting Phase UI setup completed");
     }
