@@ -292,6 +292,21 @@ public class OnlinePanelManager : MonoBehaviour
         }
     }
 
+    // 相手のベット額表示の更新
+    public void UpdateOpponentBetAmountDisplay(int betAmount)
+    {
+        if (OpponentBetAmountText != null)
+        {
+            OpponentBetAmountText.text = $"BET : {betAmount}";
+            OpponentBetAmountText.gameObject.SetActive(true);
+            Debug.Log($"Opponent bet amount display updated to: {betAmount}");
+        }
+        else
+        {
+            Debug.LogWarning("OpponentBetAmountText is null! Please assign it in the Inspector.");
+        }
+    }
+
     // プレイヤーロール表示の更新
     public void UpdatePlayerRoleDisplay(bool isParent)
     {
@@ -498,6 +513,13 @@ public class OnlinePanelManager : MonoBehaviour
                 startPhaseDescription.text = "DEALERのベット完了しました。\nベット額を設定してください。";
                 Debug.Log("[CHILD_DEBUG] startPhaseDescription text set to 'DEALERのベット完了しました。\\nベット額を設定してください。'");
                 Debug.Log($"[CHILD_DEBUG] startPhaseDescription.text: '{startPhaseDescription.text}'");
+            }
+            
+            // betAmountTextを表示（子のターン開始準備）
+            if (betAmountText != null)
+            {
+                betAmountText.gameObject.SetActive(true);
+                Debug.Log("[CHILD_DEBUG] betAmountText activated for child turn preparation");
             }
             
             Debug.Log("OnlinePanelManager - Parent bet complete panel shown");

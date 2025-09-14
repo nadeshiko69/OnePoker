@@ -215,12 +215,15 @@ public class OnlineGameManager : MonoBehaviour
                 panelManager.HideParentBettingPanel(); // 親プレイヤーBet中パネルを非表示
                 panelManager.SetBettingButtonInteractable(true);
                 
-                // 子プレイヤーの場合、betAmountTextを非表示にする
                 if (panelManager.betAmountText != null)
                 {
-                    panelManager.betAmountText.gameObject.SetActive(false);
-                    Debug.Log("[CHILD_DEBUG] Child turn: betAmountText hidden");
+                    panelManager.betAmountText.gameObject.SetActive(true);
+                    // 子プレイヤーの現在のベット額を表示
+                    panelManager.UpdateBetAmountDisplay(currentBetValue);
                 }
+                
+                // 親のベット額を表示（子のターン開始時）
+                StartCoroutine(DisplayParentBetAmount());
                 
                 Debug.Log("[CHILD_DEBUG] Child UI update completed");
             }
@@ -256,6 +259,70 @@ public class OnlineGameManager : MonoBehaviour
         }
         
         Debug.Log("[CHILD_DEBUG] StartChildTurn completed");
+    }
+
+    // 親のベット額を表示するコルーチン
+    private IEnumerator DisplayParentBetAmount()
+    {
+        Debug.Log("[CHILD_DEBUG] DisplayParentBetAmount started");
+        
+        if (gameData == null)
+        {
+            Debug.LogWarning("[CHILD_DEBUG] gameData is null, cannot get parent bet amount");
+            yield break;
+        }
+        
+        // DynamoDBから親のベット額を取得
+        HttpManager.Instance.GetGameState(
+            gameData.gameId,
+            gameData.playerId,
+            OnParentBetAmountReceived,
+            OnParentBetAmountError
+        );
+        
+        yield return null;
+    }
+    
+    // 親のベット額を受信した時の処理
+    private void OnParentBetAmountReceived(string response)
+    {
+        try
+        {
+            Debug.Log($"[CHILD_DEBUG] Parent bet amount received: {response}");
+            
+            var gameState = JsonUtility.FromJson<GameStateResponse>(response);
+            
+            if (gameState != null && gameState.player1BetAmount > 0)
+            {
+                Debug.Log($"[CHILD_DEBUG] Displaying parent bet amount: {gameState.player1BetAmount}");
+                
+                // 子の最低ベット額を親のベット額に合わせる
+                minimumBetValue = gameState.player1BetAmount;
+                currentBetValue = gameState.player1BetAmount;
+                Debug.Log($"[CHILD_DEBUG] Updated child minimum bet to: {minimumBetValue}");
+                
+                if (panelManager != null)
+                {
+                    panelManager.UpdateOpponentBetAmountDisplay(gameState.player1BetAmount);
+                    // 子のベット額表示も更新
+                    panelManager.UpdateBetAmountDisplay(currentBetValue);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[CHILD_DEBUG] Parent bet amount not found or zero");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[CHILD_DEBUG] Error parsing parent bet amount: {e.Message}");
+        }
+    }
+    
+    // 親のベット額エラー時の処理
+    private void OnParentBetAmountError(string error)
+    {
+        Debug.LogError($"[CHILD_DEBUG] Parent bet amount error: {error}");
     }
     
     // 親のBet完了監視を開始
@@ -389,9 +456,19 @@ public class OnlineGameManager : MonoBehaviour
         switch (betAction)
         {
             case "call":
-                // 親がコールした場合、子のターンを開始
-                Debug.Log("[CHILD_DEBUG] Parent called, starting child turn");
+                // 親がコールした場合、最低ベット額を更新して子のターンを開始
+                Debug.Log($"[CHILD_DEBUG] Parent called with bet amount {betAmount}, updating minimum bet and starting child turn");
+                minimumBetValue = betAmount;
+                currentBetValue = betAmount;
+                
+                // 親のベット額を表示
+                if (panelManager != null)
+                {
+                    panelManager.UpdateOpponentBetAmountDisplay(betAmount);
+                }
+                
                 StartChildTurnWithDelay();
+                UpdateBetUI();
                 break;
                 
             case "raise":
@@ -399,6 +476,13 @@ public class OnlineGameManager : MonoBehaviour
                 Debug.Log($"[CHILD_DEBUG] Parent raised to {betAmount}, updating minimum bet and starting child turn");
                 minimumBetValue = betAmount;
                 currentBetValue = betAmount;
+                
+                // 親のベット額を表示
+                if (panelManager != null)
+                {
+                    panelManager.UpdateOpponentBetAmountDisplay(betAmount);
+                }
+                
                 StartChildTurnWithDelay();
                 UpdateBetUI();
                 break;
@@ -425,6 +509,12 @@ public class OnlineGameManager : MonoBehaviour
             // 親のベット完了通知パネルを表示
             panelManager.ShowParentBetCompletePanel();
             Debug.Log("[CHILD_DEBUG] ShowParentBetCompletePanel() called successfully");
+            
+            // 子プレイヤーの現在のベット額を表示
+            panelManager.UpdateBetAmountDisplay(currentBetValue);
+            
+            // 親のベット額を表示
+            StartCoroutine(DisplayParentBetAmount());
         }
         else
         {
