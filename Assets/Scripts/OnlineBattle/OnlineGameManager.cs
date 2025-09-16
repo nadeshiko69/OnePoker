@@ -1378,6 +1378,21 @@ public class OnlineGameManager : MonoBehaviour
 
             case "open_phase":
                 Debug.Log("Processing open_phase case");
+                
+                // 相手のカードを表向きで表示
+                if (gameData != null)
+                {
+                    // 相手のカード値を取得
+                    int opponentCardValue = isPlayer1 ? gameData.player2Cards[0] : gameData.player1Cards[0];
+                    Debug.Log($"[OPEN_PHASE_DEBUG] Displaying opponent card face up in open phase: {opponentCardValue}");
+                    Debug.Log($"[OPEN_PHASE_DEBUG] isPlayer1: {isPlayer1}, player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}, player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+                    DisplayOpponentCardFaceUp(opponentCardValue);
+                }
+                else
+                {
+                    Debug.LogWarning("[OPEN_PHASE_DEBUG] gameData is null, cannot determine opponent card value for open phase");
+                }
+                
                 if (panelManager != null)
                 {
                     // HIGH/LOW表示をクリア
@@ -1968,6 +1983,11 @@ public class OnlineGameManager : MonoBehaviour
                 if (newOpponentCard != null)
                 {
                     newOpponentCard.SetCardFaceDown(false);
+                    Debug.Log($"New opponent card {cardValue} created and displayed face up");
+                }
+                else
+                {
+                    Debug.LogError("Failed to create opponent card");
                 }
             }
         }
