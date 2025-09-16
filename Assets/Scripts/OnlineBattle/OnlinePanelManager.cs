@@ -262,11 +262,11 @@ public class OnlinePanelManager : MonoBehaviour
         }
     }
 
-    public void UpdateCallButtonText(int betValue)
+    public void UpdateCallButtonText(int betValue, int minimumBetValue)
     {
         if (callButtonText != null)
         {
-            if (betValue == 1)
+            if (betValue == minimumBetValue)
             {
                 callButtonText.text = "Call";
             }
@@ -274,7 +274,7 @@ public class OnlinePanelManager : MonoBehaviour
             {
                 callButtonText.text = "Raise";
             }
-            Debug.Log($"OnlinePanelManager - Call button text updated to: {callButtonText.text} (betValue: {betValue})");
+            Debug.Log($"OnlinePanelManager - Call button text updated to: {callButtonText.text} (betValue: {betValue}, minimumBetValue: {minimumBetValue})");
         }
     }
 
@@ -297,6 +297,7 @@ public class OnlinePanelManager : MonoBehaviour
     {
         if (OpponentBetAmountText != null)
         {
+            opponentLife.gameObject.SetActive(false);
             OpponentBetAmountText.text = $"BET : {betAmount}";
             OpponentBetAmountText.gameObject.SetActive(true);
             Debug.Log($"Opponent bet amount display updated to: {betAmount}");

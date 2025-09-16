@@ -306,6 +306,8 @@ public class OnlineGameManager : MonoBehaviour
                     panelManager.UpdateOpponentBetAmountDisplay(gameState.player1BetAmount);
                     // 子のベット額表示も更新
                     panelManager.UpdateBetAmountDisplay(currentBetValue);
+                    // Call/Raiseボタンのテキストも更新
+                    panelManager.UpdateCallButtonText(currentBetValue, minimumBetValue);
                 }
             }
             else
@@ -562,7 +564,7 @@ public class OnlineGameManager : MonoBehaviour
         if (panelManager != null)
         {
             // Call/Raiseボタンのテキスト更新
-            panelManager.UpdateCallButtonText(currentBetValue);
+            panelManager.UpdateCallButtonText(currentBetValue, minimumBetValue);
             
             // ベット額表示の更新
             panelManager.UpdateBetAmountDisplay(currentBetValue);
