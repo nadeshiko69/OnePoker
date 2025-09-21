@@ -1384,9 +1384,22 @@ public class OnlineGameManager : MonoBehaviour
                 {
                     // 相手のカード値を取得
                     int opponentCardValue = isPlayer1 ? gameData.player2Cards[0] : gameData.player1Cards[0];
+                    int playerCardValue = isPlayer1 ? gameData.player1Cards[0] : gameData.player2Cards[0];
                     Debug.Log($"[OPEN_PHASE_DEBUG] Displaying opponent card face up in open phase: {opponentCardValue}");
+                    Debug.Log($"[OPEN_PHASE_DEBUG] Player card value: {playerCardValue}");
                     Debug.Log($"[OPEN_PHASE_DEBUG] isPlayer1: {isPlayer1}, player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}, player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
                     DisplayOpponentCardFaceUp(opponentCardValue);
+                    
+                    // 結果表示を更新
+                    if (resultViewManager != null)
+                    {
+                        Debug.Log($"[OPEN_PHASE_DEBUG] Updating result table with player: {playerCardValue}, opponent: {opponentCardValue}");
+                        resultViewManager.ShowResultTable(playerCardValue, opponentCardValue);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[OPEN_PHASE_DEBUG] resultViewManager is null, cannot update result table");
+                    }
                 }
                 else
                 {

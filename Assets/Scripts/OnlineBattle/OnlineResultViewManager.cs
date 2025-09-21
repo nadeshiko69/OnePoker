@@ -134,22 +134,28 @@ public class OnlineResultViewManager : MonoBehaviour
     // 勝敗判定を行い結果を表示
     public void ShowResultTable(int playerCardValue, int opponentCardValue)
     {    
+        // カード値をランクインデックスに変換（0-12の範囲）
+        int playerRankIndex = playerCardValue % 13;
+        int opponentRankIndex = opponentCardValue % 13;
+        
+        Debug.Log($"[RESULT_DEBUG] ShowResultTable called - Player: {playerCardValue} (rank: {playerRankIndex}), Opponent: {opponentCardValue} (rank: {opponentRankIndex})");
+        
         // 同値の場合はDRAW
-        if (playerCardValue == opponentCardValue)
+        if (playerRankIndex == opponentRankIndex)
         {
-            UpdateResultTable(playerCardValue, opponentCardValue, true);
+            UpdateResultTable(playerRankIndex, opponentRankIndex, true);
             return;
         }
 
-        bool playerWins = IsWinner(playerCardValue, opponentCardValue);
-        Debug.Log("playerWins: " + playerWins);
+        bool playerWins = IsWinner(playerRankIndex, opponentRankIndex);
+        Debug.Log($"[RESULT_DEBUG] playerWins: {playerWins}");
         if (playerWins)
         {
-            UpdateResultTable(playerCardValue, opponentCardValue, false, true);
+            UpdateResultTable(playerRankIndex, opponentRankIndex, false, true);
         }
         else
         {
-            UpdateResultTable(playerCardValue, opponentCardValue, false, false);
+            UpdateResultTable(playerRankIndex, opponentRankIndex, false, false);
         }
     }
 
@@ -165,14 +171,16 @@ public class OnlineResultViewManager : MonoBehaviour
 
         if (currentRound >= playerCells.Length || currentRound >= opponentCells.Length)
         {
+            Debug.LogWarning($"[RESULT_DEBUG] Current round {currentRound} exceeds table length (player: {playerCells.Length}, opponent: {opponentCells.Length})");
             return;
         }
 
+        Debug.Log($"[RESULT_DEBUG] Updating result table - Round: {currentRound}, Player: {playerCardValue}, Opponent: {opponentCardValue}, isDraw: {isDraw}, playerWins: {playerWins}");
         
         // プレイヤーのカードを表示
         if (playerCells[currentRound] != null)
         {
-            Debug.Log("playerCardValue: " + playerCardValue);   
+            Debug.Log($"[RESULT_DEBUG] Player card value: {playerCardValue}, card rank: {cardRanks[playerCardValue]}");   
             playerCells[currentRound].text = cardRanks[playerCardValue];
             playerCells[currentRound].color = isDraw ? normalColor : (playerWins ? winColor : normalColor);
         }
@@ -184,7 +192,7 @@ public class OnlineResultViewManager : MonoBehaviour
         // 相手のカードを表示
         if (opponentCells[currentRound] != null)
         {
-            Debug.Log("opponentCardValue: " + opponentCardValue);
+            Debug.Log($"[RESULT_DEBUG] Opponent card value: {opponentCardValue}, card rank: {cardRanks[opponentCardValue]}");
             opponentCells[currentRound].text = cardRanks[opponentCardValue];
             opponentCells[currentRound].color = isDraw ? normalColor : (playerWins ? normalColor : winColor);
         }
@@ -194,29 +202,30 @@ public class OnlineResultViewManager : MonoBehaviour
         }
 
         currentRound++;
+        Debug.Log($"[RESULT_DEBUG] Result table updated, next round: {currentRound}");
     }
 
-    // 特殊な勝敗判定ロジック
-    public bool IsWinner(int playerValue, int opponentValue)
+    // 特殊な勝敗判定ロジック（ランクインデックス: 0=2, 1=3, ..., 12=A）
+    public bool IsWinner(int playerRankIndex, int opponentRankIndex)
     {
         // 同値の場合は引き分け（この関数は同値チェック後に呼ばれる）
-        if (playerValue == opponentValue)
+        if (playerRankIndex == opponentRankIndex)
         {
             return false;
         }
 
         // 2(index:0)とA(index:12)の特殊ケース
-        if (playerValue == 0 && opponentValue == 12) // プレイヤーの2がAに勝つ
+        if (playerRankIndex == 0 && opponentRankIndex == 12) // プレイヤーの2がAに勝つ
         {
             return true;
         }
-        if (playerValue == 12 && opponentValue == 0) // 相手の2が自分のAに勝つ
+        if (playerRankIndex == 12 && opponentRankIndex == 0) // 相手の2が自分のAに勝つ
         {
             return false;
         }
 
         // 通常の比較（大きい方が勝ち）
-        return playerValue > opponentValue;
+        return playerRankIndex > opponentRankIndex;
     }
 
     // 結果表示をリセット
