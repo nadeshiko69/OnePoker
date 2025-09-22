@@ -1355,8 +1355,21 @@ public class OnlineGameManager : MonoBehaviour
                     {
                         // 相手のカード値を取得
                         int opponentCardValue = isPlayer1 ? gameData.player2Cards[0] : gameData.player1Cards[0];
+                        int playerCardValue = isPlayer1 ? gameData.player1Cards[0] : gameData.player2Cards[0];
+                        Debug.Log($"[OPEN_PHASE_DEBUG] Updating result table with player: {playerCardValue}, opponent: {opponentCardValue}");
                         Debug.Log($"Displaying opponent card face up: {opponentCardValue}");
                         DisplayOpponentCardFaceUp(opponentCardValue);
+                        
+                        // ResultViewの表を更新
+                        if (resultViewManager != null)
+                        {
+                            resultViewManager.ShowResultTable(playerCardValue, opponentCardValue);
+                            Debug.Log("[OPEN_PHASE_DEBUG] Result table update completed");
+                        }
+                        else
+                        {
+                            Debug.LogError("[OPEN_PHASE_DEBUG] resultViewManager is null, cannot update result table");
+                        }
                     }
                     else
                     {
@@ -1376,51 +1389,6 @@ public class OnlineGameManager : MonoBehaviour
                 }
                 break;
 
-            case "open_phase":
-                Debug.Log("Processing open_phase case");
-                
-                // 相手のカードを表向きで表示
-                if (gameData != null)
-                {
-                    // 相手のカード値を取得
-                    int opponentCardValue = isPlayer1 ? gameData.player2Cards[0] : gameData.player1Cards[0];
-                    int playerCardValue = isPlayer1 ? gameData.player1Cards[0] : gameData.player2Cards[0];
-                    Debug.Log($"[OPEN_PHASE_DEBUG] Displaying opponent card face up in open phase: {opponentCardValue}");
-                    Debug.Log($"[OPEN_PHASE_DEBUG] Player card value: {playerCardValue}");
-                    Debug.Log($"[OPEN_PHASE_DEBUG] isPlayer1: {isPlayer1}, player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}, player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
-                    DisplayOpponentCardFaceUp(opponentCardValue);
-                    
-                    // 結果表示を更新
-                    if (resultViewManager != null)
-                    {
-                        Debug.Log($"[OPEN_PHASE_DEBUG] Updating result table with player: {playerCardValue}, opponent: {opponentCardValue}");
-                        resultViewManager.ShowResultTable(playerCardValue, opponentCardValue);
-                    }
-                    else
-                    {
-                        Debug.LogWarning("[OPEN_PHASE_DEBUG] resultViewManager is null, cannot update result table");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("[OPEN_PHASE_DEBUG] gameData is null, cannot determine opponent card value for open phase");
-                }
-                
-                if (panelManager != null)
-                {
-                    // HIGH/LOW表示をクリア
-                    panelManager.ClearHighLowDisplay();
-                    Debug.Log("HIGH/LOW display cleared for open phase");
-                    
-                    panelManager.ShowOpenPhasePanel();
-                    Debug.Log("Open Phase started");
-                    Debug.Log("Lambda function: open_phase activated");
-                }
-                else
-                {
-                    Debug.LogError("panelManager is null in open_phase case");
-                }
-                break;
                 
             default:
                 Debug.LogWarning($"Unknown game phase: {newPhase}");

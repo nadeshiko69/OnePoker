@@ -877,19 +877,6 @@ public class OnlinePanelManager : MonoBehaviour
         }
     }
 
-    // Open Phaseパネルを表示
-    public void ShowOpenPhasePanel()
-    {
-        if (openPanel != null)
-        {
-            openPanel.SetActive(true);
-            Debug.Log("OnlinePanelManager - Open Phase panel activated");
-        }
-        else
-        {
-            Debug.LogError("OnlinePanelManager - openPanel is null in ShowOpenPhasePanel()");
-        }
-    }
 
     // フェーズテキストを更新
     public void UpdatePhaseText(string phase)
@@ -908,8 +895,7 @@ public class OnlinePanelManager : MonoBehaviour
                     displayText = "BET PHASE";
                     break;
                 case "reveal":
-                case "open_phase":
-                    displayText = "OPEN PHASE";
+                    displayText = "REVEAL PHASE";
                     break;
                 default:
                     displayText = phase.ToUpper();
