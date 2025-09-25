@@ -1370,6 +1370,9 @@ public class OnlineGameManager : MonoBehaviour
                         {
                             Debug.LogError("[OPEN_PHASE_DEBUG] resultViewManager is null, cannot update result table");
                         }
+                        
+                        // 勝敗判定
+                        JudgeWinner(playerCardValue, opponentCardValue);
                     }
                     else
                     {
@@ -1983,6 +1986,28 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.LogError($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - OnCardPlacementError called with error: {error}");
         Debug.LogError($"[CARD_PLACEMENT_DEBUG] カード配置API呼び出しでエラーが発生しました");
+    }
+
+    private void JudgeWinner(int playerCardValue, int opponentCardValue)
+    {
+        int playerRankIndex = playerCardValue % 13;
+        int opponentRankIndex = opponentCardValue % 13;
+        bool playerWins = resultViewManager.IsWinner(playerRankIndex, opponentRankIndex);
+        Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - JudgeWinner called with playerCardValue: {playerCardValue}, opponentCardValue: {opponentCardValue}, playerWins: {playerWins}");
+        if (playerWins)
+        {
+            Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Player wins");
+            panelManager.gameResultPanel.SetActive(true);
+            panelManager.gameResultText.text = "YOU WIN!";
+            panelManager.gameResultText.color = Color.red;
+        }
+        else
+        {
+            Debug.Log($"[CARD_PLACEMENT_DEBUG] OnlineGameManager - Opponent wins");
+            panelManager.gameResultPanel.SetActive(true);
+            panelManager.gameResultText.text = "YOU LOSE...";
+            panelManager.gameResultText.color = Color.blue;
+        }
     }
 
     // カード配置・スキル・ベットなどのイベントは
