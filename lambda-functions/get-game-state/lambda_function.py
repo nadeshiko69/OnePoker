@@ -92,6 +92,12 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'updatedAt': game_state['updatedAt']
         }
         
+        # セットされたカードの値を追加
+        if 'player1CardValue' in game_state:
+            response_data['player1CardValue'] = game_state['player1CardValue']
+        if 'player2CardValue' in game_state:
+            response_data['player2CardValue'] = game_state['player2CardValue']
+        
         # phaseTransitionTimeが存在する場合は追加
         if 'phaseTransitionTime' in game_state and game_state['phaseTransitionTime'] is not None:
             response_data['phaseTransitionTime'] = game_state['phaseTransitionTime']
