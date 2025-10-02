@@ -210,6 +210,10 @@ namespace OnePoker.Network
             public int? opponentPlacedCardId;
             public string updatedAt;
             public int player1BetAmount; // 親のBet金額
+            public bool player1Set; // プレイヤー1のセット完了状態
+            public bool player2Set; // プレイヤー2のセット完了状態
+            public int player1CardValue; // プレイヤー1がセットしたカード値
+            public int player2CardValue; // プレイヤー2がセットしたカード値
         }
 
         [System.Serializable]

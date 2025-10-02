@@ -19,6 +19,12 @@ public class OnlineGameDataProvider : MonoBehaviour
     public int[] MyCards => IsPlayer1 ? Player1Cards : Player2Cards;
     public int[] OpponentCards => IsPlayer1 ? Player2Cards : Player1Cards;
     
+    // セットしたカード値のプロパティ
+    public int Player1CardValue => gameData?.player1CardValue ?? -1;
+    public int Player2CardValue => gameData?.player2CardValue ?? -1;
+    public int MySetCardValue => IsPlayer1 ? Player1CardValue : Player2CardValue;
+    public int OpponentSetCardValue => IsPlayer1 ? Player2CardValue : Player1CardValue;
+    
     /// <summary>
     /// PlayerPrefsからゲームデータを読み込み
     /// </summary>
@@ -66,6 +72,64 @@ public class OnlineGameDataProvider : MonoBehaviour
     }
     
     /// <summary>
+    /// セットしたカード値を更新
+    /// </summary>
+    public void UpdateSetCardValues(int player1CardValue, int player2CardValue)
+    {
+        if (gameData == null)
+        {
+            Debug.LogError("[GameDataProvider] Game data is null, cannot update set card values");
+            return;
+        }
+        
+        gameData.player1CardValue = player1CardValue;
+        gameData.player2CardValue = player2CardValue;
+        
+        Debug.Log($"[GameDataProvider] Set card values updated - Player1: {player1CardValue}, Player2: {player2CardValue}");
+    }
+    
+    /// <summary>
+    /// 特定プレイヤーのセットしたカード値を更新
+    /// </summary>
+    public void UpdatePlayerSetCardValue(string playerId, int cardValue)
+    {
+        if (gameData == null)
+        {
+            Debug.LogError("[GameDataProvider] Game data is null, cannot update player set card value");
+            return;
+        }
+        
+        if (playerId == gameData.playerId)
+        {
+            // 自分のカード値を更新
+            if (gameData.isPlayer1)
+            {
+                gameData.player1CardValue = cardValue;
+                Debug.Log($"[GameDataProvider] Player1 set card value updated: {cardValue}");
+            }
+            else
+            {
+                gameData.player2CardValue = cardValue;
+                Debug.Log($"[GameDataProvider] Player2 set card value updated: {cardValue}");
+            }
+        }
+        else
+        {
+            // 相手のカード値を更新
+            if (gameData.isPlayer1)
+            {
+                gameData.player2CardValue = cardValue;
+                Debug.Log($"[GameDataProvider] Opponent (Player2) set card value updated: {cardValue}");
+            }
+            else
+            {
+                gameData.player1CardValue = cardValue;
+                Debug.Log($"[GameDataProvider] Opponent (Player1) set card value updated: {cardValue}");
+            }
+        }
+    }
+    
+    /// <summary>
     /// ゲームデータの詳細をログ出力
     /// </summary>
     private void LogGameDataDetails()
@@ -78,6 +142,8 @@ public class OnlineGameDataProvider : MonoBehaviour
         Debug.Log($"[GameDataProvider] IsPlayer1: {gameData.isPlayer1}");
         Debug.Log($"[GameDataProvider] Player1Cards: {(gameData.player1Cards != null ? string.Join(",", gameData.player1Cards) : "null")}");
         Debug.Log($"[GameDataProvider] Player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
+        Debug.Log($"[GameDataProvider] Player1CardValue: {gameData.player1CardValue}");
+        Debug.Log($"[GameDataProvider] Player2CardValue: {gameData.player2CardValue}");
     }
     
     /// <summary>
@@ -128,6 +194,8 @@ public class OnlineGameDataProvider : MonoBehaviour
         public string gameId;
         public int[] player1Cards;
         public int[] player2Cards;
+        public int player1CardValue;  // セットしたカード値
+        public int player2CardValue;  // セットしたカード値
     }
 }
 

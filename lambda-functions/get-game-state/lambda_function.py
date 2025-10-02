@@ -68,7 +68,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         # デバッグログを追加
         print(f"Game {game_id}: Retrieved game state - gamePhase: {game_state.get('gamePhase')}, phaseTransitionTime: {game_state.get('phaseTransitionTime')}")
-        
         # set_phaseからcard_placementへの自動遷移処理を削除
         # 現在はset_phaseとcard_placementが統合されているため、自動遷移は不要
         
@@ -87,16 +86,14 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'currentBet': game_state['currentBet'],
             'player1CardPlaced': game_state['player1CardPlaced'],
             'player2CardPlaced': game_state['player2CardPlaced'],
+            'player1CardValue': game_state['player1CardValue'],
+            'player2CardValue': game_state['player2CardValue'],
             'player1BetAmount': game_state['player1BetAmount'],
             'player2BetAmount': game_state['player2BetAmount'],
+            'player1Set': game_state.get('player1Set', False),
+            'player2Set': game_state.get('player2Set', False),
             'updatedAt': game_state['updatedAt']
         }
-        
-        # セットされたカードの値を追加
-        if 'player1CardValue' in game_state:
-            response_data['player1CardValue'] = game_state['player1CardValue']
-        if 'player2CardValue' in game_state:
-            response_data['player2CardValue'] = game_state['player2CardValue']
         
         # phaseTransitionTimeが存在する場合は追加
         if 'phaseTransitionTime' in game_state and game_state['phaseTransitionTime'] is not None:

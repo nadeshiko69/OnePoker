@@ -9,7 +9,7 @@ using OnePoker.Network;
 /// オンライン対戦のメインマネージャークラス（リファクタリング版）
 /// 各専用マネージャーを統合して管理
 /// </summary>
-public class OnlineGameManagerNew : MonoBehaviour
+public class OnlineGameManager : MonoBehaviour
 {
     public enum SkillType { Scan, Change, Obstruct, FakeOut, Copy, None }
     
@@ -269,20 +269,8 @@ public class OnlineGameManagerNew : MonoBehaviour
     {
         Debug.Log("[OnlineGameManager] Reveal Phase started");
         
-        int playerCardValue = gameDataProvider.GetPlayerCardValue(0);
-        int opponentCardValue = gameDataProvider.GetOpponentCardValue(0);
-        
-        // 相手のカードを表向きに
-        cardDisplayManager.DisplayOpponentCardFaceUp(opponentCardValue);
-        
-        // 結果表を更新
-        if (resultViewManager != null)
-        {
-            resultViewManager.ShowResultTable(playerCardValue, opponentCardValue);
-        }
-        
-        // 勝敗判定
-        JudgeWinner(playerCardValue, opponentCardValue);
+        // AWSから最新のゲーム状態を取得してカード値を更新
+        FetchLatestGameStateForReveal();
     }
     
     private void OnBothPlayersPlaced(int player1CardValue, int player2CardValue)
@@ -460,5 +448,107 @@ public class OnlineGameManagerNew : MonoBehaviour
     
     public void SetOpponentCalled(bool called) { }
     public void RevealCards() { }
+    
+    /// <summary>
+    /// RevealPhase用にAWSから最新のゲーム状態を取得
+    /// </summary>
+    private void FetchLatestGameStateForReveal()
+    {
+        Debug.Log("[REVEAL_DEBUG] Fetching latest game state for reveal phase");
+        
+        if (!gameDataProvider.IsValid())
+        {
+            Debug.LogError("[REVEAL_DEBUG] GameDataProvider is not valid, cannot fetch game state");
+            return;
+        }
+        
+        HttpManager.Instance.GetGameState(
+            gameDataProvider.GameId,
+            gameDataProvider.PlayerId,
+            OnRevealGameStateReceived,
+            OnRevealGameStateError
+        );
+    }
+    
+    /// <summary>
+    /// RevealPhase用ゲーム状態取得成功時のコールバック
+    /// </summary>
+    private void OnRevealGameStateReceived(string response)
+    {
+        Debug.Log($"[REVEAL_DEBUG] Game state received: {response}");
+        
+        try
+        {
+            var gameStateData = JsonUtility.FromJson<GameStateResponse>(response);
+            
+            if (gameStateData != null)
+            {
+                Debug.Log($"[REVEAL_DEBUG] Raw card values from AWS - Player1: {gameStateData.player1CardValue}, Player2: {gameStateData.player2CardValue}");
+                
+                // セットしたカード値を更新
+                gameDataProvider.UpdateSetCardValues(gameStateData.player1CardValue, gameStateData.player2CardValue);
+                
+                // 相手のカードを表向きで表示
+                cardDisplayManager.DisplayOpponentCardFaceUp(gameStateData.player2CardValue);
+                
+                // ResultViewの表を更新
+                if (resultViewManager != null)
+                {
+                    Debug.Log($"[REVEAL_DEBUG] Calling ShowResultTable with Player1: {gameStateData.player1CardValue}, Player2: {gameStateData.player2CardValue}");
+                    resultViewManager.ShowResultTable(gameStateData.player1CardValue, gameStateData.player2CardValue);
+                    Debug.Log("[REVEAL_DEBUG] Result table update completed");
+                }
+                else
+                {
+                    Debug.LogError("[REVEAL_DEBUG] resultViewManager is null, cannot update result table");
+                }
+                
+                // 勝敗判定
+                JudgeWinner(gameStateData.player1CardValue, gameStateData.player2CardValue);
+                
+                Debug.Log($"[REVEAL_DEBUG] Reveal phase processing completed - Player1: {gameStateData.player1CardValue}, Player2: {gameStateData.player2CardValue}");
+            }
+            else
+            {
+                Debug.LogError("[REVEAL_DEBUG] Failed to parse game state response");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[REVEAL_DEBUG] Exception while processing game state: {e.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// RevealPhase用ゲーム状態取得失敗時のコールバック
+    /// </summary>
+    private void OnRevealGameStateError(string error)
+    {
+        Debug.LogError($"[REVEAL_DEBUG] Failed to fetch game state: {error}");
+    }
+    
+    [System.Serializable]
+    private class GameStateResponse
+    {
+        public string gameId;
+        public string gamePhase;
+        public string currentTurn;
+        public int player1Life;
+        public int player2Life;
+        public int currentBet;
+        public bool player1CardPlaced;
+        public bool player2CardPlaced;
+        public int player1BetAmount;
+        public int player2BetAmount;
+        public int player1CardValue;
+        public int player2CardValue;
+        public int[] myCards;
+        public int myLife;
+        public int myBetAmount;
+        public bool myCardPlaced;
+        public bool opponentCardPlaced;
+        public int? opponentPlacedCardId;
+        public string updatedAt;
+    }
 }
 
