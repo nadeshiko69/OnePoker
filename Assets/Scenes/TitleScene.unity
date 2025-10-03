@@ -2657,9 +2657,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Mind Bluff
-
-'
+  m_text: Instant Poker
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: cba7aa18b40279c48bf97aee0216e2a6, type: 2}
   m_sharedMaterial: {fileID: -2004183136129814628, guid: cba7aa18b40279c48bf97aee0216e2a6, type: 2}
@@ -3975,7 +3973,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: One Shot Poker
+  m_text: One shot
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: cba7aa18b40279c48bf97aee0216e2a6, type: 2}
   m_sharedMaterial: {fileID: -2004183136129814628, guid: cba7aa18b40279c48bf97aee0216e2a6, type: 2}
