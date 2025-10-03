@@ -3425,8 +3425,8 @@ MonoBehaviour:
   gameOverPanel: {fileID: 2007954557}
   gameOverText: {fileID: 1207794368}
   restartButton: {fileID: 1603740483}
-  playerDropZone: {fileID: 0}
-  opponentDropZone: {fileID: 0}
+  playerDropZone: {fileID: 2120547386}
+  opponentDropZone: {fileID: 1887968404}
 --- !u!1 &593240512
 GameObject:
   m_ObjectHideFlags: 0
@@ -13468,6 +13468,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1898410584}
   - component: {fileID: 1898410585}
+  - component: {fileID: 1898410586}
   m_Layer: 5
   m_Name: GameManager
   m_TagString: Untagged
@@ -13504,6 +13505,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f071461310aa8964b971a5150c28504d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerLifeText: {fileID: 819376135}
+  opponentLifeText: {fileID: 2024170839}
+  cardPrefab: {fileID: 8622914166395771307, guid: 4c3356f803bb4c54490226619374d4f7, type: 3}
+--- !u!114 &1898410586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1898410583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f0ebccd027a1254ca2ce9992063cb5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerLifeText: {fileID: 819376135}

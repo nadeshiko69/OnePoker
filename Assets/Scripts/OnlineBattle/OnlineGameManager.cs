@@ -488,25 +488,31 @@ public class OnlineGameManager : MonoBehaviour
                 // セットしたカード値を更新
                 gameDataProvider.UpdateSetCardValues(gameStateData.player1CardValue, gameStateData.player2CardValue);
                 
-                // 相手のカードを表向きで表示
-                cardDisplayManager.DisplayOpponentCardFaceUp(gameStateData.player2CardValue);
+                // プレイヤーの立場に応じてカード値を決定
+                bool isPlayer1 = gameDataProvider.IsPlayer1;
+                int myCardValue = isPlayer1 ? gameStateData.player1CardValue : gameStateData.player2CardValue;
+                int opponentCardValue = isPlayer1 ? gameStateData.player2CardValue : gameStateData.player1CardValue;
                 
-                // ResultViewの表を更新
+                Debug.Log($"[REVEAL_DEBUG] Player perspective - IsPlayer1: {isPlayer1}, MyCard: {myCardValue}, OpponentCard: {opponentCardValue}");
+                
+                // 相手のカードを表向きで表示
+                cardDisplayManager.DisplayOpponentCardFaceUp(opponentCardValue);
+                
+                // ResultViewの表を更新（自分のカード、相手のカードの順）
                 if (resultViewManager != null)
                 {
-                    Debug.Log($"[REVEAL_DEBUG] Calling ShowResultTable with Player1: {gameStateData.player1CardValue}, Player2: {gameStateData.player2CardValue}");
-                    resultViewManager.ShowResultTable(gameStateData.player1CardValue, gameStateData.player2CardValue);
-                    Debug.Log("[REVEAL_DEBUG] Result table update completed");
+                    Debug.Log($"[REVEAL_DEBUG] Calling ShowResultTable with MyCard: {myCardValue}, OpponentCard: {opponentCardValue}");
+                    resultViewManager.ShowResultTable(myCardValue, opponentCardValue);
                 }
                 else
                 {
                     Debug.LogError("[REVEAL_DEBUG] resultViewManager is null, cannot update result table");
                 }
                 
-                // 勝敗判定
-                JudgeWinner(gameStateData.player1CardValue, gameStateData.player2CardValue);
+                // 勝敗判定（自分のカード、相手のカードの順）
+                JudgeWinner(myCardValue, opponentCardValue);
                 
-                Debug.Log($"[REVEAL_DEBUG] Reveal phase processing completed - Player1: {gameStateData.player1CardValue}, Player2: {gameStateData.player2CardValue}");
+                Debug.Log($"[REVEAL_DEBUG] Reveal phase processing completed - MyCard: {myCardValue}, OpponentCard: {opponentCardValue}");
             }
             else
             {

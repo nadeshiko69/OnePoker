@@ -32,8 +32,8 @@ public class OnlineMatchManager : MonoBehaviour
     public int OpponentLife => opponentLife;
 
     // DropZone関連
-    public DropZone playerDropZone;   // Inspectorでアタッチ
-    public DropZone opponentDropZone; // Inspectorでアタッチ
+    public OnlineDropZone playerDropZone;   // Inspectorでアタッチ
+    public OnlineDropZone opponentDropZone; // Inspectorでアタッチ
 
     void Start()
     {

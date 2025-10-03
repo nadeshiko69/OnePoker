@@ -85,7 +85,8 @@ public class OnlineCardDisplayManager : MonoBehaviour
             
             if (existingCard == null)
             {
-                int opponentCardValue = gameDataProvider.GetOpponentCardValue(0);
+                // プレイヤーの立場に応じて相手のカード値を取得
+                int opponentCardValue = gameDataProvider.OpponentSetCardValue;
                 Debug.Log($"[CardDisplayManager] No opponent card found, creating with value: {opponentCardValue}");
                 CreateOpponentCard(opponentCardValue, opponentZone, true);
             }
