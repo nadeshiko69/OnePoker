@@ -291,6 +291,9 @@ public class OnlineGameManager : MonoBehaviour
             if (actionType == "call" || actionType == "raise")
             {
                 parentChildManager.StartChildTurn();
+                
+                // 子のベット監視を開始
+                parentChildManager.StartChildBetMonitoring();
             }
             else if (actionType == "drop")
             {
@@ -306,7 +309,8 @@ public class OnlineGameManager : MonoBehaviour
             }
             else if (actionType == "raise")
             {
-                parentChildManager.StartParentTurn();
+                // 子のレイズ値を親に通知して親のベット入力待ちにする（サーバー更新はbet-actionに任せる）
+                OnChildBetComplete(actionType, betValue);
             }
         }
     }
@@ -334,6 +338,17 @@ public class OnlineGameManager : MonoBehaviour
         }
         
         parentChildManager.StartChildTurnWithDelay();
+    }
+    
+    private void OnChildBetComplete(string betAction, int betAmount)
+    {
+        Debug.Log($"[OnlineGameManager] Child bet complete: {betAction}, {betAmount}");
+        
+        if (betAction == "raise")
+        {
+            // 子のレイズ値を親の最低ベット額として設定して親のターンを開始
+            parentChildManager.StartParentTurnAfterChildRaise(betAmount);
+        }
     }
     
     /// <summary>

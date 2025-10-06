@@ -193,21 +193,33 @@ public class OnlinePanelManager : MonoBehaviour
     public void ShowSkillUI()
     {
         Debug.Log("ShowSkillUI called");
-        ScanSkillButton.onClick.RemoveAllListeners();
-        ChangeSkillButton.onClick.RemoveAllListeners();
-        ObstructSkillButton.onClick.RemoveAllListeners();
-        FakeOutSkillButton.onClick.RemoveAllListeners();
-        CopySkillButton.onClick.RemoveAllListeners();
-
-        ScanSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Scan, DescriptionScanSkill));
-        ChangeSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Change, DescriptionChangeSkill));
-        ObstructSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Obstruct, DescriptionObstructSkill));
-        FakeOutSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.FakeOut, DescriptionFakeOutSkill));
-        CopySkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Copy, DescriptionCopySkill));
+        if (ScanSkillButton != null) {
+            ScanSkillButton.onClick.RemoveAllListeners();
+            ScanSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Scan, DescriptionScanSkill));
+        }
+        if (ChangeSkillButton != null) {
+            ChangeSkillButton.onClick.RemoveAllListeners();
+            ChangeSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Change, DescriptionChangeSkill));
+        }
+        if (ObstructSkillButton != null) {
+            ObstructSkillButton.onClick.RemoveAllListeners();
+            ObstructSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Obstruct, DescriptionObstructSkill));
+        }
+        if (FakeOutSkillButton != null) {
+            FakeOutSkillButton.onClick.RemoveAllListeners();
+            FakeOutSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.FakeOut, DescriptionFakeOutSkill));
+        }
+        if (CopySkillButton != null) {
+            CopySkillButton.onClick.RemoveAllListeners();
+            CopySkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Copy, DescriptionCopySkill));
+        }
 
         // プレイヤーがObstructスキルの被害を受けている場合はPanelを表示する
-        if(skillManager.IsPlayerObstructed)obstructPanel.SetActive(true);
-        skillManager.SetPlayerObstructed(false);
+        if (skillManager != null)
+        {
+            if (skillManager.IsPlayerObstructed && obstructPanel != null) obstructPanel.SetActive(true);
+            skillManager.SetPlayerObstructed(false);
+        }
 
         SetSkillButtonInteractable(true);
         VisibleSkillButtons(true);

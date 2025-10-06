@@ -10,15 +10,14 @@ table = dynamodb.Table('GameStates')
 def convert_decimal(obj):
     if isinstance(obj, list):
         return [convert_decimal(i) for i in obj]
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         return {k: convert_decimal(v) for k, v in obj.items()}
-    elif isinstance(obj, decimal.Decimal):
-        if obj % 1 == 0:
-            return int(obj)
-        else:
+    if isinstance(obj, decimal.Decimal):
+        try:
+            return int(obj) if obj % 1 == 0 else float(obj)
+        except Exception:
             return float(obj)
-    else:
-        return obj
+    return obj
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
@@ -88,8 +87,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2CardPlaced': game_state['player2CardPlaced'],
             'player1CardValue': game_state['player1CardValue'],
             'player2CardValue': game_state['player2CardValue'],
-            'player1BetAmount': game_state['player1BetAmount'],
-            'player2BetAmount': game_state['player2BetAmount'],
+            'player1BetAmount': convert_decimal(game_state.get('player1BetAmount', 0)),
+            'player2BetAmount': convert_decimal(game_state.get('player2BetAmount', 0)),
             'player1Set': game_state.get('player1Set', False),
             'player2Set': game_state.get('player2Set', False),
             'updatedAt': game_state['updatedAt']

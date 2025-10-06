@@ -11,15 +11,15 @@ def convert_decimals(obj):
     """Decimal型をint/floatに変換する"""
     if isinstance(obj, list):
         return [convert_decimals(i) for i in obj]
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         return {k: convert_decimals(v) for k, v in obj.items()}
-    elif isinstance(obj, Decimal):
-        if obj % 1 == 0:
-            return int(obj)
-        else:
+    if isinstance(obj, Decimal):
+        try:
+            # 小数点を含まない場合はint、含む場合はfloatへ
+            return int(obj) if obj % 1 == 0 else float(obj)
+        except Exception:
             return float(obj)
-    else:
-        return obj
+    return obj
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
@@ -33,7 +33,15 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         game_id = body.get('gameId')
         player_id = body.get('playerId')
         action_type = body.get('actionType')  # "call", "raise", "drop"
-        bet_value = body.get('betValue', 1)
+        # 受け取ったベット値は数値に正規化
+        raw_bet_value = body.get('betValue', 1)
+        try:
+            bet_value = int(raw_bet_value)
+        except Exception:
+            try:
+                bet_value = int(float(raw_bet_value))
+            except Exception:
+                bet_value = 1
         
         # 必須パラメータの検証
         if not game_id or not player_id or not action_type:
@@ -193,6 +201,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'message': f'Successfully performed {action_type}'
         }
         
+        # 双方の最新ベット額を明示的に返す（クライアントUI更新用）
+        response_data['player1BetAmount'] = convert_decimals(updated_game_state.get('player1BetAmount', 0))
+        response_data['player2BetAmount'] = convert_decimals(updated_game_state.get('player2BetAmount', 0))
+
         # 相手のアクション情報を追加（相手が既にアクション済みの場合）
         if not is_player1 and 'player1LastAction' in updated_game_state:
             response_data['opponentAction'] = {
@@ -207,7 +219,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'playerId': game_state['player2Id']
             }
         
-        print(f"Bet action response: {json.dumps(response_data, indent=2)}")
+        # デバッグ出力でもDecimalを変換してからJSON化する
+        print(f"Bet action response: {json.dumps(convert_decimals(response_data), indent=2)}")
         
         return {
             'statusCode': 200,

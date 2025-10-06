@@ -181,6 +181,24 @@ public class OnlineBettingManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Player2BetAmountをサーバーに更新（子がレイズした場合）
+    /// </summary>
+    public void UpdatePlayer2BetAmountInServer(int betAmount)
+    {
+        Debug.Log($"[BettingManager] Updating player2 bet amount in server: {betAmount}");
+        
+        // Player2のベット金額を更新するためのHTTPリクエスト
+        // 現在はUpdatePlayerBetAmountを使用するが、将来的にはPlayer2専用のエンドポイントが必要
+        HttpManager.Instance.UpdatePlayerBetAmount(
+            gameDataProvider.GameId,
+            gameDataProvider.PlayerId,
+            betAmount,
+            OnBetAmountUpdateSuccess,
+            OnBetAmountUpdateError
+        );
+    }
+    
+    /// <summary>
     /// ベットアクション成功時の処理
     /// </summary>
     private void OnBetActionSuccess(string response)

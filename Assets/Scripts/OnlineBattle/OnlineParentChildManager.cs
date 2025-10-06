@@ -108,6 +108,41 @@ public class OnlineParentChildManager : MonoBehaviour
     }
     
     /// <summary>
+    /// 親のターンを開始（子のレイズ後）
+    /// </summary>
+    public void StartParentTurnAfterChildRaise(int childRaiseValue)
+    {
+        Debug.Log($"[ParentChildManager] Starting parent turn after child raise: {childRaiseValue}. isParent: {isParent}");
+        
+        if (isParent)
+        {
+            // 自分が親の場合
+            isParentTurn = true;
+            waitingForParentAction = false;
+            
+            if (bettingManager != null)
+            {
+                // 子のレイズ値を最低ベット額として設定
+                bettingManager.SetMinimumBetValue(childRaiseValue);
+                bettingManager.SetBetValue(childRaiseValue);
+                bettingManager.SetMyTurn(true);
+            }
+            
+            if (panelManager != null)
+            {
+                panelManager.HideWaitingForParentPanel();
+                panelManager.ShowParentTurnPanel();
+                panelManager.SetBettingButtonInteractable(true);
+                panelManager.UpdateOpponentBetAmountDisplay(childRaiseValue);
+                panelManager.UpdateBetAmountDisplay(childRaiseValue);
+                panelManager.UpdateCallButtonText(childRaiseValue, childRaiseValue);
+            }
+            
+            OnParentTurnStarted?.Invoke();
+        }
+    }
+    
+    /// <summary>
     /// 子のターンを開始
     /// </summary>
     public void StartChildTurn()
@@ -358,10 +393,117 @@ public class OnlineParentChildManager : MonoBehaviour
         Debug.Log($"[ParentChildManager] Moving to round {currentRound}");
     }
     
+    /// <summary>
+    /// 子のベット完了監視を開始
+    /// </summary>
+    public void StartChildBetMonitoring()
+    {
+        if (!isParent) return;
+        
+        Debug.Log("[ParentChildManager] Starting child bet monitoring");
+        
+        if (parentBetMonitorCoroutine != null)
+        {
+            StopCoroutine(parentBetMonitorCoroutine);
+        }
+        
+        parentBetMonitorCoroutine = StartCoroutine(MonitorChildBetStatus());
+    }
+    
+    /// <summary>
+    /// 子のベット完了状態を監視
+    /// </summary>
+    private IEnumerator MonitorChildBetStatus()
+    {
+        while (isParentTurn && !waitingForParentAction)
+        {
+            yield return new WaitForSeconds(1f);
+            yield return StartCoroutine(CheckChildBetStatus());
+        }
+    }
+    
+    /// <summary>
+    /// 子のベット完了状態を確認
+    /// </summary>
+    private IEnumerator CheckChildBetStatus()
+    {
+        if (gameDataProvider == null) yield break;
+        
+        HttpManager.Instance.GetGameState(
+            gameDataProvider.GameId,
+            gameDataProvider.PlayerId,
+            OnChildBetStatusReceived,
+            OnChildBetStatusError
+        );
+        
+        yield return null;
+    }
+    
+    /// <summary>
+    /// 子のベット状態受信時の処理
+    /// </summary>
+    private void OnChildBetStatusReceived(string response)
+    {
+        try
+        {
+            var gameState = JsonUtility.FromJson<GameStateResponse>(response);
+            
+            if (gameState != null && gameState.player2BetAmount > 0)
+            {
+                Debug.Log($"[ParentChildManager] Child bet complete: {gameState.player2BetAmount}");
+                
+                // 監視を停止
+                if (parentBetMonitorCoroutine != null)
+                {
+                    StopCoroutine(parentBetMonitorCoroutine);
+                    parentBetMonitorCoroutine = null;
+                }
+                
+                // 子のベット値を親の最低ベット額として設定
+                if (bettingManager != null)
+                {
+                    bettingManager.SetMinimumBetValue(gameState.player2BetAmount);
+                    bettingManager.SetBetValue(gameState.player2BetAmount);
+                }
+                
+                if (panelManager != null)
+                {
+                    panelManager.UpdateOpponentBetAmountDisplay(gameState.player2BetAmount);
+                    panelManager.UpdateBetAmountDisplay(gameState.player2BetAmount);
+                    panelManager.UpdateCallButtonText(gameState.player2BetAmount, gameState.player2BetAmount);
+                }
+                
+                // 親のターンを有効化
+                if (bettingManager != null)
+                {
+                    bettingManager.SetMyTurn(true);
+                }
+                
+                if (panelManager != null)
+                {
+                    panelManager.SetBettingButtonInteractable(true);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[ParentChildManager] Error parsing child bet status: {e.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// 子のベット状態エラー時の処理
+    /// </summary>
+    private void OnChildBetStatusError(string error)
+    {
+        Debug.LogError($"[ParentChildManager] Child bet status error: {error}");
+    }
+    
     [Serializable]
     private class GameStateResponse
     {
         public int player1BetAmount;
+        public int player2BetAmount;
     }
 }
 
