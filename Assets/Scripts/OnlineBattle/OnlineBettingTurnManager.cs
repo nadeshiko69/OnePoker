@@ -17,6 +17,10 @@ public class OnlineBettingTurnManager : MonoBehaviour
     private Coroutine turnMonitorCoroutine;
     private bool isMonitoring = false;
     
+    // 状態キャッシュ（重複呼び出し防止）
+    private string lastAwaitingPlayer = "";
+    private int lastRequiredBet = -1;
+    
     /// <summary>
     /// 初期化
     /// </summary>
@@ -134,13 +138,24 @@ public class OnlineBettingTurnManager : MonoBehaviour
     /// </summary>
     private void HandleTurnChange(GameStateResponse gameState)
     {
+        // 状態が変わっていない場合は処理をスキップ
+        if (gameState.awaitingPlayer == lastAwaitingPlayer && 
+            gameState.currentRequiredBet == lastRequiredBet)
+        {
+            return; // 変化なし、何もしない
+        }
+        
+        // 状態をキャッシュ
+        lastAwaitingPlayer = gameState.awaitingPlayer;
+        lastRequiredBet = gameState.currentRequiredBet;
+        
         // 自分のプレイヤー識別子（"P1" or "P2"）
         string mySide = gameDataProvider.IsPlayer1 ? "P1" : "P2";
         
         // 自分のターンか判定
         bool isMyTurn = (gameState.awaitingPlayer == mySide);
         
-        Debug.Log($"[BettingTurnManager] Turn check - MySide: {mySide}, AwaitingPlayer: {gameState.awaitingPlayer}, IsMyTurn: {isMyTurn}");
+        Debug.Log($"[BettingTurnManager] Turn change detected - MySide: {mySide}, AwaitingPlayer: {gameState.awaitingPlayer}, IsMyTurn: {isMyTurn}, RequiredBet: {gameState.currentRequiredBet}");
         
         if (isMyTurn)
         {
