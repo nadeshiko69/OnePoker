@@ -309,8 +309,8 @@ public class OnlineGameManager : MonoBehaviour
             }
             else if (actionType == "raise")
             {
-                // 子のレイズ値を親に通知して親のベット入力待ちにする（サーバー更新はbet-actionに任せる）
-                OnChildBetComplete(actionType, betValue);
+                // 子のレイズ後は親が監視で検知するため、ここでは何もしない
+                Debug.Log($"[OnlineGameManager] Child raised to {betValue}, waiting for parent to detect via monitoring");
             }
         }
     }

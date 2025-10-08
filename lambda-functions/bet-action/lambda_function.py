@@ -191,6 +191,34 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # 最新のゲーム状態を取得
         response = table.get_item(Key={'gameId': game_id})
         updated_game_state = response['Item']
+
+        # 追加の整合チェック：更新後の状態で両者がアクション済みかつ金額が一致/整合していればrevealへ
+        try:
+            p1_action = updated_game_state.get('player1LastAction')
+            p2_action = updated_game_state.get('player2LastAction')
+            p1_bet = updated_game_state.get('player1BetAmount', 0)
+            p2_bet = updated_game_state.get('player2BetAmount', 0)
+            # Decimalを数値へ
+            p1_bet_n = int(p1_bet) if isinstance(p1_bet, Decimal) or isinstance(p1_bet, (int, float)) else int(float(p1_bet))
+            p2_bet_n = int(p2_bet) if isinstance(p2_bet, Decimal) or isinstance(p2_bet, (int, float)) else int(float(p2_bet))
+
+            both_acted = (p1_action in ['call', 'raise']) and (p2_action in ['call', 'raise'])
+            bets_matched = (p1_bet_n == p2_bet_n)
+
+            # いずれかがdropならこの処理はスキップ（上で処理済み）
+            if updated_game_state.get('gamePhase') == 'betting' and both_acted and bets_matched:
+                table.update_item(
+                    Key={'gameId': game_id},
+                    UpdateExpression='SET #gp = :gp, #ua = :ua',
+                    ExpressionAttributeNames={'#gp': 'gamePhase', '#ua': 'updatedAt'},
+                    ExpressionAttributeValues={':gp': 'reveal', ':ua': int(time.time())}
+                )
+                # 再取得
+                response = table.get_item(Key={'gameId': game_id})
+                updated_game_state = response['Item']
+                print('Post-check set gamePhase to reveal due to matched bets and both acted.')
+        except Exception as e:
+            print(f'Post-update reveal check skipped due to error: {e}')
         
         # レスポンスを作成
         response_data = {

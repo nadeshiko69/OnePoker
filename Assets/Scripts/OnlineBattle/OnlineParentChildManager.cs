@@ -83,6 +83,9 @@ public class OnlineParentChildManager : MonoBehaviour
                 panelManager.SetBettingButtonInteractable(true);
             }
             
+            // 親のターン開始時に子のベット監視を開始
+            StartChildBetMonitoring();
+            
             OnParentTurnStarted?.Invoke();
         }
         else
@@ -400,7 +403,7 @@ public class OnlineParentChildManager : MonoBehaviour
     {
         if (!isParent) return;
         
-        Debug.Log("[ParentChildManager] Starting child bet monitoring");
+        Debug.Log($"[ParentChildManager] Starting child bet monitoring - isParent: {isParent}, waitingForParentAction: {waitingForParentAction}");
         
         if (parentBetMonitorCoroutine != null)
         {
@@ -415,11 +418,14 @@ public class OnlineParentChildManager : MonoBehaviour
     /// </summary>
     private IEnumerator MonitorChildBetStatus()
     {
-        while (isParentTurn && !waitingForParentAction)
+        Debug.Log("[ParentChildManager] Starting child bet monitoring loop");
+        while (isParent && !waitingForParentAction)
         {
+            Debug.Log("[ParentChildManager] Checking child bet status...");
             yield return new WaitForSeconds(1f);
             yield return StartCoroutine(CheckChildBetStatus());
         }
+        Debug.Log("[ParentChildManager] Child bet monitoring loop ended");
     }
     
     /// <summary>
@@ -447,6 +453,7 @@ public class OnlineParentChildManager : MonoBehaviour
         try
         {
             var gameState = JsonUtility.FromJson<GameStateResponse>(response);
+            Debug.Log($"[ParentChildManager] Child bet status received - player2BetAmount: {gameState?.player2BetAmount ?? -1}");
             
             if (gameState != null && gameState.player2BetAmount > 0)
             {
@@ -468,20 +475,18 @@ public class OnlineParentChildManager : MonoBehaviour
                 
                 if (panelManager != null)
                 {
+                    // 親のベットパネルを表示
+                    panelManager.ShowParentTurnPanel();
                     panelManager.UpdateOpponentBetAmountDisplay(gameState.player2BetAmount);
                     panelManager.UpdateBetAmountDisplay(gameState.player2BetAmount);
                     panelManager.UpdateCallButtonText(gameState.player2BetAmount, gameState.player2BetAmount);
+                    panelManager.SetBettingButtonInteractable(true);
                 }
                 
                 // 親のターンを有効化
                 if (bettingManager != null)
                 {
                     bettingManager.SetMyTurn(true);
-                }
-                
-                if (panelManager != null)
-                {
-                    panelManager.SetBettingButtonInteractable(true);
                 }
             }
         }
