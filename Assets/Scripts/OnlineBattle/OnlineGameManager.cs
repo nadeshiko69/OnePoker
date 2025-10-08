@@ -24,9 +24,9 @@ public class OnlineGameManager : MonoBehaviour
     private OnlinePhaseManager phaseManager;
     private OnlineCardPlacementManager cardPlacementManager;
     private OnlineBettingManager bettingManager;
-    private OnlineParentChildManager parentChildManager;
     private OnlineGameDataProvider gameDataProvider;
     private OnlineCardDisplayManager cardDisplayManager;
+    private OnlineBettingTurnManager bettingTurnManager;
     
     // その他のマネージャー
     private OnlineMatchManager matchManager;
@@ -82,15 +82,15 @@ public class OnlineGameManager : MonoBehaviour
         phaseManager = GetOrAddComponent<OnlinePhaseManager>();
         cardPlacementManager = GetOrAddComponent<OnlineCardPlacementManager>();
         bettingManager = GetOrAddComponent<OnlineBettingManager>();
-        parentChildManager = GetOrAddComponent<OnlineParentChildManager>();
         cardDisplayManager = GetOrAddComponent<OnlineCardDisplayManager>();
+        bettingTurnManager = GetOrAddComponent<OnlineBettingTurnManager>();
         
         // 各マネージャーを初期化
         phaseManager.Initialize(panelManager, gameDataProvider);
         cardPlacementManager.Initialize(panelManager, handManager, gameDataProvider);
         bettingManager.Initialize(panelManager, gameDataProvider);
-        parentChildManager.Initialize(panelManager, bettingManager, gameDataProvider);
         cardDisplayManager.Initialize(gameDataProvider);
+        bettingTurnManager.Initialize(gameDataProvider, bettingManager, panelManager);
         
         // cardPrefabを設定
         if (cardDisplayManager != null && cardPrefab != null)
@@ -130,11 +130,6 @@ public class OnlineGameManager : MonoBehaviour
         
         // ベッティングイベント
         bettingManager.OnBetActionExecuted += OnBetActionExecuted;
-        
-        // 親子システムイベント
-        parentChildManager.OnParentTurnStarted += OnParentTurnStarted;
-        parentChildManager.OnChildTurnStarted += OnChildTurnStarted;
-        parentChildManager.OnParentBetComplete += OnParentBetComplete;
     }
     
     /// <summary>
@@ -183,9 +178,6 @@ public class OnlineGameManager : MonoBehaviour
         
         // カードセットを有効化
         cardPlacementManager.EnableCardPlacement();
-        
-        // 親子システムの初期化
-        parentChildManager.InitializeParentChildSystem(gameDataProvider.IsPlayer1);
     }
     
     /// <summary>
@@ -262,7 +254,7 @@ public class OnlineGameManager : MonoBehaviour
         Debug.Log("[OnlineGameManager] Betting Phase started");
         cardPlacementManager.DisableCardPlacement();
         cardDisplayManager.EnsureOpponentCardDisplayed();
-        parentChildManager.StartParentTurn();
+        bettingTurnManager.StartTurnMonitoring();
     }
     
     private void OnRevealPhaseStarted()
@@ -282,73 +274,6 @@ public class OnlineGameManager : MonoBehaviour
     private void OnBetActionExecuted(string actionType, int betValue)
     {
         Debug.Log($"[OnlineGameManager] Bet action executed: {actionType}, {betValue}");
-        
-        if (parentChildManager.IsParent)
-        {
-            // 親の場合
-            bettingManager.UpdatePlayerBetAmountInServer(betValue);
-            
-            if (actionType == "call" || actionType == "raise")
-            {
-                parentChildManager.StartChildTurn();
-                
-                // 子のベット監視を開始
-                parentChildManager.StartChildBetMonitoring();
-            }
-            else if (actionType == "drop")
-            {
-                phaseManager.HandlePhaseChange("reveal");
-            }
-        }
-        else
-        {
-            // 子の場合
-            if (actionType == "call" || actionType == "drop")
-            {
-                phaseManager.HandlePhaseChange("reveal");
-            }
-            else if (actionType == "raise")
-            {
-                // 新awaitingPlayerシステムではサーバーが自動でUI制御を行うため、ここでは何もしない
-                Debug.Log($"[OnlineGameManager] Child raised to {betValue}, server will handle UI transitions via awaitingPlayer");
-            }
-        }
-    }
-    
-    private void OnParentTurnStarted()
-    {
-        Debug.Log("[OnlineGameManager] Parent turn started");
-    }
-    
-    private void OnChildTurnStarted()
-    {
-        Debug.Log("[OnlineGameManager] Child turn started");
-    }
-    
-    private void OnParentBetComplete(string betAction, int betAmount)
-    {
-        Debug.Log($"[OnlineGameManager] Parent bet complete: {betAction}, {betAmount}");
-        
-        bettingManager.SetMinimumBetValue(betAmount);
-        bettingManager.SetBetValue(betAmount);
-        
-        if (panelManager != null)
-        {
-            panelManager.UpdateOpponentBetAmountDisplay(betAmount);
-        }
-        
-        parentChildManager.StartChildTurnWithDelay();
-    }
-    
-    private void OnChildBetComplete(string betAction, int betAmount)
-    {
-        Debug.Log($"[OnlineGameManager] Child bet complete: {betAction}, {betAmount}");
-        
-        if (betAction == "raise")
-        {
-            // 子のレイズ値を親の最低ベット額として設定して親のターンを開始
-            parentChildManager.StartParentTurnAfterChildRaise(betAmount);
-        }
     }
     
     /// <summary>

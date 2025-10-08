@@ -173,7 +173,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      trump_front2_0: 4870535730830949973
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
