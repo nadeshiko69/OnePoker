@@ -461,9 +461,12 @@ public class OnlinePanelManager : MonoBehaviour
         if (startPhasePanel != null)
         {
             startPhasePanel.SetActive(true);
-            if (startPhaseTitle != null) startPhaseTitle.text = "親のターン";
+            if (startPhaseTitle != null) startPhaseTitle.text = "Bet Phase";
             if (startPhaseDescription != null) startPhaseDescription.text = "ベット額を設定してください";
             Debug.Log("OnlinePanelManager - Parent turn panel shown");
+            
+            // 3秒後に自動で非表示にする
+            StartCoroutine(AutoHideParentTurnPanelAfterDelay(3f));
         }
 
         // 親のターン時にbetAmountTextを表示
@@ -473,6 +476,16 @@ public class OnlinePanelManager : MonoBehaviour
             Debug.Log("OnlinePanelManager - betAmountText activated for parent turn");
         }
     }
+    
+    private IEnumerator AutoHideParentTurnPanelAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(false);
+            Debug.Log("OnlinePanelManager - Parent turn panel auto-hidden after delay");
+        }
+    }
 
     // 親のアクション待ちパネル表示
     public void ShowWaitingForParentPanel()
@@ -480,7 +493,7 @@ public class OnlinePanelManager : MonoBehaviour
         if (startPhasePanel != null)
         {
             startPhasePanel.SetActive(true);
-            if (startPhaseTitle != null) startPhaseTitle.text = "親のアクション待ち";
+            if (startPhaseTitle != null) startPhaseTitle.text = "Bet Phase";
             if (startPhaseDescription != null) startPhaseDescription.text = "親プレイヤーがベット中です...";
             Debug.Log("OnlinePanelManager - Waiting for parent panel shown");
         }

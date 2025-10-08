@@ -214,6 +214,8 @@ namespace OnePoker.Network
             public bool player2Set; // プレイヤー2のセット完了状態
             public int player1CardValue; // プレイヤー1がセットしたカード値
             public int player2CardValue; // プレイヤー2がセットしたカード値
+            public string awaitingPlayer; // 待機中のプレイヤー "P1", "P2", "none"
+            public int currentRequiredBet; // 現在必要なベット額
         }
 
         [System.Serializable]

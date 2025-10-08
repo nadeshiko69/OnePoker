@@ -159,6 +159,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2BetAmount': 0,
             'player1PlacedCard': None,
             'player2PlacedCard': None,
+            'awaitingPlayer': 'P1',  # 親から開始
+            'currentRequiredBet': 1,  # 初期ベット額
             'createdAt': current_time,
             'updatedAt': current_time
         }

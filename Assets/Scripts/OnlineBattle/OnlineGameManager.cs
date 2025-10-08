@@ -309,8 +309,8 @@ public class OnlineGameManager : MonoBehaviour
             }
             else if (actionType == "raise")
             {
-                // 子のレイズ後は親が監視で検知するため、ここでは何もしない
-                Debug.Log($"[OnlineGameManager] Child raised to {betValue}, waiting for parent to detect via monitoring");
+                // 新awaitingPlayerシステムではサーバーが自動でUI制御を行うため、ここでは何もしない
+                Debug.Log($"[OnlineGameManager] Child raised to {betValue}, server will handle UI transitions via awaitingPlayer");
             }
         }
     }

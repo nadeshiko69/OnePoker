@@ -137,41 +137,40 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         if action_type == 'drop':
             # ドロップの場合
-            if is_player1:
-                update_attrs['player1Dropped'] = True
-                update_attrs['gamePhase'] = 'reveal'
-                update_attrs['winner'] = game_state['player2Id']
-            else:
-                update_attrs['player2Dropped'] = True
-                update_attrs['gamePhase'] = 'reveal'
-                update_attrs['winner'] = game_state['player1Id']
+            update_attrs['gamePhase'] = 'reveal'
+            update_attrs['winner'] = opponent_id
+            print(f"Player {player_id} dropped. Game phase changed to reveal. Winner: {opponent_id}")
             
-            print(f"Player {player_id} dropped. Game phase changed to reveal. Winner: {update_attrs['winner']}")
-            
-        elif action_type in ['call', 'raise']:
-            # コールまたはレイズの場合
-            if is_player1:
+        elif action_type == 'call':
+            # コールの場合
+            if is_player1:  # 親のコール
                 update_attrs['player1BetAmount'] = bet_value
-                update_attrs['player1LastAction'] = action_type
-                update_attrs['player1LastActionTime'] = current_time
-            else:
+                update_attrs['awaitingPlayer'] = 'P2'
+                update_attrs['currentRequiredBet'] = bet_value
+            else:  # 子のコール
                 update_attrs['player2BetAmount'] = bet_value
-                update_attrs['player2LastAction'] = action_type
-                update_attrs['player2LastActionTime'] = current_time
-            
-            # 相手のアクションをチェック
-            opponent_bet_amount = game_state.get('player1BetAmount' if not is_player1 else 'player2BetAmount', 0)
-            opponent_last_action = game_state.get('player1LastAction' if not is_player1 else 'player2LastAction')
-            
-            # 両者がアクション済みの場合
-            if opponent_last_action and opponent_last_action in ['call', 'raise']:
-                # 両者がコールした場合、またはレイズの応答が完了した場合
-                if (action_type == 'call' and opponent_last_action == 'call') or \
-                   (action_type == 'call' and opponent_last_action == 'raise' and bet_value >= opponent_bet_amount):
+                current_required = game_state.get('currentRequiredBet', 0)
+                if bet_value >= current_required:
+                    # 必要なベット額以上ならrevealへ
+                    update_attrs['awaitingPlayer'] = 'none'
                     update_attrs['gamePhase'] = 'reveal'
-                    print(f"Both players have acted. Game phase changed to reveal.")
+                    print(f"Both players called. Game phase changed to reveal.")
+                else:
+                    # 不足の場合は待機継続
+                    print(f"Child call insufficient. Required: {current_required}, Provided: {bet_value}")
             
-            print(f"Player {player_id} performed {action_type} with bet value {bet_value}")
+        elif action_type == 'raise':
+            # レイズの場合
+            if is_player1:  # 親のレイズ
+                update_attrs['player1BetAmount'] = bet_value
+                update_attrs['awaitingPlayer'] = 'P2'
+                update_attrs['currentRequiredBet'] = bet_value
+            else:  # 子のレイズ
+                update_attrs['player2BetAmount'] = bet_value
+                update_attrs['awaitingPlayer'] = 'P1'
+                update_attrs['currentRequiredBet'] = bet_value
+            
+            print(f"Player {player_id} raised to {bet_value}. Awaiting: {'P2' if is_player1 else 'P1'}")
         
         # 更新時間を設定
         update_attrs['updatedAt'] = current_time
@@ -232,6 +231,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # 双方の最新ベット額を明示的に返す（クライアントUI更新用）
         response_data['player1BetAmount'] = convert_decimals(updated_game_state.get('player1BetAmount', 0))
         response_data['player2BetAmount'] = convert_decimals(updated_game_state.get('player2BetAmount', 0))
+        response_data['awaitingPlayer'] = updated_game_state.get('awaitingPlayer', 'P1')
+        response_data['currentRequiredBet'] = convert_decimals(updated_game_state.get('currentRequiredBet', 1))
 
         # 相手のアクション情報を追加（相手が既にアクション済みの場合）
         if not is_player1 and 'player1LastAction' in updated_game_state:
