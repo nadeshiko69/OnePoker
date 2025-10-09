@@ -216,6 +216,8 @@ namespace OnePoker.Network
             public int player2CardValue; // プレイヤー2がセットしたカード値
             public string awaitingPlayer; // 待機中のプレイヤー "P1", "P2", "none"
             public int currentRequiredBet; // 現在必要なベット額
+            public string[] player1UsedSkills; // プレイヤー1の使用済スキル
+            public string[] player2UsedSkills; // プレイヤー2の使用済スキル
         }
 
         [System.Serializable]
@@ -430,6 +432,44 @@ namespace OnePoker.Network
                 }
                 onError?.Invoke(errorMessage);
             }
+        }
+
+        /// <summary>
+        /// スキル使用API
+        /// </summary>
+        public void UseSkill(string gameId, string playerId, string skillType, Action<UseSkillResponse> onSuccess, Action<string> onError)
+        {
+            string url = $"{ApiBaseUrl}/use-skill";
+            string jsonBody = JsonUtility.ToJson(new UseSkillRequest
+            {
+                gameId = gameId,
+                playerId = playerId,
+                skillType = skillType
+            });
+
+            Debug.Log($"HttpManager - Using skill: {skillType} for player {playerId} in game {gameId}");
+            Debug.Log($"HttpManager - Request URL: {url}");
+            Debug.Log($"HttpManager - Request Body: {jsonBody}");
+
+            Post<UseSkillResponse>(url, jsonBody, onSuccess, onError);
+        }
+
+        [System.Serializable]
+        public class UseSkillRequest
+        {
+            public string gameId;
+            public string playerId;
+            public string skillType; // "Scan", "Change", "Obstruct", "FakeOut", "Copy"
+        }
+
+        [System.Serializable]
+        public class UseSkillResponse
+        {
+            public bool success;
+            public string gameId;
+            public string playerId;
+            public string skillType;
+            public string[] usedSkills;
         }
     }
 } 
