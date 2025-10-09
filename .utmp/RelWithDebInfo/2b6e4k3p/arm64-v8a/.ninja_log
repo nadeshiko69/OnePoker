@@ -1,0 +1,12 @@
+# ninja log v5
+781	3889	7816808139551679	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	3bce1bcbdd75b003
+3899	5588	7816808156324041	D:/Git/OnePoker/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/2b6e4k3p/obj/arm64-v8a/libswappywrapper.so	6955a9a1036d9a30
+517	23282	7816808326068914	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	a8c44bf3f61b4430
+346	23366	7816808326508485	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	f3e5f8b041efcc20
+79	23578	7816808334682593	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	c1b31f5e0324b182
+423	23663	7816808336427445	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	df76c60c68a25a6a
+148	24363	7816808344282228	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	5c58c86977645d9b
+233	27249	7816808373965805	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	6cc3a5e9ce4a6afe
+635	27347	7816808374102891	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	60bdaeecf3f5d5a4
+8	28838	7816808389016090	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	891a1f2cb932e01f
+28843	29953	7816808400057546	D:/Git/OnePoker/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/2b6e4k3p/obj/arm64-v8a/libgame.so	de280559eaf3c499
