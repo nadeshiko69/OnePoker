@@ -93,6 +93,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2Set': game_state.get('player2Set', False),
             'awaitingPlayer': game_state.get('awaitingPlayer', 'P1'),
             'currentRequiredBet': convert_decimal(game_state.get('currentRequiredBet', 1)),
+            'player1UsedSkills': game_state.get('player1UsedSkills', []),
+            'player2UsedSkills': game_state.get('player2UsedSkills', []),
             'updatedAt': game_state['updatedAt']
         }
         
