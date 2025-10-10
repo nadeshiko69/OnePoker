@@ -193,35 +193,42 @@ public class OnlinePanelManager : MonoBehaviour
     public void ShowSkillUI()
     {
         Debug.Log("ShowSkillUI called");
+        
+        // スキルボタンを表示
+        if (ScanSkillButton != null) ScanSkillButton.gameObject.SetActive(true);
+        if (ChangeSkillButton != null) ChangeSkillButton.gameObject.SetActive(true);
+        if (ObstructSkillButton != null) ObstructSkillButton.gameObject.SetActive(true);
+        if (FakeOutSkillButton != null) FakeOutSkillButton.gameObject.SetActive(true);
+        if (CopySkillButton != null) CopySkillButton.gameObject.SetActive(true);
+        
+        // 新しいスキルマネージャー用のリスナーを設定
         if (ScanSkillButton != null) {
             ScanSkillButton.onClick.RemoveAllListeners();
-            ScanSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Scan, DescriptionScanSkill));
+            ScanSkillButton.onClick.AddListener(() => OnSkillButtonClicked("Scan"));
         }
         if (ChangeSkillButton != null) {
             ChangeSkillButton.onClick.RemoveAllListeners();
-            ChangeSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Change, DescriptionChangeSkill));
+            ChangeSkillButton.onClick.AddListener(() => OnSkillButtonClicked("Change"));
         }
         if (ObstructSkillButton != null) {
             ObstructSkillButton.onClick.RemoveAllListeners();
-            ObstructSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Obstruct, DescriptionObstructSkill));
+            ObstructSkillButton.onClick.AddListener(() => OnSkillButtonClicked("Obstruct"));
         }
         if (FakeOutSkillButton != null) {
             FakeOutSkillButton.onClick.RemoveAllListeners();
-            FakeOutSkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.FakeOut, DescriptionFakeOutSkill));
+            FakeOutSkillButton.onClick.AddListener(() => OnSkillButtonClicked("FakeOut"));
         }
         if (CopySkillButton != null) {
             CopySkillButton.onClick.RemoveAllListeners();
-            CopySkillButton.onClick.AddListener(() => ShowDescriptionSkillPanel(OnlineGameManager.SkillType.Copy, DescriptionCopySkill));
+            CopySkillButton.onClick.AddListener(() => OnSkillButtonClicked("Copy"));
         }
 
         // プレイヤーがObstructスキルの被害を受けている場合はPanelを表示する
         if (skillManager != null)
         {
             if (skillManager.IsPlayerObstructed && obstructPanel != null) obstructPanel.SetActive(true);
-            skillManager.SetPlayerObstructed(false);
         }
 
-        SetSkillButtonInteractable(true);
         VisibleSkillButtons(true);
         SetBettingButtonInteractable(true);
         VisibleBetButtons(false);
@@ -241,7 +248,6 @@ public class OnlinePanelManager : MonoBehaviour
         if (obstructPanel != null) obstructPanel.SetActive(false);
 
         // ベットフェーズでベットボタンを有効化
-        SetSkillButtonInteractable(true);
         VisibleSkillButtons(false);
         SetBettingButtonInteractable(true);
         VisibleBetButtons(true);
@@ -648,7 +654,6 @@ public class OnlinePanelManager : MonoBehaviour
         VisibleBetButtons(false);
         VisibleSkillButtons(true);
         VisibleChangeCardButtons(false);
-        SetSkillButtonInteractable(true);
         SetBettingButtonInteractable(true);
         obstructPanel.SetActive(false);
     }
@@ -692,29 +697,10 @@ public class OnlinePanelManager : MonoBehaviour
         UseSkillButton.onClick.RemoveAllListeners();
         CancelSkillButton.onClick.RemoveAllListeners();
 
-        UseSkillButton.onClick.AddListener(() => skillManager.UseSkill(skillType));
+        UseSkillButton.onClick.AddListener(() => skillManager.UseSkill(skillType.ToString()));
         CancelSkillButton.onClick.AddListener(() => descriptionSkillPanel.SetActive(false));
     }
 
-    public void SetSkillButtonInteractable(bool interactable)
-    {
-        if (!skillManager.IsPlayerObstructed)
-        {
-            if (gameManager.PlayerCanUseScanSkill) ScanSkillButton.interactable = interactable;
-            if (gameManager.PlayerCanUseChangeSkill) ChangeSkillButton.interactable = interactable;
-            if (gameManager.PlayerCanUseObstructSkill) ObstructSkillButton.interactable = interactable;
-            if (gameManager.PlayerCanUseFakeOutSkill) FakeOutSkillButton.interactable = interactable;
-            if (gameManager.PlayerCanUseCopySkill) CopySkillButton.interactable = interactable;
-        }
-        else
-        {
-            ScanSkillButton.interactable = false;
-            ChangeSkillButton.interactable = false; 
-            ObstructSkillButton.interactable = false;
-            FakeOutSkillButton.interactable = false;
-            CopySkillButton.interactable = false;
-        }
-    }
 
     public void SetBettingButtonInteractable(bool interactable)
     {
@@ -933,6 +919,108 @@ public class OnlinePanelManager : MonoBehaviour
         else
         {
             Debug.LogWarning("OnlinePanelManager - phaseText is null! Please assign it in the Inspector.");
+        }
+    }
+
+    // ========================================
+    // スキル関連の新メソッド
+    // ========================================
+
+    /// <summary>
+    /// スキルUIを非表示
+    /// </summary>
+    public void HideSkillUI()
+    {
+        Debug.Log("HideSkillUI called");
+        if (ScanSkillButton != null) ScanSkillButton.gameObject.SetActive(false);
+        if (ChangeSkillButton != null) ChangeSkillButton.gameObject.SetActive(false);
+        if (ObstructSkillButton != null) ObstructSkillButton.gameObject.SetActive(false);
+        if (FakeOutSkillButton != null) FakeOutSkillButton.gameObject.SetActive(false);
+        if (CopySkillButton != null) CopySkillButton.gameObject.SetActive(false);
+        if (descriptionSkillPanel != null) descriptionSkillPanel.SetActive(false);
+    }
+
+    /// <summary>
+    /// 特定のスキルボタンの有効/無効を設定
+    /// </summary>
+    public void SetSkillButtonInteractable(string skillType, bool interactable)
+    {
+        Debug.Log($"SetSkillButtonInteractable - {skillType}: {interactable}");
+        
+        switch (skillType)
+        {
+            case "Scan":
+                if (ScanSkillButton != null) ScanSkillButton.interactable = interactable;
+                break;
+            case "Change":
+                if (ChangeSkillButton != null) ChangeSkillButton.interactable = interactable;
+                break;
+            case "Obstruct":
+                if (ObstructSkillButton != null) ObstructSkillButton.interactable = interactable;
+                break;
+            case "FakeOut":
+                if (FakeOutSkillButton != null) FakeOutSkillButton.interactable = interactable;
+                break;
+            case "Copy":
+                if (CopySkillButton != null) CopySkillButton.interactable = interactable;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 全スキルボタンの有効/無効を設定
+    /// </summary>
+    public void SetAllSkillButtonsInteractable(bool interactable)
+    {
+        Debug.Log($"SetAllSkillButtonsInteractable: {interactable}");
+        
+        if (ScanSkillButton != null) ScanSkillButton.interactable = interactable;
+        if (ChangeSkillButton != null) ChangeSkillButton.interactable = interactable;
+        if (ObstructSkillButton != null) ObstructSkillButton.interactable = interactable;
+        if (FakeOutSkillButton != null) FakeOutSkillButton.interactable = interactable;
+        if (CopySkillButton != null) CopySkillButton.interactable = interactable;
+    }
+
+    /// <summary>
+    /// 相手がスキルを使用した通知を表示
+    /// </summary>
+    public void ShowOpponentUsedSkillNotification(string message)
+    {
+        Debug.Log($"ShowOpponentUsedSkillNotification: {message}");
+        
+        if (startPhasePanel != null && startPhaseDescription != null)
+        {
+            startPhasePanel.SetActive(true);
+            if (startPhaseTitle != null) startPhaseTitle.text = "スキル通知";
+            startPhaseDescription.text = message;
+            StartCoroutine(AutoHideNotificationAfterDelay(3f));
+        }
+    }
+
+    private IEnumerator AutoHideNotificationAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (startPhasePanel != null)
+        {
+            startPhasePanel.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// スキルボタンがクリックされた時の処理
+    /// </summary>
+    private void OnSkillButtonClicked(string skillType)
+    {
+        Debug.Log($"OnSkillButtonClicked: {skillType}");
+        
+        // スキルマネージャーに通知
+        if (skillManager != null)
+        {
+            skillManager.UseSkill(skillType);
+        }
+        else
+        {
+            Debug.LogError("OnlinePanelManager - skillManager is null!");
         }
     }
 }

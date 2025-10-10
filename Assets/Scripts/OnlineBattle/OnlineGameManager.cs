@@ -247,6 +247,12 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.Log("[OnlineGameManager] Set Phase started");
         cardPlacementManager.EnableCardPlacement();
+        
+        // スキルUIを表示
+        if (skillManager != null)
+        {
+            skillManager.OnSetPhaseStarted();
+        }
     }
     
     private void OnBettingPhaseStarted()
@@ -254,12 +260,25 @@ public class OnlineGameManager : MonoBehaviour
         Debug.Log("[OnlineGameManager] Betting Phase started");
         cardPlacementManager.DisableCardPlacement();
         cardDisplayManager.EnsureOpponentCardDisplayed();
+        
+        // スキルUIを非表示
+        if (skillManager != null)
+        {
+            skillManager.OnNonSetPhaseStarted();
+        }
+        
         bettingTurnManager.StartTurnMonitoring();
     }
     
     private void OnRevealPhaseStarted()
     {
         Debug.Log("[OnlineGameManager] Reveal Phase started");
+        
+        // スキルUIを非表示
+        if (skillManager != null)
+        {
+            skillManager.OnNonSetPhaseStarted();
+        }
         
         // AWSから最新のゲーム状態を取得してカード値を更新
         FetchLatestGameStateForReveal();

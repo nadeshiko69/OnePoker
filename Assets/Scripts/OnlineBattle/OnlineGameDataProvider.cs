@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 /// <summary>
 /// オンライン対戦のゲームデータを管理・提供するクラス
@@ -25,6 +26,48 @@ public class OnlineGameDataProvider : MonoBehaviour
     public int MySetCardValue => IsPlayer1 ? Player1CardValue : Player2CardValue;
     public int OpponentSetCardValue => IsPlayer1 ? Player2CardValue : Player1CardValue;
     
+    // ゲームデータとプレイヤーIDのプロパティ
+    public OnlineGameDataWithCards GameData => gameData;
+    public string MyPlayerId => gameData?.playerId ?? "";
+    
+    void Start()
+    {
+        Debug.Log("[GameDataProvider] Start called");
+        
+        // テスト用: PlayerPrefsにデータがない場合のダミーデータ
+        if (!LoadGameData())
+        {
+            Debug.LogWarning("[GameDataProvider] Failed to load game data, creating test data");
+            CreateTestGameData();
+        }
+    }
+    
+    /// <summary>
+    /// テスト用のゲームデータを作成
+    /// </summary>
+    private void CreateTestGameData()
+    {
+        gameData = new OnlineGameDataWithCards
+        {
+            gameId = "test_game_123",
+            playerId = "test_player_456",
+            opponentId = "test_opponent_789",
+            isPlayer1 = true,
+            roomCode = "TEST001",
+            player1Cards = new int[] { 1, 2 },
+            player2Cards = new int[] { 3, 4 },
+            player1CardValue = -1,
+            player2CardValue = -1,
+            player1UsedSkills = new List<string>(),
+            player2UsedSkills = new List<string>()
+        };
+        
+        Debug.Log("[GameDataProvider] Test game data created:");
+        Debug.Log($"[GameDataProvider] - GameId: '{gameData.gameId}'");
+        Debug.Log($"[GameDataProvider] - PlayerId: '{gameData.playerId}'");
+        Debug.Log($"[GameDataProvider] - OpponentId: '{gameData.opponentId}'");
+    }
+    
     /// <summary>
     /// PlayerPrefsからゲームデータを読み込み
     /// </summary>
@@ -33,6 +76,8 @@ public class OnlineGameDataProvider : MonoBehaviour
         Debug.Log("[GameDataProvider] Loading game data from PlayerPrefs");
         
         string gameDataJson = PlayerPrefs.GetString("OnlineGameData", "");
+        Debug.Log($"[GameDataProvider] Raw JSON from PlayerPrefs: '{gameDataJson}'");
+        Debug.Log($"[GameDataProvider] JSON length: {gameDataJson.Length}");
         
         if (string.IsNullOrEmpty(gameDataJson))
         {
@@ -46,6 +91,11 @@ public class OnlineGameDataProvider : MonoBehaviour
             
             if (gameData != null)
             {
+                Debug.Log($"[GameDataProvider] GameData parsed successfully:");
+                Debug.Log($"[GameDataProvider] - GameId: '{gameData.gameId}'");
+                Debug.Log($"[GameDataProvider] - PlayerId: '{gameData.playerId}'");
+                Debug.Log($"[GameDataProvider] - OpponentId: '{gameData.opponentId}'");
+                Debug.Log($"[GameDataProvider] - IsPlayer1: {gameData.isPlayer1}");
                 LogGameDataDetails();
                 return true;
             }
@@ -86,6 +136,23 @@ public class OnlineGameDataProvider : MonoBehaviour
         gameData.player2CardValue = player2CardValue;
         
         Debug.Log($"[GameDataProvider] Set card values updated - Player1: {player1CardValue}, Player2: {player2CardValue}");
+    }
+    
+    /// <summary>
+    /// 使用済スキルを更新
+    /// </summary>
+    public void UpdateUsedSkills(List<string> player1UsedSkills, List<string> player2UsedSkills)
+    {
+        if (gameData == null)
+        {
+            Debug.LogError("[GameDataProvider] Game data is null, cannot update used skills");
+            return;
+        }
+        
+        gameData.player1UsedSkills = player1UsedSkills ?? new List<string>();
+        gameData.player2UsedSkills = player2UsedSkills ?? new List<string>();
+        
+        Debug.Log($"[GameDataProvider] Used skills updated - Player1: {string.Join(", ", gameData.player1UsedSkills)}, Player2: {string.Join(", ", gameData.player2UsedSkills)}");
     }
     
     /// <summary>
@@ -196,6 +263,8 @@ public class OnlineGameDataProvider : MonoBehaviour
         public int[] player2Cards;
         public int player1CardValue;  // セットしたカード値
         public int player2CardValue;  // セットしたカード値
+        public List<string> player1UsedSkills;  // プレイヤー1の使用済スキル
+        public List<string> player2UsedSkills;  // プレイヤー2の使用済スキル
     }
 }
 
