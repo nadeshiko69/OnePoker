@@ -14,6 +14,7 @@ public class OnlineGameDataProvider : MonoBehaviour
     public string GameId => gameData?.gameId ?? "";
     public string PlayerId => gameData?.playerId ?? "";
     public string OpponentId => gameData?.opponentId ?? "";
+    public string RoomCode => gameData?.roomCode ?? "";
     public bool IsPlayer1 => gameData?.isPlayer1 ?? false;
     public int[] Player1Cards => gameData?.player1Cards;
     public int[] Player2Cards => gameData?.player2Cards;

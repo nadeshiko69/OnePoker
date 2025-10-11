@@ -282,6 +282,127 @@ public class OnlineGameManager : MonoBehaviour
         
         // AWSから最新のゲーム状態を取得してカード値を更新
         FetchLatestGameStateForReveal();
+        
+        // 3秒後に次のラウンドに進む
+        StartCoroutine(WaitAndProceedToNextRound());
+    }
+    
+    /// <summary>
+    /// Reveal後、3秒待ってから次のラウンドに進む
+    /// </summary>
+    private IEnumerator WaitAndProceedToNextRound()
+    {
+        Debug.Log("[OnlineGameManager] Waiting 3 seconds before next round...");
+        yield return new WaitForSeconds(3f);
+        
+        Debug.Log("[OnlineGameManager] Proceeding to next round");
+        StartNextRound();
+    }
+    
+    /// <summary>
+    /// 次のラウンドを開始
+    /// </summary>
+    private void StartNextRound()
+    {
+        Debug.Log("[OnlineGameManager] StartNextRound called");
+        
+        string gameId = gameDataProvider.GameId;
+        
+        if (string.IsNullOrEmpty(gameId))
+        {
+            Debug.LogError("[OnlineGameManager] GameId is empty, cannot start next round");
+            return;
+        }
+        
+        HttpManager.Instance.NextRound(
+            gameId,
+            OnNextRoundSuccess,
+            OnNextRoundError
+        );
+    }
+    
+    /// <summary>
+    /// 次のラウンド成功時のコールバック
+    /// </summary>
+    private void OnNextRoundSuccess(HttpManager.NextRoundResponse response)
+    {
+        Debug.Log($"[OnlineGameManager] Next round success: Round {response.currentRound}, Dealer: {response.currentDealer}");
+        
+        // カード情報を更新
+        gameDataProvider.UpdateGameData(new OnlineGameDataProvider.OnlineGameDataWithCards
+        {
+            gameId = response.gameId,
+            playerId = gameDataProvider.MyPlayerId,
+            opponentId = gameDataProvider.OpponentId,
+            isPlayer1 = gameDataProvider.IsPlayer1,
+            roomCode = gameDataProvider.RoomCode,
+            player1Cards = response.player1Cards,
+            player2Cards = response.player2Cards,
+            player1CardValue = -1,
+            player2CardValue = -1,
+            player1UsedSkills = new System.Collections.Generic.List<string>(),
+            player2UsedSkills = new System.Collections.Generic.List<string>()
+        });
+        
+        // 手札を再設定
+        SetupHands();
+        
+        // SetZone（DropZone）のカードを削除
+        ClearSetZone();
+        
+        // スキルマネージャーをリセット
+        if (skillManager != null)
+        {
+            skillManager.ResetUsedSkills();
+        }
+        
+        // フェーズマネージャーを再起動
+        phaseManager.StartPhaseMonitoring();
+        
+        Debug.Log($"[OnlineGameManager] Next round setup complete - Round {response.currentRound}");
+    }
+    
+    /// <summary>
+    /// 次のラウンド失敗時のコールバック
+    /// </summary>
+    private void OnNextRoundError(string error)
+    {
+        Debug.LogError($"[OnlineGameManager] Failed to start next round: {error}");
+        // エラー通知をUIに表示
+        if (panelManager != null)
+        {
+            panelManager.ShowOpponentUsedSkillNotification($"次のラウンド開始エラー: {error}");
+        }
+    }
+    
+    /// <summary>
+    /// SetZone（DropZone）のカードを削除
+    /// </summary>
+    private void ClearSetZone()
+    {
+        Debug.Log("[OnlineGameManager] Clearing SetZone cards");
+        
+        // 自分のSetZoneのカードを削除
+        var mySetZone = GameObject.Find("MySetZone");
+        if (mySetZone != null)
+        {
+            foreach (Transform child in mySetZone.transform)
+            {
+                Destroy(child.gameObject);
+            }
+            Debug.Log("[OnlineGameManager] My SetZone cleared");
+        }
+        
+        // 相手のSetZoneのカードを削除
+        var opponentSetZone = GameObject.Find("OpponentSetZone");
+        if (opponentSetZone != null)
+        {
+            foreach (Transform child in opponentSetZone.transform)
+            {
+                Destroy(child.gameObject);
+            }
+            Debug.Log("[OnlineGameManager] Opponent SetZone cleared");
+        }
     }
     
     private void OnBothPlayersPlaced(int player1CardValue, int player2CardValue)

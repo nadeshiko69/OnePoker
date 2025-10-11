@@ -163,6 +163,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'currentRequiredBet': 1,  # 初期ベット額
             'player1UsedSkills': [],  # プレイヤー1の使用済スキル
             'player2UsedSkills': [],  # プレイヤー2の使用済スキル
+            'currentRound': 1,  # 現在のラウンド番号
+            'currentDealer': 'P1',  # 現在の親（Player1から開始）
             'createdAt': current_time,
             'updatedAt': current_time
         }

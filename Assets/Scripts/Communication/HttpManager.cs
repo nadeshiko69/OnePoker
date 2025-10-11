@@ -471,5 +471,40 @@ namespace OnePoker.Network
             public string skillType;
             public string[] usedSkills;
         }
+
+        /// <summary>
+        /// 次のラウンドに進むAPI
+        /// </summary>
+        public void NextRound(string gameId, Action<NextRoundResponse> onSuccess, Action<string> onError)
+        {
+            string url = $"{ApiBaseUrl}/next-round";
+            string jsonBody = JsonUtility.ToJson(new NextRoundRequest
+            {
+                gameId = gameId
+            });
+
+            Debug.Log($"HttpManager - Next round request for game {gameId}");
+            Debug.Log($"HttpManager - Request URL: {url}");
+
+            Post<NextRoundResponse>(url, jsonBody, onSuccess, onError);
+        }
+
+        [System.Serializable]
+        public class NextRoundRequest
+        {
+            public string gameId;
+        }
+
+        [System.Serializable]
+        public class NextRoundResponse
+        {
+            public bool success;
+            public string gameId;
+            public int currentRound;
+            public string currentDealer;
+            public string gamePhase;
+            public int[] player1Cards;
+            public int[] player2Cards;
+        }
     }
 } 
