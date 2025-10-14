@@ -328,6 +328,23 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.Log($"[OnlineGameManager] Next round success: Round {response.currentRound}, Dealer: {response.currentDealer}");
         
+        // ========== UIリセット処理 ==========
+        
+        // 1. 勝敗パネルを非表示にする
+        if (panelManager != null)
+        {
+            if (panelManager.gameResultPanel != null)
+            {
+                panelManager.gameResultPanel.SetActive(false);
+                Debug.Log("[OnlineGameManager] Game result panel hidden");
+            }
+        }
+        
+        // 2. ResultViewはリセットしない（結果を蓄積するため）
+        Debug.Log("[OnlineGameManager] Result view preserved for multi-round display");
+        
+        // ========== ゲームデータ更新 ==========
+        
         // カード情報を更新
         gameDataProvider.UpdateGameData(new OnlineGameDataProvider.OnlineGameDataWithCards
         {
@@ -344,22 +361,27 @@ public class OnlineGameManager : MonoBehaviour
             player2UsedSkills = new System.Collections.Generic.List<string>()
         });
         
-        // 手札を再設定
-        SetupHands();
+        // ========== 盤面リセット処理 ==========
         
-        // SetZone（DropZone）のカードを削除
+        // 3. SetZone（DropZone）のカードを削除
         ClearSetZone();
         
-        // スキルマネージャーをリセット
+        // 4. 手札を再設定（1枚補充）
+        SetupHands();
+        
+        // 5. スキルマネージャーをリセット
         if (skillManager != null)
         {
             skillManager.ResetUsedSkills();
         }
         
-        // フェーズマネージャーを再起動
+        // ========== フェーズ管理 ==========
+        
+        // 6. フェーズマネージャーを再起動
         phaseManager.StartPhaseMonitoring();
         
         Debug.Log($"[OnlineGameManager] Next round setup complete - Round {response.currentRound}");
+        Debug.Log($"[OnlineGameManager] UI reset: Game result panel hidden, Result view reset, SetZone cleared, Hands refreshed");
     }
     
     /// <summary>
@@ -382,26 +404,70 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.Log("[OnlineGameManager] Clearing SetZone cards");
         
-        // 自分のSetZoneのカードを削除
-        var mySetZone = GameObject.Find("MySetZone");
-        if (mySetZone != null)
+        // デバッグ: OnlineMatchManagerのDropZone参照を確認
+        if (matchManager != null)
         {
-            foreach (Transform child in mySetZone.transform)
+            Debug.Log($"[OnlineGameManager] matchManager found - playerDropZone: {matchManager.playerDropZone?.name}, opponentDropZone: {matchManager.opponentDropZone?.name}");
+            
+            // OnlineMatchManagerの参照を使用してカードを削除
+            if (matchManager.playerDropZone != null)
             {
-                Destroy(child.gameObject);
+                int childCount = matchManager.playerDropZone.transform.childCount;
+                Debug.Log($"[OnlineGameManager] Player DropZone has {childCount} children");
+                foreach (Transform child in matchManager.playerDropZone.transform)
+                {
+                    Debug.Log($"[OnlineGameManager] Destroying player card: {child.name}");
+                    Destroy(child.gameObject);
+                }
+                Debug.Log("[OnlineGameManager] Player DropZone cleared via matchManager");
             }
-            Debug.Log("[OnlineGameManager] My SetZone cleared");
+            
+            if (matchManager.opponentDropZone != null)
+            {
+                int childCount = matchManager.opponentDropZone.transform.childCount;
+                Debug.Log($"[OnlineGameManager] Opponent DropZone has {childCount} children");
+                foreach (Transform child in matchManager.opponentDropZone.transform)
+                {
+                    Debug.Log($"[OnlineGameManager] Destroying opponent card: {child.name}");
+                    Destroy(child.gameObject);
+                }
+                Debug.Log("[OnlineGameManager] Opponent DropZone cleared via matchManager");
+            }
         }
-        
-        // 相手のSetZoneのカードを削除
-        var opponentSetZone = GameObject.Find("OpponentSetZone");
-        if (opponentSetZone != null)
+        else
         {
-            foreach (Transform child in opponentSetZone.transform)
+            Debug.LogWarning("[OnlineGameManager] matchManager is null, trying GameObject.Find method");
+            
+            // フォールバック: GameObject.Findを使用
+            var mySetZone = GameObject.Find("MySetZone");
+            if (mySetZone != null)
             {
-                Destroy(child.gameObject);
+                Debug.Log($"[OnlineGameManager] Found MySetZone: {mySetZone.name}");
+                foreach (Transform child in mySetZone.transform)
+                {
+                    Destroy(child.gameObject);
+                }
+                Debug.Log("[OnlineGameManager] My SetZone cleared via GameObject.Find");
             }
-            Debug.Log("[OnlineGameManager] Opponent SetZone cleared");
+            else
+            {
+                Debug.LogWarning("[OnlineGameManager] MySetZone not found via GameObject.Find");
+            }
+            
+            var opponentSetZone = GameObject.Find("OpponentSetZone");
+            if (opponentSetZone != null)
+            {
+                Debug.Log($"[OnlineGameManager] Found OpponentSetZone: {opponentSetZone.name}");
+                foreach (Transform child in opponentSetZone.transform)
+                {
+                    Destroy(child.gameObject);
+                }
+                Debug.Log("[OnlineGameManager] Opponent SetZone cleared via GameObject.Find");
+            }
+            else
+            {
+                Debug.LogWarning("[OnlineGameManager] OpponentSetZone not found via GameObject.Find");
+            }
         }
     }
     
