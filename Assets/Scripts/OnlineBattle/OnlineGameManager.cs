@@ -367,7 +367,9 @@ public class OnlineGameManager : MonoBehaviour
         ClearSetZone();
         
         // 4. 手札を再設定（1枚補充）
+        Debug.Log("[OnlineGameManager] About to call SetupHands");
         SetupHands();
+        Debug.Log("[OnlineGameManager] SetupHands completed");
         
         // 5. スキルマネージャーをリセット
         if (skillManager != null)
