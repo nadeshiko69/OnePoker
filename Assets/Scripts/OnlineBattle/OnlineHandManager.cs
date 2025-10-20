@@ -7,9 +7,70 @@ public class OnlineHandManager : MonoBehaviour
     public CardDisplay opponentCard1;
     public CardDisplay opponentCard2;
 
+    // 参照がMissingの場合に自動で再取得する
+    private void EnsureBindings()
+    {
+        if (playerCard1 == null) playerCard1 = FindOrCreateCard("Player_Card1", "Player_CardAnchor1");
+        if (playerCard2 == null) playerCard2 = FindOrCreateCard("Player_Card2", "Player_CardAnchor2");
+        if (opponentCard1 == null) opponentCard1 = FindOrCreateCard("Opponent_Card1", "Opponent_CardAnchor1");
+        if (opponentCard2 == null) opponentCard2 = FindOrCreateCard("Opponent_Card2", "Opponent_CardAnchor2");
+    }
+
+    // 指定アンカー配下にカードPrefabを再生成して返す（まず既存を探索）
+    private CardDisplay FindOrCreateCard(string cardName, string anchorName)
+    {
+        var existing = GameObject.Find(cardName);
+        if (existing != null)
+        {
+            var cd = existing.GetComponent<CardDisplay>();
+            if (cd != null) return cd;
+        }
+
+        var anchor = GameObject.Find(anchorName);
+        if (anchor == null)
+        {
+            Debug.LogWarning($"[HAND_DEBUG] Anchor not found: {anchorName}");
+            return null;
+        }
+
+        // PrefabをResourcesからロードして生成（Assets/Resources/Prefabs/Card.prefabを想定）
+        var prefab = Resources.Load<GameObject>("Prefabs/Card");
+        if (prefab == null)
+        {
+            Debug.LogError("[HAND_DEBUG] Card prefab not found at Resources/Prefabs/Card");
+            return null;
+        }
+
+        var go = Instantiate(prefab, anchor.transform);
+        go.name = cardName;
+        // アンカー中央に整列
+        var rt = go.transform as RectTransform;
+        if (rt != null)
+        {
+            rt.anchoredPosition = Vector2.zero;
+            rt.localScale = Vector3.one;
+            rt.localRotation = Quaternion.identity;
+        }
+
+        var display = go.GetComponent<CardDisplay>();
+        if (display == null)
+        {
+            display = go.AddComponent<CardDisplay>();
+        }
+        // ドラッグ可能にしたい場合はCardDraggableが付いている前提（無ければ付与可能）
+        if (go.GetComponent<CardDraggable>() == null)
+        {
+            go.AddComponent<CardDraggable>();
+        }
+
+        Debug.Log($"[HAND_DEBUG] Recreated missing card under {anchorName}: {cardName}");
+        return display;
+    }
+
     // プレイヤーの手札をUIに反映
     public void SetPlayerHand(int[] cardIds)
     {
+        EnsureBindings();
         Debug.Log($"[HAND_DEBUG] SetPlayerHand called with cardIds: {(cardIds != null ? string.Join(",", cardIds) : "null")}");
         Debug.Log($"[HAND_DEBUG] playerCard1: {playerCard1 != null}, playerCard2: {playerCard2 != null}");
         
@@ -86,6 +147,7 @@ public class OnlineHandManager : MonoBehaviour
     // 相手の手札をUIに反映（初期は裏向き）
     public void SetOpponentHand(int[] cardIds)
     {
+        EnsureBindings();
         Debug.Log($"[HAND_DEBUG] SetOpponentHand called with cardIds: {(cardIds != null ? string.Join(",", cardIds) : "null")}");
         Debug.Log($"[HAND_DEBUG] opponentCard1: {opponentCard1 != null}, opponentCard2: {opponentCard2 != null}");
         

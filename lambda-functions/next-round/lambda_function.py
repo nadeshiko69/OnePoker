@@ -64,7 +64,32 @@ def lambda_handler(event, context):
         if game_state.get('gamePhase') == 'set_phase' and game_state.get('currentRound', 1) >= next_round:
             return create_response(400, {'error': 'Next round already started'})
         
+        # プレイヤー別の重複実行チェック
+        if is_player1:
+            player_cards_key = 'player1Cards'
+            player_set_key = 'player1CardValue'
+        else:
+            player_cards_key = 'player2Cards'
+            player_set_key = 'player2CardValue'
+        
+        # 既に手札が2枚で、セットしたカードがnullの場合は既に処理済み
+        current_player_cards = game_state.get(player_cards_key, [])
+        current_player_set = game_state.get(player_set_key)
+        
+        if len(current_player_cards) == 2 and current_player_set is None:
+            print(f"{player_name} already processed for next round")
+            return create_response(200, {
+                'success': True,
+                'gameId': game_id,
+                'playerId': player_id,
+                'processedPlayer': player_name,
+                'message': 'Already processed'
+            })
+        
         print(f"Game {game_id}: Advancing from round {current_round} to {next_round}")
+        
+        # 現在の親を取得
+        current_dealer = game_state.get('currentDealer', 'P1')
         
         # 親を決定（3ラウンドごとに交代）
         # 1-3: P1, 4-6: P2, 7-9: P1, 10-12: P2, ...
@@ -73,7 +98,7 @@ def lambda_handler(event, context):
         else:
             new_dealer = 'P2'
         
-        print(f"Round {next_round}: Dealer is {new_dealer}")
+        print(f"Round {next_round}: Current dealer is {current_dealer}, New dealer is {new_dealer}")
         
         # デッキを取得
         deck = game_state.get('deck', [])
@@ -148,55 +173,117 @@ def lambda_handler(event, context):
         # ゲーム状態を更新
         current_time = int(time.time())
         
+        # 親のプレイヤーかどうかを判定
+        is_dealer = (player_id == current_dealer)
+        print(f"Player {player_id} is {'dealer' if is_dealer else 'non-dealer'}")
+        
         # プレイヤー別の更新式を構築
         if is_player1:
-            update_expression = f"""
-                SET currentRound = :round,
-                    currentDealer = :dealer,
-                    awaitingPlayer = :dealer,
-                    deck = :deck,
-                    player1Cards = :p1cards,
-                    player1CardValue = :null_val,
-                    player1CardPlaced = :false_val,
-                    player1Set = :false_val,
-                    player1BetAmount = :zero,
-                    player1UsedSkills = :empty_list,
-                    gamePhase = :phase,
-                    phaseTransitionTime = :null_val,
-                    currentRequiredBet = :one,
-                    updatedAt = :time
-            """
+            if is_dealer:
+                # 親（Player1）: 共通フィールド + Player1の手札を更新
+                update_expression = f"""
+                    SET currentRound = :round,
+                        currentDealer = :dealer,
+                        awaitingPlayer = :dealer,
+                        deck = :deck,
+                        player1Cards = :p1cards,
+                        player1CardValue = :null_val,
+                        player1CardPlaced = :false_val,
+                        player1Set = :false_val,
+                        player1BetAmount = :zero,
+                        player1UsedSkills = :empty_list,
+                        gamePhase = :phase,
+                        phaseTransitionTime = :null_val,
+                        currentRequiredBet = :one,
+                        updatedAt = :time
+                """
+            else:
+                # 子（Player1）: Player1の手札のみを更新＋盤面をSetPhaseへ
+                update_expression = f"""
+                    SET player1Cards = :p1cards,
+                        player1CardValue = :null_val,
+                        player1CardPlaced = :false_val,
+                        player1Set = :false_val,
+                        player1BetAmount = :zero,
+                        player1UsedSkills = :empty_list,
+                        gamePhase = :phase,
+                        awaitingPlayer = :dealer,
+                        phaseTransitionTime = :null_val,
+                        currentRequiredBet = :one,
+                        updatedAt = :time
+                """
         else:
-            update_expression = f"""
-                SET currentRound = :round,
-                    currentDealer = :dealer,
-                    awaitingPlayer = :dealer,
-                    deck = :deck,
-                    player2Cards = :p2cards,
-                    player2CardValue = :null_val,
-                    player2CardPlaced = :false_val,
-                    player2Set = :false_val,
-                    player2BetAmount = :zero,
-                    player2UsedSkills = :empty_list,
-                    gamePhase = :phase,
-                    phaseTransitionTime = :null_val,
-                    currentRequiredBet = :one,
-                    updatedAt = :time
-            """
+            if is_dealer:
+                # 親（Player2）: 共通フィールド + Player2の手札を更新
+                update_expression = f"""
+                    SET currentRound = :round,
+                        currentDealer = :dealer,
+                        awaitingPlayer = :dealer,
+                        deck = :deck,
+                        player2Cards = :p2cards,
+                        player2CardValue = :null_val,
+                        player2CardPlaced = :false_val,
+                        player2Set = :false_val,
+                        player2BetAmount = :zero,
+                        player2UsedSkills = :empty_list,
+                        gamePhase = :phase,
+                        phaseTransitionTime = :null_val,
+                        currentRequiredBet = :one,
+                        updatedAt = :time
+                """
+            else:
+                # 子（Player2）: Player2の手札のみを更新＋盤面をSetPhaseへ
+                update_expression = f"""
+                    SET player2Cards = :p2cards,
+                        player2CardValue = :null_val,
+                        player2CardPlaced = :false_val,
+                        player2Set = :false_val,
+                        player2BetAmount = :zero,
+                        player2UsedSkills = :empty_list,
+                        gamePhase = :phase,
+                        awaitingPlayer = :dealer,
+                        phaseTransitionTime = :null_val,
+                        currentRequiredBet = :one,
+                        updatedAt = :time
+                """
         
-        # 条件: 現在のラウンドが期待値と一致する場合のみ更新
-        condition_expression = "currentRound = :current_round"
-        
-        try:
-            game_table.update_item(
-                Key={'gameId': game_id},
-                UpdateExpression=update_expression,
-                ConditionExpression=condition_expression,
-                ExpressionAttributeValues={
+        # プレイヤー別のExpressionAttributeValuesを構築
+        if is_player1:
+            if is_dealer:
+                # 親（Player1）: 共通フィールド + Player1の手札
+                expression_values = {
                     ':round': next_round,
                     ':dealer': new_dealer,
                     ':deck': deck,
                     ':p1cards': player1_cards,
+                    ':phase': 'set_phase',
+                    ':null_val': None,
+                    ':false_val': False,
+                    ':zero': 0,
+                    ':one': 1,
+                    ':empty_list': [],
+                    ':time': current_time
+                }
+            else:
+                # 子（Player1）: Player1の手札のみ＋盤面遷移用の値
+                expression_values = {
+                    ':p1cards': player1_cards,
+                    ':null_val': None,
+                    ':false_val': False,
+                    ':zero': 0,
+                    ':one': 1,
+                    ':phase': 'set_phase',
+                    ':dealer': new_dealer,
+                    ':empty_list': [],
+                    ':time': current_time
+                }
+        else:
+            if is_dealer:
+                # 親（Player2）: 共通フィールド + Player2の手札
+                expression_values = {
+                    ':round': next_round,
+                    ':dealer': new_dealer,
+                    ':deck': deck,
                     ':p2cards': player2_cards,
                     ':phase': 'set_phase',
                     ':null_val': None,
@@ -204,14 +291,33 @@ def lambda_handler(event, context):
                     ':zero': 0,
                     ':one': 1,
                     ':empty_list': [],
-                    ':time': current_time,
-                    ':current_round': current_round
+                    ':time': current_time
                 }
+            else:
+                # 子（Player2）: Player2の手札のみ＋盤面遷移用の値
+                expression_values = {
+                    ':p2cards': player2_cards,
+                    ':null_val': None,
+                    ':false_val': False,
+                    ':zero': 0,
+                    ':one': 1,
+                    ':phase': 'set_phase',
+                    ':dealer': new_dealer,
+                    ':empty_list': [],
+                    ':time': current_time
+                }
+        
+        try:
+            game_table.update_item(
+                Key={'gameId': game_id},
+                UpdateExpression=update_expression,
+                ExpressionAttributeValues=expression_values
             )
-            print(f"Game state updated successfully for round {next_round}")
-        except game_table.meta.client.exceptions.ConditionalCheckFailedException:
-            print(f"Conditional check failed - round may have already been advanced")
-            return create_response(400, {'error': 'Round already advanced by another request'})
+            role = "dealer" if is_dealer else "non-dealer"
+            print(f"Game state updated successfully for {player_name} ({role}) in round {next_round}")
+        except Exception as e:
+            print(f"Error updating game state: {str(e)}")
+            return create_response(500, {'error': f'Failed to update game state: {str(e)}'})
         
         # レスポンスを作成
         response_data = {

@@ -475,15 +475,16 @@ namespace OnePoker.Network
         /// <summary>
         /// 次のラウンドに進むAPI
         /// </summary>
-        public void NextRound(string gameId, Action<NextRoundResponse> onSuccess, Action<string> onError)
+        public void NextRound(string gameId, string playerId, Action<NextRoundResponse> onSuccess, Action<string> onError)
         {
             string url = $"{ApiBaseUrl}/next-round";
             string jsonBody = JsonUtility.ToJson(new NextRoundRequest
             {
-                gameId = gameId
+                gameId = gameId,
+                playerId = playerId
             });
 
-            Debug.Log($"HttpManager - Next round request for game {gameId}");
+            Debug.Log($"HttpManager - Next round request for game {gameId}, player {playerId}");
             Debug.Log($"HttpManager - Request URL: {url}");
 
             Post<NextRoundResponse>(url, jsonBody, onSuccess, onError);
@@ -493,6 +494,7 @@ namespace OnePoker.Network
         public class NextRoundRequest
         {
             public string gameId;
+            public string playerId;
         }
 
         [System.Serializable]

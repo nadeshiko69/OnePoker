@@ -141,8 +141,18 @@ public class OnlineGameManager : MonoBehaviour
         
         if (handManager != null)
         {
-            handManager.SetPlayerHand(gameDataProvider.MyCards);
-            handManager.SetOpponentHand(gameDataProvider.OpponentCards);
+            var myCards = gameDataProvider.MyCards;
+            var opponentCards = gameDataProvider.OpponentCards;
+            
+            Debug.Log($"[OnlineGameManager] MyCards: {(myCards != null ? string.Join(",", myCards) : "null")}");
+            Debug.Log($"[OnlineGameManager] OpponentCards: {(opponentCards != null ? string.Join(",", opponentCards) : "null")}");
+            
+            handManager.SetPlayerHand(myCards);
+            handManager.SetOpponentHand(opponentCards);
+        }
+        else
+        {
+            Debug.LogError("[OnlineGameManager] handManager is null!");
         }
     }
     
@@ -307,6 +317,7 @@ public class OnlineGameManager : MonoBehaviour
         Debug.Log("[OnlineGameManager] StartNextRound called");
         
         string gameId = gameDataProvider.GameId;
+        string playerId = gameDataProvider.MyPlayerId;
         
         if (string.IsNullOrEmpty(gameId))
         {
@@ -314,8 +325,17 @@ public class OnlineGameManager : MonoBehaviour
             return;
         }
         
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("[OnlineGameManager] PlayerId is empty, cannot start next round");
+            return;
+        }
+        
+        Debug.Log($"[OnlineGameManager] Starting next round - GameId: {gameId}, PlayerId: {playerId}");
+        
         HttpManager.Instance.NextRound(
             gameId,
+            playerId,
             OnNextRoundSuccess,
             OnNextRoundError
         );
@@ -346,6 +366,8 @@ public class OnlineGameManager : MonoBehaviour
         // ========== ゲームデータ更新 ==========
         
         // カード情報を更新
+        Debug.Log($"[OnlineGameManager] Updating game data with new cards - Player1: {string.Join(",", response.player1Cards)}, Player2: {string.Join(",", response.player2Cards)}");
+        
         gameDataProvider.UpdateGameData(new OnlineGameDataProvider.OnlineGameDataWithCards
         {
             gameId = response.gameId,
@@ -355,8 +377,8 @@ public class OnlineGameManager : MonoBehaviour
             roomCode = gameDataProvider.RoomCode,
             player1Cards = response.player1Cards,
             player2Cards = response.player2Cards,
-            player1CardValue = -1,
-            player2CardValue = -1,
+            player1CardValue = null,
+            player2CardValue = null,
             player1UsedSkills = new System.Collections.Generic.List<string>(),
             player2UsedSkills = new System.Collections.Generic.List<string>()
         });
@@ -419,6 +441,8 @@ public class OnlineGameManager : MonoBehaviour
                 foreach (Transform child in matchManager.playerDropZone.transform)
                 {
                     Debug.Log($"[OnlineGameManager] Destroying player card: {child.name}");
+                    // まず即座に非表示にする（描画の被りを回避）
+                    child.gameObject.SetActive(false);
                     Destroy(child.gameObject);
                 }
                 Debug.Log("[OnlineGameManager] Player DropZone cleared via matchManager");
@@ -431,6 +455,7 @@ public class OnlineGameManager : MonoBehaviour
                 foreach (Transform child in matchManager.opponentDropZone.transform)
                 {
                     Debug.Log($"[OnlineGameManager] Destroying opponent card: {child.name}");
+                    child.gameObject.SetActive(false);
                     Destroy(child.gameObject);
                 }
                 Debug.Log("[OnlineGameManager] Opponent DropZone cleared via matchManager");

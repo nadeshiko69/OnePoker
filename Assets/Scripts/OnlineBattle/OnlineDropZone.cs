@@ -40,24 +40,40 @@ public class OnlineDropZone : MonoBehaviour, IDropHandler
                 {
                     Debug.Log($"OnlineDropZone - Player card dropped: {playerCard.CardValue}");
                     
+                    // 手札オブジェクトは動かさず、見た目用のクローンをSetZoneへ配置する
                     CardDraggable draggable = playerCard.GetComponent<CardDraggable>();
                     if (draggable != null)
                     {
-                        // ドラッグ対象のカードをこのDropZoneの子にする
-                        draggable.transform.SetParent(transform);
+                        // 元の位置・親に即時戻す（手札参照がMissingにならないようにする）
+                        draggable.transform.SetParent(draggable.OriginalParent);
+                        draggable.transform.position = draggable.OriginalPosition;
+                    }
 
-                        // カードの位置を整える（中央揃え）
-                        draggable.transform.localPosition = Vector3.zero;
+                    // クローンを生成してSetZone配下に配置
+                    var clone = Instantiate(playerCard.gameObject, transform);
+                    clone.name = "Card";
+                    clone.transform.localPosition = Vector3.zero;
+                    
+                    // クローンはドラッグ不可にする
+                    var cloneDraggable = clone.GetComponent<CardDraggable>();
+                    if (cloneDraggable != null) Destroy(cloneDraggable);
 
-                        // ドロップ確認パネルを表示
-                        if (gameManager != null)
-                        {
-                            gameManager.ShowConfirmation(playerCard, this);
-                        }
-                        else
-                        {
-                            Debug.LogError("OnlineDropZone - gameManager is null!");
-                        }
+                    // 値と表示を反映（表向き）
+                    var cloneDisplay = clone.GetComponent<CardDisplay>();
+                    if (cloneDisplay != null)
+                    {
+                        cloneDisplay.SetCardValue(playerCard.CardValue);
+                        cloneDisplay.SetCard(true);
+                    }
+
+                    // ドロップ確認パネルを表示（ゲーム処理用にオリジナルの参照を渡す）
+                    if (gameManager != null)
+                    {
+                        gameManager.ShowConfirmation(playerCard, this);
+                    }
+                    else
+                    {
+                        Debug.LogError("OnlineDropZone - gameManager is null!");
                     }
                 }
                 else

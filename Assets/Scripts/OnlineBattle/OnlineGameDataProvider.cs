@@ -262,8 +262,8 @@ public class OnlineGameDataProvider : MonoBehaviour
         public string gameId;
         public int[] player1Cards;
         public int[] player2Cards;
-        public int player1CardValue;  // セットしたカード値
-        public int player2CardValue;  // セットしたカード値
+        public int? player1CardValue;  // セットしたカード値
+        public int? player2CardValue;  // セットしたカード値
         public List<string> player1UsedSkills;  // プレイヤー1の使用済スキル
         public List<string> player2UsedSkills;  // プレイヤー2の使用済スキル
     }
