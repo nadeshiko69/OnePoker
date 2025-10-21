@@ -1,4 +1,7 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Linq;
 
 public class OnlineHandManager : MonoBehaviour
 {
@@ -10,10 +13,68 @@ public class OnlineHandManager : MonoBehaviour
     // 参照がMissingの場合に自動で再取得する
     private void EnsureBindings()
     {
-        if (playerCard1 == null) playerCard1 = FindOrCreateCard("Player_Card1", "Player_CardAnchor1");
-        if (playerCard2 == null) playerCard2 = FindOrCreateCard("Player_Card2", "Player_CardAnchor2");
-        if (opponentCard1 == null) opponentCard1 = FindOrCreateCard("Opponent_Card1", "Opponent_CardAnchor1");
-        if (opponentCard2 == null) opponentCard2 = FindOrCreateCard("Opponent_Card2", "Opponent_CardAnchor2");
+        Debug.Log($"[HAND_DEBUG] EnsureBindings() called");
+        Debug.Log($"[HAND_DEBUG] Initial state: playerCard1={playerCard1 != null}, playerCard2={playerCard2 != null}, opponentCard1={opponentCard1 != null}, opponentCard2={opponentCard2 != null}");
+        
+        if (playerCard1 == null || !playerCard1.gameObject.activeInHierarchy) 
+        {
+            Debug.Log($"[HAND_DEBUG] playerCard1 needs recreation: null={playerCard1 == null}, active={playerCard1?.gameObject.activeInHierarchy}");
+            playerCard1 = FindOrCreateCard("Player_Card1", "Player_CardAnchor1");
+        }
+        else
+        {
+            Debug.Log($"[HAND_DEBUG] playerCard1 exists, checking UI components: cardImage={playerCard1.cardImage != null}, numberText={playerCard1.numberText != null}, markText={playerCard1.markText != null}");
+            if (playerCard1.cardImage == null || playerCard1.numberText == null || playerCard1.markText == null)
+            {
+                Debug.Log($"[HAND_DEBUG] playerCard1 has null UI components, setting references");
+                SetUIComponentReferences(playerCard1, playerCard1.gameObject);
+            }
+        }
+        
+        if (playerCard2 == null || !playerCard2.gameObject.activeInHierarchy) 
+        {
+            Debug.Log($"[HAND_DEBUG] playerCard2 needs recreation: null={playerCard2 == null}, active={playerCard2?.gameObject.activeInHierarchy}");
+            playerCard2 = FindOrCreateCard("Player_Card2", "Player_CardAnchor2");
+        }
+        else
+        {
+            Debug.Log($"[HAND_DEBUG] playerCard2 exists, checking UI components: cardImage={playerCard2.cardImage != null}, numberText={playerCard2.numberText != null}, markText={playerCard2.markText != null}");
+            if (playerCard2.cardImage == null || playerCard2.numberText == null || playerCard2.markText == null)
+            {
+                Debug.Log($"[HAND_DEBUG] playerCard2 has null UI components, setting references");
+                SetUIComponentReferences(playerCard2, playerCard2.gameObject);
+            }
+        }
+        
+        if (opponentCard1 == null || !opponentCard1.gameObject.activeInHierarchy) 
+        {
+            Debug.Log($"[HAND_DEBUG] opponentCard1 needs recreation: null={opponentCard1 == null}, active={opponentCard1?.gameObject.activeInHierarchy}");
+            opponentCard1 = FindOrCreateCard("Opponent_Card1", "Opponent_CardAnchor1");
+        }
+        else
+        {
+            Debug.Log($"[HAND_DEBUG] opponentCard1 exists, checking UI components: cardImage={opponentCard1.cardImage != null}, numberText={opponentCard1.numberText != null}, markText={opponentCard1.markText != null}");
+            if (opponentCard1.cardImage == null || opponentCard1.numberText == null || opponentCard1.markText == null)
+            {
+                Debug.Log($"[HAND_DEBUG] opponentCard1 has null UI components, setting references");
+                SetUIComponentReferences(opponentCard1, opponentCard1.gameObject);
+            }
+        }
+        
+        if (opponentCard2 == null || !opponentCard2.gameObject.activeInHierarchy) 
+        {
+            Debug.Log($"[HAND_DEBUG] opponentCard2 needs recreation: null={opponentCard2 == null}, active={opponentCard2?.gameObject.activeInHierarchy}");
+            opponentCard2 = FindOrCreateCard("Opponent_Card2", "Opponent_CardAnchor2");
+        }
+        else
+        {
+            Debug.Log($"[HAND_DEBUG] opponentCard2 exists, checking UI components: cardImage={opponentCard2.cardImage != null}, numberText={opponentCard2.numberText != null}, markText={opponentCard2.markText != null}");
+            if (opponentCard2.cardImage == null || opponentCard2.numberText == null || opponentCard2.markText == null)
+            {
+                Debug.Log($"[HAND_DEBUG] opponentCard2 has null UI components, setting references");
+                SetUIComponentReferences(opponentCard2, opponentCard2.gameObject);
+            }
+        }
     }
 
     // 指定アンカー配下にカードPrefabを再生成して返す（まず既存を探索）
@@ -23,7 +84,24 @@ public class OnlineHandManager : MonoBehaviour
         if (existing != null)
         {
             var cd = existing.GetComponent<CardDisplay>();
-            if (cd != null) return cd;
+            if (cd != null && existing.activeInHierarchy)
+            {
+                Debug.Log($"[HAND_DEBUG] Found existing active card: {cardName}");
+                
+                // 既存のカードでもUIコンポーネントがnullの場合は再設定
+                if (cd.cardImage == null || cd.numberText == null || cd.markText == null)
+                {
+                    Debug.Log($"[HAND_DEBUG] Existing card has null UI components, setting references for {cardName}");
+                    SetUIComponentReferences(cd, existing);
+                }
+                
+                return cd;
+            }
+            else if (cd != null && !existing.activeInHierarchy)
+            {
+                Debug.Log($"[HAND_DEBUG] Found existing inactive card: {cardName}, destroying and recreating");
+                Destroy(existing);
+            }
         }
 
         var anchor = GameObject.Find(anchorName);
@@ -32,17 +110,22 @@ public class OnlineHandManager : MonoBehaviour
             Debug.LogWarning($"[HAND_DEBUG] Anchor not found: {anchorName}");
             return null;
         }
+        Debug.Log($"[HAND_DEBUG] Found anchor: {anchorName}, transform: {anchor.transform}");
 
-        // PrefabをResourcesからロードして生成（Assets/Resources/Prefabs/Card.prefabを想定）
+        // PrefabをResourcesからロードして生成
+        Debug.Log($"[HAND_DEBUG] Loading prefab from Resources/Prefabs/Card");
         var prefab = Resources.Load<GameObject>("Prefabs/Card");
         if (prefab == null)
         {
             Debug.LogError("[HAND_DEBUG] Card prefab not found at Resources/Prefabs/Card");
             return null;
         }
+        Debug.Log($"[HAND_DEBUG] Prefab loaded successfully: {prefab.name}");
 
         var go = Instantiate(prefab, anchor.transform);
         go.name = cardName;
+        Debug.Log($"[HAND_DEBUG] Instantiated card: {cardName} under {anchorName}");
+        
         // アンカー中央に整列
         var rt = go.transform as RectTransform;
         if (rt != null)
@@ -50,6 +133,19 @@ public class OnlineHandManager : MonoBehaviour
             rt.anchoredPosition = Vector2.zero;
             rt.localScale = Vector3.one;
             rt.localRotation = Quaternion.identity;
+            Debug.Log($"[HAND_DEBUG] Set card position: anchoredPosition={rt.anchoredPosition}, localScale={rt.localScale}");
+        }
+        
+        // 既存のカードと同じRotationとScaleを設定
+        var existingCard = GameObject.Find(cardName == "Player_Card1" ? "Player_Card2" : "Player_Card1");
+        if (existingCard != null)
+        {
+            var existingRectTransform = existingCard.GetComponent<RectTransform>();
+            if (existingRectTransform != null && rt != null)
+            {
+                rt.localRotation = existingRectTransform.localRotation;
+                rt.localScale = existingRectTransform.localScale;
+            }
         }
 
         var display = go.GetComponent<CardDisplay>();
@@ -57,6 +153,14 @@ public class OnlineHandManager : MonoBehaviour
         {
             display = go.AddComponent<CardDisplay>();
         }
+        
+        // UIコンポーネントの参照を設定（新しく生成されたPrefabの場合）
+        if (display.cardImage == null || display.numberText == null || display.markText == null)
+        {
+            Debug.Log($"[HAND_DEBUG] Setting UI component references for {cardName}");
+            SetUIComponentReferences(display, go);
+        }
+        
         // ドラッグ可能にしたい場合はCardDraggableが付いている前提（無ければ付与可能）
         if (go.GetComponent<CardDraggable>() == null)
         {
@@ -67,11 +171,68 @@ public class OnlineHandManager : MonoBehaviour
         return display;
     }
 
+    // UIコンポーネントの参照を設定する共通メソッド
+    private void SetUIComponentReferences(CardDisplay display, GameObject cardObject)
+    {
+        Debug.Log($"[HAND_DEBUG] Attempting to set UI component references for {cardObject.name}");
+        
+        // Imageコンポーネントを取得
+        if (display.cardImage == null)
+        {
+            display.cardImage = cardObject.GetComponent<Image>();
+            if (display.cardImage == null)
+            {
+                display.cardImage = cardObject.GetComponentInChildren<Image>();
+                if (display.cardImage != null)
+                {
+                    Debug.Log($"[HAND_DEBUG] Found Image in children for {cardObject.name}");
+                }
+                else
+                {
+                    Debug.LogError($"[HAND_DEBUG] Failed to find Image component for {cardObject.name}");
+                }
+            }
+            else
+            {
+                Debug.Log($"[HAND_DEBUG] Found Image on root for {cardObject.name}");
+            }
+        }
+        else
+        {
+            Debug.Log($"[HAND_DEBUG] Image already set for {cardObject.name}");
+        }
+        
+        // TextMeshProUGUIコンポーネントを取得
+        var textComponents = cardObject.GetComponentsInChildren<TextMeshProUGUI>();
+        Debug.Log($"[HAND_DEBUG] Found {textComponents.Length} TextMeshProUGUI components in children for {cardObject.name}");
+        
+        if (textComponents.Length >= 2)
+        {
+            display.numberText = textComponents[0];
+            display.markText = textComponents[1];
+            Debug.Log($"[HAND_DEBUG] Assigned numberText and markText for {cardObject.name}");
+        }
+        else if (textComponents.Length == 1)
+        {
+            display.numberText = textComponents[0];
+            display.markText = textComponents[0]; // 同じコンポーネントを使用
+            Debug.Log($"[HAND_DEBUG] Assigned single TextMeshProUGUI to both numberText and markText for {cardObject.name}");
+        }
+        else
+        {
+            Debug.LogWarning($"[HAND_DEBUG] No TextMeshProUGUI components found for {cardObject.name}");
+        }
+        
+        Debug.Log($"[HAND_DEBUG] UI components set: cardImage={display.cardImage != null}, numberText={display.numberText != null}, markText={display.markText != null}");
+    }
+
     // プレイヤーの手札をUIに反映
     public void SetPlayerHand(int[] cardIds)
     {
-        EnsureBindings();
         Debug.Log($"[HAND_DEBUG] SetPlayerHand called with cardIds: {(cardIds != null ? string.Join(",", cardIds) : "null")}");
+        Debug.Log($"[HAND_DEBUG] About to call EnsureBindings()");
+        EnsureBindings();
+        Debug.Log($"[HAND_DEBUG] EnsureBindings() completed");
         Debug.Log($"[HAND_DEBUG] playerCard1: {playerCard1 != null}, playerCard2: {playerCard2 != null}");
         
         try
@@ -147,8 +308,10 @@ public class OnlineHandManager : MonoBehaviour
     // 相手の手札をUIに反映（初期は裏向き）
     public void SetOpponentHand(int[] cardIds)
     {
-        EnsureBindings();
         Debug.Log($"[HAND_DEBUG] SetOpponentHand called with cardIds: {(cardIds != null ? string.Join(",", cardIds) : "null")}");
+        Debug.Log($"[HAND_DEBUG] About to call EnsureBindings()");
+        EnsureBindings();
+        Debug.Log($"[HAND_DEBUG] EnsureBindings() completed");
         Debug.Log($"[HAND_DEBUG] opponentCard1: {opponentCard1 != null}, opponentCard2: {opponentCard2 != null}");
         
         try

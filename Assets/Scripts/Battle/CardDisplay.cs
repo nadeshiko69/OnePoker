@@ -39,6 +39,14 @@ public class CardDisplay : MonoBehaviour
         isFaceUp = faceUp;
         Debug.Log($"CardDisplay.SetCard called: faceUp={faceUp}, cardValue={cardValue}, gameObject={gameObject.name}");
 
+        if (cardImage == null || numberText == null || markText == null)
+        {
+            Debug.LogError($"CardDisplay.SetCard - UI components are null! cardImage={cardImage != null}, numberText={numberText != null}, markText={markText != null}, gameObject={gameObject.name}");
+            Debug.LogError($"CardDisplay.SetCard - GameObject hierarchy: parent={gameObject.transform.parent?.name}, root={gameObject.transform.root.name}");
+            Debug.LogError($"CardDisplay.SetCard - GameObject components: Image={gameObject.GetComponent<Image>() != null}, TextMeshProUGUI count={gameObject.GetComponentsInChildren<TextMeshProUGUI>().Length}");
+            return;
+        }
+
         if (isFaceUp)
         {
             cardImage.sprite = frontSprite;
@@ -74,5 +82,8 @@ public class CardDisplay : MonoBehaviour
             markText.enabled = false;
             Debug.Log($"CardDisplay.SetCard (faceDown) - Set to back sprite, gameObject={gameObject.name}");
         }
+        
+        // 最終的なUI状態をログ出力
+        Debug.Log($"CardDisplay.SetCard - Final UI state: cardImage.sprite={cardImage.sprite?.name}, numberText.text='{numberText.text}', markText.text='{markText.text}', numberText.enabled={numberText.enabled}, markText.enabled={markText.enabled}");
     }
 }
