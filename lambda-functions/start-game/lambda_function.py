@@ -143,8 +143,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'deck': remaining_deck,
             'player1Cards': player1_cards,
             'player2Cards': player2_cards,
-            'player1Life': 10,
-            'player2Life': 10,
+            'player1Life': 20,
+            'player2Life': 20,
             'currentBet': 0,
             'currentTurn': player1_id,  # 先手はplayer1
             'gamePhase': 'set_phase',  # 最初はset_phaseから開始
@@ -183,8 +183,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'player2Cards': player2_cards,
             'currentTurn': player1_id,
             'gamePhase': 'set_phase',
-            'player1Life': 10,
-            'player2Life': 10
+            'player1Life': 20,
+            'player2Life': 20
         }
         
         print(f"New game response: {json.dumps(response)}")
