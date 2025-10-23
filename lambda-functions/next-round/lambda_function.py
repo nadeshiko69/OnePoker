@@ -131,12 +131,15 @@ def lambda_handler(event, context):
             print(f"Round {current_round} result: Player1={p1_value}, Player2={p2_value}")
             print(f"Bet amounts: Player1={player1_bet}, Player2={player2_bet}")
             
-            if p1_value > p2_value:
+            # 勝敗判定
+            p1_wins = determine_winner(p1_value, p2_value)
+            
+            if p1_wins == 1:
                 # Player1の勝利 - Player1がPlayer2の掛け金を獲得、Player2が自分の掛け金を失う
                 player1_life += player2_bet
                 player2_life -= player2_bet
                 print(f"Player1 wins! Life updated: P1={player1_life} (+{player2_bet}), P2={player2_life} (-{player2_bet})")
-            elif p2_value > p1_value:
+            elif p1_wins == -1:
                 # Player2の勝利 - Player2がPlayer1の掛け金を獲得、Player1が自分の掛け金を失う
                 player1_life -= player1_bet
                 player2_life += player1_bet
@@ -395,6 +398,40 @@ def lambda_handler(event, context):
             'error': 'Internal server error',
             'message': str(error)
         })
+
+def determine_winner(card1_value, card2_value):
+    """
+    カード値の勝敗を判定する関数
+    Aが2に負ける特殊ルールを含む
+        1: Player1の勝利
+        -1: Player2の勝利
+        0: 引き分け
+    """
+    # カード値を数値に変換（0-51のIDから実際のカード値を取得）
+    def get_card_number(card_id):
+        # カードID 0-51を数値1-13に変換（A=1, 2=2, ..., K=13）
+        return (card_id % 13) + 1
+    
+    p1_number = get_card_number(card1_value)
+    p2_number = get_card_number(card2_value)
+    
+    print(f"Card numbers: Player1={p1_number}, Player2={p2_number}")
+    
+    # Aが2に負ける特殊ルール
+    if p1_number == 1 and p2_number == 2:  # Player1がA、Player2が2
+        print("Special rule: A loses to 2 - Player2 wins")
+        return -1
+    elif p1_number == 2 and p2_number == 1:  # Player1が2、Player2がA
+        print("Special rule: A loses to 2 - Player1 wins")
+        return 1
+    
+    # 通常の数値比較
+    if p1_number > p2_number:
+        return 1
+    elif p2_number > p1_number:
+        return -1
+    else:
+        return 0
 
 def create_response(status_code, body):
     """
