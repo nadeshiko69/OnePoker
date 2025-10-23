@@ -507,6 +507,8 @@ namespace OnePoker.Network
             public string gamePhase;
             public int[] player1Cards;
             public int[] player2Cards;
+            public int player1Life;
+            public int player2Life;
         }
     }
 } 

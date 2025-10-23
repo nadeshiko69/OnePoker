@@ -21,6 +21,12 @@ public class OnlineGameDataProvider : MonoBehaviour
     public int[] MyCards => IsPlayer1 ? Player1Cards : Player2Cards;
     public int[] OpponentCards => IsPlayer1 ? Player2Cards : Player1Cards;
     
+    // ライフ値のプロパティ
+    public int Player1Life => gameData?.player1Life ?? 20;
+    public int Player2Life => gameData?.player2Life ?? 20;
+    public int MyLife => IsPlayer1 ? Player1Life : Player2Life;
+    public int OpponentLife => IsPlayer1 ? Player2Life : Player1Life;
+    
     // セットしたカード値のプロパティ
     public int Player1CardValue => gameData?.player1CardValue ?? -1;
     public int Player2CardValue => gameData?.player2CardValue ?? -1;
@@ -59,6 +65,8 @@ public class OnlineGameDataProvider : MonoBehaviour
             player2Cards = new int[] { 3, 4 },
             player1CardValue = -1,
             player2CardValue = -1,
+            player1Life = 20,
+            player2Life = 20,
             player1UsedSkills = new List<string>(),
             player2UsedSkills = new List<string>()
         };
@@ -212,6 +220,8 @@ public class OnlineGameDataProvider : MonoBehaviour
         Debug.Log($"[GameDataProvider] Player2Cards: {(gameData.player2Cards != null ? string.Join(",", gameData.player2Cards) : "null")}");
         Debug.Log($"[GameDataProvider] Player1CardValue: {gameData.player1CardValue}");
         Debug.Log($"[GameDataProvider] Player2CardValue: {gameData.player2CardValue}");
+        Debug.Log($"[GameDataProvider] Player1Life: {gameData.player1Life}");
+        Debug.Log($"[GameDataProvider] Player2Life: {gameData.player2Life}");
     }
     
     /// <summary>
@@ -264,6 +274,8 @@ public class OnlineGameDataProvider : MonoBehaviour
         public int[] player2Cards;
         public int? player1CardValue;  // セットしたカード値
         public int? player2CardValue;  // セットしたカード値
+        public int player1Life;  // プレイヤー1のライフ
+        public int player2Life;  // プレイヤー2のライフ
         public List<string> player1UsedSkills;  // プレイヤー1の使用済スキル
         public List<string> player2UsedSkills;  // プレイヤー2の使用済スキル
     }

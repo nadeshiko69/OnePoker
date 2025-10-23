@@ -112,6 +112,41 @@ def lambda_handler(event, context):
         
         print(f"Used cards this round: {used_cards}")
         
+        # 勝敗判定とライフ更新
+        player1_life = int(game_state.get('player1Life', 20))
+        player2_life = int(game_state.get('player2Life', 20))
+        
+        # 各プレイヤーのベット額を取得
+        player1_bet = int(game_state.get('player1BetAmount', 0))
+        player2_bet = int(game_state.get('player2BetAmount', 0))
+        
+        # 勝敗判定（カード値の比較）
+        player1_card_value = game_state.get('player1CardValue')
+        player2_card_value = game_state.get('player2CardValue')
+        
+        if player1_card_value is not None and player2_card_value is not None:
+            p1_value = int(player1_card_value)
+            p2_value = int(player2_card_value)
+            
+            print(f"Round {current_round} result: Player1={p1_value}, Player2={p2_value}")
+            print(f"Bet amounts: Player1={player1_bet}, Player2={player2_bet}")
+            
+            if p1_value > p2_value:
+                # Player1の勝利 - Player1がPlayer2の掛け金を獲得、Player2が自分の掛け金を失う
+                player1_life += player2_bet
+                player2_life -= player2_bet
+                print(f"Player1 wins! Life updated: P1={player1_life} (+{player2_bet}), P2={player2_life} (-{player2_bet})")
+            elif p2_value > p1_value:
+                # Player2の勝利 - Player2がPlayer1の掛け金を獲得、Player1が自分の掛け金を失う
+                player1_life -= player1_bet
+                player2_life += player1_bet
+                print(f"Player2 wins! Life updated: P1={player1_life} (-{player1_bet}), P2={player2_life} (+{player1_bet})")
+            else:
+                # 引き分け（ライフ変更なし）
+                print(f"Draw! No life changes: P1={player1_life}, P2={player2_life}")
+        else:
+            print(f"No card values available for life calculation: P1={player1_card_value}, P2={player2_card_value}")
+        
         # デッキに使用済みカードを戻す
         deck.extend(used_cards)
         
@@ -192,6 +227,8 @@ def lambda_handler(event, context):
                         player1Set = :false_val,
                         player1BetAmount = :zero,
                         player1UsedSkills = :empty_list,
+                        player1Life = :p1life,
+                        player2Life = :p2life,
                         gamePhase = :phase,
                         phaseTransitionTime = :null_val,
                         currentRequiredBet = :one,
@@ -206,6 +243,8 @@ def lambda_handler(event, context):
                         player1Set = :false_val,
                         player1BetAmount = :zero,
                         player1UsedSkills = :empty_list,
+                        player1Life = :p1life,
+                        player2Life = :p2life,
                         gamePhase = :phase,
                         awaitingPlayer = :dealer,
                         phaseTransitionTime = :null_val,
@@ -226,6 +265,8 @@ def lambda_handler(event, context):
                         player2Set = :false_val,
                         player2BetAmount = :zero,
                         player2UsedSkills = :empty_list,
+                        player1Life = :p1life,
+                        player2Life = :p2life,
                         gamePhase = :phase,
                         phaseTransitionTime = :null_val,
                         currentRequiredBet = :one,
@@ -240,6 +281,8 @@ def lambda_handler(event, context):
                         player2Set = :false_val,
                         player2BetAmount = :zero,
                         player2UsedSkills = :empty_list,
+                        player1Life = :p1life,
+                        player2Life = :p2life,
                         gamePhase = :phase,
                         awaitingPlayer = :dealer,
                         phaseTransitionTime = :null_val,
@@ -256,6 +299,8 @@ def lambda_handler(event, context):
                     ':dealer': new_dealer,
                     ':deck': deck,
                     ':p1cards': player1_cards,
+                    ':p1life': player1_life,
+                    ':p2life': player2_life,
                     ':phase': 'set_phase',
                     ':null_val': None,
                     ':false_val': False,
@@ -268,6 +313,8 @@ def lambda_handler(event, context):
                 # 子（Player1）: Player1の手札のみ＋盤面遷移用の値
                 expression_values = {
                     ':p1cards': player1_cards,
+                    ':p1life': player1_life,
+                    ':p2life': player2_life,
                     ':null_val': None,
                     ':false_val': False,
                     ':zero': 0,
@@ -285,6 +332,8 @@ def lambda_handler(event, context):
                     ':dealer': new_dealer,
                     ':deck': deck,
                     ':p2cards': player2_cards,
+                    ':p1life': player1_life,
+                    ':p2life': player2_life,
                     ':phase': 'set_phase',
                     ':null_val': None,
                     ':false_val': False,
@@ -297,6 +346,8 @@ def lambda_handler(event, context):
                 # 子（Player2）: Player2の手札のみ＋盤面遷移用の値
                 expression_values = {
                     ':p2cards': player2_cards,
+                    ':p1life': player1_life,
+                    ':p2life': player2_life,
                     ':null_val': None,
                     ':false_val': False,
                     ':zero': 0,
@@ -329,7 +380,9 @@ def lambda_handler(event, context):
             'currentDealer': new_dealer,
             'gamePhase': 'set_phase',
             'player1Cards': player1_cards,
-            'player2Cards': player2_cards
+            'player2Cards': player2_cards,
+            'player1Life': player1_life,
+            'player2Life': player2_life
         }
         
         return create_response(200, response_data)

@@ -16,7 +16,7 @@ public class OnlineGameManager : MonoBehaviour
     [Header("UI References")]
     public TextMeshProUGUI playerLifeText;
     public TextMeshProUGUI opponentLifeText;
-    
+
     [Header("Card Prefab")]
     public GameObject cardPrefab;
     
@@ -47,6 +47,9 @@ public class OnlineGameManager : MonoBehaviour
         {
             // 手札の設定
             SetupHands();
+            
+            // ライフ表示の初期化
+            UpdateLifeDisplay();
             
             // HIGH/LOW表示の更新
             UpdateHighLowDisplay();
@@ -182,7 +185,7 @@ public class OnlineGameManager : MonoBehaviour
     private void CompleteInitialization()
     {
         Debug.Log("[OnlineGameManager] Completing initialization");
-        
+
         // ライフUI初期化
         UpdateLifeUI();
         
@@ -198,8 +201,8 @@ public class OnlineGameManager : MonoBehaviour
         Debug.Log("[OnlineGameManager] Starting game");
         
         if (panelManager != null && gameDataProvider.IsValid())
-        {
-            panelManager.UpdatePhaseText("set_phase");
+            {
+                panelManager.UpdatePhaseText("set_phase");
             
             StartCoroutine(ShowMatchStartPanelAndStartMonitoring(
                 gameDataProvider.PlayerId,
@@ -216,10 +219,10 @@ public class OnlineGameManager : MonoBehaviour
     {
         panelManager.ShowMatchStartPanel(playerName, opponentName, duration);
         yield return new WaitForSeconds(duration);
-        
-        // フェーズ移行時間を設定
-        yield return StartCoroutine(SetPhaseTransitionTime());
-        
+            
+            // フェーズ移行時間を設定
+            yield return StartCoroutine(SetPhaseTransitionTime());
+            
         // フェーズ監視開始
         phaseManager.StartPhaseMonitoring();
     }
@@ -239,7 +242,7 @@ public class OnlineGameManager : MonoBehaviour
         
         yield return new WaitForSeconds(0.1f);
     }
-    
+
     /// <summary>
     /// ライフUIを更新
     /// </summary>
@@ -262,6 +265,18 @@ public class OnlineGameManager : MonoBehaviour
         if (skillManager != null)
         {
             skillManager.OnSetPhaseStarted();
+        }
+
+        // Bet値のUIを非表示にして、LifeのUIを表示（BetPhaseの逆処理）
+        if (panelManager != null)
+        {
+            // betAmountTextを非表示
+            if (panelManager.betAmountText != null) 
+                panelManager.betAmountText.gameObject.SetActive(false);
+            
+            // playerLifeを表示
+            if (panelManager.playerLife != null) 
+                panelManager.playerLife.gameObject.SetActive(true);
         }
     }
     
@@ -379,9 +394,14 @@ public class OnlineGameManager : MonoBehaviour
             player2Cards = response.player2Cards,
             player1CardValue = null,
             player2CardValue = null,
+            player1Life = response.player1Life,
+            player2Life = response.player2Life,
             player1UsedSkills = new System.Collections.Generic.List<string>(),
             player2UsedSkills = new System.Collections.Generic.List<string>()
         });
+        
+        // ライフ表示を更新
+        UpdateLifeDisplay();
         
         // ========== 盤面リセット処理 ==========
         
@@ -415,9 +435,27 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.LogError($"[OnlineGameManager] Failed to start next round: {error}");
         // エラー通知をUIに表示
-        if (panelManager != null)
-        {
+                    if (panelManager != null)
+                    {
             panelManager.ShowOpponentUsedSkillNotification($"次のラウンド開始エラー: {error}");
+        }
+    }
+    
+    /// <summary>
+    /// ライフ表示を更新
+    /// </summary>
+    private void UpdateLifeDisplay()
+    {
+        if (playerLifeText != null)
+        {
+            playerLifeText.text = $"Life: {gameDataProvider.MyLife}";
+            Debug.Log($"[OnlineGameManager] Player life updated: {gameDataProvider.MyLife}");
+        }
+        
+        if (opponentLifeText != null)
+        {
+            opponentLifeText.text = $"Life: {gameDataProvider.OpponentLife}";
+            Debug.Log($"[OnlineGameManager] Opponent life updated: {gameDataProvider.OpponentLife}");
         }
     }
     
@@ -460,9 +498,9 @@ public class OnlineGameManager : MonoBehaviour
                 }
                 Debug.Log("[OnlineGameManager] Opponent DropZone cleared via matchManager");
             }
-        }
-        else
-        {
+                    }
+                    else
+                    {
             Debug.LogWarning("[OnlineGameManager] matchManager is null, trying GameObject.Find method");
             
             // フォールバック: GameObject.Findを使用
@@ -475,9 +513,9 @@ public class OnlineGameManager : MonoBehaviour
                     Destroy(child.gameObject);
                 }
                 Debug.Log("[OnlineGameManager] My SetZone cleared via GameObject.Find");
-            }
-            else
-            {
+                }
+                else
+                {
                 Debug.LogWarning("[OnlineGameManager] MySetZone not found via GameObject.Find");
             }
             
@@ -490,9 +528,9 @@ public class OnlineGameManager : MonoBehaviour
                     Destroy(child.gameObject);
                 }
                 Debug.Log("[OnlineGameManager] Opponent SetZone cleared via GameObject.Find");
-            }
-            else
-            {
+                }
+                else
+                {
                 Debug.LogWarning("[OnlineGameManager] OpponentSetZone not found via GameObject.Find");
             }
         }
@@ -552,17 +590,17 @@ public class OnlineGameManager : MonoBehaviour
         
         Debug.Log($"[OnlineGameManager] JudgeWinner: player={playerCardValue}, opponent={opponentCardValue}, playerWins={playerWins}");
         
-        if (panelManager != null)
-        {
+            if (panelManager != null)
+            {
             panelManager.gameResultPanel.SetActive(true);
             
             if (playerWins)
             {
                 panelManager.gameResultText.text = "YOU WIN!";
                 panelManager.gameResultText.color = Color.red;
-            }
-            else
-            {
+        }
+        else
+        {
                 panelManager.gameResultText.text = "YOU LOSE...";
                 panelManager.gameResultText.color = Color.blue;
             }
@@ -705,7 +743,7 @@ public class OnlineGameManager : MonoBehaviour
     {
         Debug.LogError($"[REVEAL_DEBUG] Failed to fetch game state: {error}");
     }
-    
+
     [System.Serializable]
     private class GameStateResponse
     {
