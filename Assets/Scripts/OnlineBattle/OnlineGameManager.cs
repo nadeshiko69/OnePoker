@@ -189,6 +189,12 @@ public class OnlineGameManager : MonoBehaviour
         // ライフUI初期化
         UpdateLifeUI();
         
+        if (resultViewManager != null)
+        {
+            resultViewManager.ResetResults();
+            Debug.Log("[OnlineGameManager] ResultView reset for new game");
+        }
+        
         // カードセットを有効化
         cardPlacementManager.EnableCardPlacement();
     }

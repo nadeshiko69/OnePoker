@@ -20,7 +20,6 @@ public class OnlineResultViewManager : MonoBehaviour
     void Start()
     {
         InitializeResultTable();
-        ResetResults();
     }
 
     private GameObject CreateCell(string name, Transform parent)
