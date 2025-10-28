@@ -37,6 +37,10 @@ public class OnlineGameDataProvider : MonoBehaviour
     public OnlineGameDataWithCards GameData => gameData;
     public string MyPlayerId => gameData?.playerId ?? "";
     
+    // Dealer情報のプロパティ
+    public string CurrentDealer => gameData?.currentDealer ?? "P1";
+    public bool IsDealer => gameData != null && CurrentDealer == (IsPlayer1 ? "P1" : "P2");
+    
     void Start()
     {
         Debug.Log("[GameDataProvider] Start called");
@@ -253,6 +257,18 @@ public class OnlineGameDataProvider : MonoBehaviour
     }
     
     /// <summary>
+    /// Dealer情報を更新
+    /// </summary>
+    public void UpdateCurrentDealer(string dealer)
+    {
+        if (gameData != null)
+        {
+            gameData.currentDealer = dealer;
+            Debug.Log($"[GameDataProvider] Current dealer updated: {dealer}");
+        }
+    }
+    
+    /// <summary>
     /// ゲームデータが有効かチェック
     /// </summary>
     public bool IsValid()
@@ -278,6 +294,7 @@ public class OnlineGameDataProvider : MonoBehaviour
         public int player2Life;  // プレイヤー2のライフ
         public List<string> player1UsedSkills;  // プレイヤー1の使用済スキル
         public List<string> player2UsedSkills;  // プレイヤー2の使用済スキル
+        public string currentDealer = "P1";  // 現在の親プレイヤー（P1 or P2）
     }
 }
 

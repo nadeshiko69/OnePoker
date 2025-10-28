@@ -283,6 +283,11 @@ public class OnlineGameManager : MonoBehaviour
             // playerLifeを表示
             if (panelManager.playerLife != null) 
                 panelManager.playerLife.gameObject.SetActive(true);
+            
+            // 役割表示を更新
+            bool isPlayerDealer = gameDataProvider.IsDealer;
+            panelManager.UpdatePlayerRoleDisplay(isPlayerDealer);
+            Debug.Log($"[OnlineGameManager] Role display updated on SetPhase - IsDealer: {isPlayerDealer}");
         }
     }
     
@@ -403,8 +408,20 @@ public class OnlineGameManager : MonoBehaviour
             player1Life = response.player1Life,
             player2Life = response.player2Life,
             player1UsedSkills = new System.Collections.Generic.List<string>(),
-            player2UsedSkills = new System.Collections.Generic.List<string>()
+            player2UsedSkills = new System.Collections.Generic.List<string>(),
+            currentDealer = response.currentDealer
         });
+        
+        // Dealer情報を更新
+        gameDataProvider.UpdateCurrentDealer(response.currentDealer);
+        
+        // 役割表示を更新
+        if (panelManager != null)
+        {
+            bool isPlayerDealer = gameDataProvider.IsDealer;
+            panelManager.UpdatePlayerRoleDisplay(isPlayerDealer);
+            Debug.Log($"[OnlineGameManager] Role display updated - IsDealer: {isPlayerDealer}");
+        }
         
         // ライフ表示を更新
         UpdateLifeDisplay();
@@ -702,6 +719,13 @@ public class OnlineGameManager : MonoBehaviour
             {
                 Debug.Log($"[REVEAL_DEBUG] Raw card values from AWS - Player1: {gameStateData.player1CardValue}, Player2: {gameStateData.player2CardValue}");
                 
+                // Dealer情報を更新
+                if (!string.IsNullOrEmpty(gameStateData.currentDealer))
+                {
+                    gameDataProvider.UpdateCurrentDealer(gameStateData.currentDealer);
+                    Debug.Log($"[REVEAL_DEBUG] Current dealer: {gameStateData.currentDealer}");
+                }
+                
                 // セットしたカード値を更新
                 gameDataProvider.UpdateSetCardValues(gameStateData.player1CardValue, gameStateData.player2CardValue);
                 
@@ -756,6 +780,7 @@ public class OnlineGameManager : MonoBehaviour
         public string gameId;
         public string gamePhase;
         public string currentTurn;
+        public string currentDealer;  // 現在の親プレイヤー
         public int player1Life;
         public int player2Life;
         public int currentBet;
