@@ -34,7 +34,7 @@ public class OnlineGameManager : MonoBehaviour
     private OnlinePanelManager panelManager;
     private OnlineSkillManager skillManager;
     private OnlineHandManager handManager;
-    
+
     void Start()
     {
         Debug.Log("[OnlineGameManager] Start called");
@@ -259,7 +259,7 @@ public class OnlineGameManager : MonoBehaviour
         if (opponentLifeText != null && matchManager != null)
             opponentLifeText.text = $"Life: {matchManager.OpponentLife}";
     }
-    
+
     // ========== イベントハンドラー ==========
     
     private void OnSetPhaseStarted()
@@ -301,6 +301,12 @@ public class OnlineGameManager : MonoBehaviour
         if (skillManager != null)
         {
             skillManager.OnNonSetPhaseStarted();
+        }
+        
+        // Scanスキルで表向きになった相手の手札を裏向きに戻す
+        if (handManager != null)
+        {
+            handManager.ResetOpponentCardsToFaceDown();
         }
         
         bettingTurnManager.StartTurnMonitoring();

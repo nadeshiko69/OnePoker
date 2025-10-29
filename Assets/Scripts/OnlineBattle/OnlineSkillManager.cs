@@ -271,11 +271,11 @@ public class OnlineSkillManager : MonoBehaviour
     {
         Debug.Log($"[SkillManager] Applying skill effect: {skillType}");
 
-        switch (skillType)
-        {
+            switch (skillType)
+            {
             case "Scan":
-                // Scanスキル: 相手の手札を1枚表示（オンライン対戦では演出のみ）
-                panelManager?.ShowOpponentUsedSkillNotification("Scanを使用しました");
+                // Scanスキル: 相手の手札を1枚表示
+                StartScanSkill();
                 break;
 
             case "Change":
@@ -369,5 +369,88 @@ public class OnlineSkillManager : MonoBehaviour
         obstructTurnCounter = 0;
         obstructAlreadyProcessed = false;
         Debug.Log("[SkillManager] Used skills reset");
+    }
+
+    // ========== Scan スキル実装 ==========
+    
+    private bool isScanningMode = false;
+    private OnlineHandManager handManager;
+    
+    /// <summary>
+    /// Scanスキルを開始（相手の手札を選択させる）
+    /// </summary>
+    private void StartScanSkill()
+    {
+        Debug.Log("[SkillManager] Starting Scan skill - waiting for opponent card selection");
+        
+        // HandManagerを取得
+        if (handManager == null)
+        {
+            handManager = FindObjectOfType<OnlineHandManager>();
+        }
+        
+        if (handManager == null)
+        {
+            Debug.LogError("[SkillManager] OnlineHandManager not found!");
+            return;
+        }
+        
+        isScanningMode = true;
+        
+        // UIにメッセージを表示
+        panelManager?.ShowOpponentUsedSkillNotification("相手の手札を1枚選択してください");
+        
+        // 相手の手札にクリック可能な状態を設定
+        handManager.EnableOpponentCardSelection(this);
+        
+        Debug.Log("[SkillManager] Scan mode enabled - waiting for user to click on opponent card");
+    }
+    
+    /// <summary>
+    /// Scanスキル完了（相手の手札が選択された）
+    /// </summary>
+    public void OnOpponentCardSelected(GameObject card)
+    {
+        if (!isScanningMode)
+        {
+            Debug.LogWarning("[SkillManager] OnOpponentCardSelected called but not in scanning mode");
+            return;
+        }
+        
+        Debug.Log($"[SkillManager] Opponent card selected: {card.name}");
+        
+        // 選択されたカードを表向きにする
+        var cardDisplay = card.GetComponent<CardDisplay>();
+        if (cardDisplay != null)
+        {
+            int cardValue = cardDisplay.CardValue;
+            Debug.Log($"[SkillManager] Revealing opponent card - CardValue: {cardValue}");
+            
+            // カードを表向きに表示
+            cardDisplay.SetCard(true);
+            
+            // メッセージを表示
+            panelManager?.ShowOpponentUsedSkillNotification($"相手の手札を確認: {GetCardName(cardValue)}");
+        }
+        
+        isScanningMode = false;
+        
+        // 相手の手札の選択可能状態を解除
+        handManager.DisableOpponentCardSelection();
+        
+        Debug.Log("[SkillManager] Scan skill completed");
+    }
+    
+    /// <summary>
+    /// カード名を取得（デバッグ用）
+    /// </summary>
+    private string GetCardName(int cardValue)
+    {
+        int rank = cardValue % 13;
+        string[] ranks = { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
+        int suit = cardValue / 13;
+        string[] suits = { "♠", "♥", "♦", "♣" };
+        
+        return $"{ranks[rank]} {suits[suit]}";
     }
 }

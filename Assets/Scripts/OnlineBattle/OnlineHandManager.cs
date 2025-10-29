@@ -391,4 +391,114 @@ public class OnlineHandManager : MonoBehaviour
         
         return card == playerCard1 || card == playerCard2;
     }
+    
+    // ========== Scanスキル用の手札選択機能 ==========
+    
+    private OnlineSkillManager skillManager;
+    private bool isOpponentCardSelectable = false;
+    
+    /// <summary>
+    /// 相手の手札をクリック可能にする（Scanスキル用）
+    /// </summary>
+    public void EnableOpponentCardSelection(OnlineSkillManager manager)
+    {
+        Debug.Log("[HAND_MANAGER] Enabling opponent card selection for Scan skill");
+        skillManager = manager;
+        isOpponentCardSelectable = true;
+        
+        // 相手の手札にRaycastを有効にする
+        if (opponentCard1 != null && opponentCard1.gameObject != null)
+        {
+            opponentCard1.gameObject.layer = 5; // UIレイヤー
+            var raycaster = opponentCard1.gameObject.GetComponent<UnityEngine.EventSystems.EventTrigger>();
+            if (raycaster == null)
+            {
+                raycaster = opponentCard1.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+            }
+            
+            // クリックイベントを追加
+            UnityEngine.EventSystems.EventTrigger.Entry entry = new UnityEngine.EventSystems.EventTrigger.Entry();
+            entry.eventID = UnityEngine.EventSystems.EventTriggerType.PointerClick;
+            entry.callback.AddListener((data) => OnOpponentCardClicked(opponentCard1.gameObject));
+            raycaster.triggers.Add(entry);
+        }
+        
+        if (opponentCard2 != null && opponentCard2.gameObject != null)
+        {
+            opponentCard2.gameObject.layer = 5; // UIレイヤー
+            var raycaster = opponentCard2.gameObject.GetComponent<UnityEngine.EventSystems.EventTrigger>();
+            if (raycaster == null)
+            {
+                raycaster = opponentCard2.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+            }
+            
+            // クリックイベントを追加
+            UnityEngine.EventSystems.EventTrigger.Entry entry = new UnityEngine.EventSystems.EventTrigger.Entry();
+            entry.eventID = UnityEngine.EventSystems.EventTriggerType.PointerClick;
+            entry.callback.AddListener((data) => OnOpponentCardClicked(opponentCard2.gameObject));
+            raycaster.triggers.Add(entry);
+        }
+    }
+    
+    /// <summary>
+    /// 相手の手札のクリック可能状態を解除
+    /// </summary>
+    public void DisableOpponentCardSelection()
+    {
+        Debug.Log("[HAND_MANAGER] Disabling opponent card selection");
+        isOpponentCardSelectable = false;
+        
+        // イベントトリガーを削除
+        if (opponentCard1 != null && opponentCard1.gameObject != null)
+        {
+            var raycaster = opponentCard1.gameObject.GetComponent<UnityEngine.EventSystems.EventTrigger>();
+            if (raycaster != null)
+            {
+                raycaster.triggers.Clear();
+            }
+        }
+        
+        if (opponentCard2 != null && opponentCard2.gameObject != null)
+        {
+            var raycaster = opponentCard2.gameObject.GetComponent<UnityEngine.EventSystems.EventTrigger>();
+            if (raycaster != null)
+            {
+                raycaster.triggers.Clear();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 相手の手札がクリックされた時の処理
+    /// </summary>
+    private void OnOpponentCardClicked(GameObject card)
+    {
+        if (!isOpponentCardSelectable || skillManager == null)
+        {
+            return;
+        }
+        
+        Debug.Log($"[HAND_MANAGER] Opponent card clicked: {card.name}");
+        skillManager.OnOpponentCardSelected(card);
+    }
+    
+    /// <summary>
+    /// Scanスキルで表向きになった相手の手札を裏向きに戻す
+    /// </summary>
+    public void ResetOpponentCardsToFaceDown()
+    {
+        Debug.Log("[HAND_MANAGER] Resetting opponent cards to face down");
+        
+        if (opponentCard1 != null)
+        {
+            opponentCard1.SetCard(false); // 裏向きに戻す
+            Debug.Log("[HAND_MANAGER] opponentCard1 set to face down");
+        }
+        
+        if (opponentCard2 != null)
+        {
+            opponentCard2.SetCard(false); // 裏向きに戻す
+            Debug.Log("[HAND_MANAGER] opponentCard2 set to face down");
+        }
+    }
 } 
