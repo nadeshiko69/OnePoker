@@ -229,7 +229,6 @@ def lambda_handler(event, context):
                         player1CardPlaced = :false_val,
                         player1Set = :false_val,
                         player1BetAmount = :zero,
-                        player1UsedSkills = :empty_list,
                         player1Life = :p1life,
                         player2Life = :p2life,
                         gamePhase = :phase,
@@ -245,7 +244,6 @@ def lambda_handler(event, context):
                         player1CardPlaced = :false_val,
                         player1Set = :false_val,
                         player1BetAmount = :zero,
-                        player1UsedSkills = :empty_list,
                         player1Life = :p1life,
                         player2Life = :p2life,
                         gamePhase = :phase,
@@ -267,7 +265,6 @@ def lambda_handler(event, context):
                         player2CardPlaced = :false_val,
                         player2Set = :false_val,
                         player2BetAmount = :zero,
-                        player2UsedSkills = :empty_list,
                         player1Life = :p1life,
                         player2Life = :p2life,
                         gamePhase = :phase,
@@ -283,7 +280,6 @@ def lambda_handler(event, context):
                         player2CardPlaced = :false_val,
                         player2Set = :false_val,
                         player2BetAmount = :zero,
-                        player2UsedSkills = :empty_list,
                         player1Life = :p1life,
                         player2Life = :p2life,
                         gamePhase = :phase,
@@ -309,7 +305,6 @@ def lambda_handler(event, context):
                     ':false_val': False,
                     ':zero': 0,
                     ':one': 1,
-                    ':empty_list': [],
                     ':time': current_time
                 }
             else:
@@ -324,7 +319,6 @@ def lambda_handler(event, context):
                     ':one': 1,
                     ':phase': 'set_phase',
                     ':dealer': new_dealer,
-                    ':empty_list': [],
                     ':time': current_time
                 }
         else:
@@ -342,7 +336,6 @@ def lambda_handler(event, context):
                     ':false_val': False,
                     ':zero': 0,
                     ':one': 1,
-                    ':empty_list': [],
                     ':time': current_time
                 }
             else:
@@ -357,7 +350,6 @@ def lambda_handler(event, context):
                     ':one': 1,
                     ':phase': 'set_phase',
                     ':dealer': new_dealer,
-                    ':empty_list': [],
                     ':time': current_time
                 }
         

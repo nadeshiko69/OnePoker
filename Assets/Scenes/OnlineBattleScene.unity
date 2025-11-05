@@ -1785,6 +1785,16 @@ MonoBehaviour:
   matchResultPanel: {fileID: 736612973}
   matchResultText: {fileID: 1667555893}
   matchRestartButton: {fileID: 1603740483}
+  playerUsedScan1: {fileID: 1131729679}
+  playerUsedScan2: {fileID: 502562787}
+  playerUsedChange: {fileID: 1388308129}
+  playerUsedObstruct: {fileID: 1785835798}
+  playerUsedCopy: {fileID: 1167292853}
+  opponentUsedScan1: {fileID: 842639005}
+  opponentUsedScan2: {fileID: 1271357267}
+  opponentUsedChange: {fileID: 670365353}
+  opponentUsedObstruct: {fileID: 1391496862}
+  opponentUsedCopy: {fileID: 939118551}
 --- !u!1 &363663042
 GameObject:
   m_ObjectHideFlags: 0
@@ -13925,8 +13935,8 @@ RectTransform:
   - {fileID: 808339325}
   - {fileID: 484266405}
   - {fileID: 1304018473}
-  - {fileID: 234388221}
   - {fileID: 164405883}
+  - {fileID: 234388221}
   - {fileID: 1153414626}
   - {fileID: 593240513}
   - {fileID: 1368722557}

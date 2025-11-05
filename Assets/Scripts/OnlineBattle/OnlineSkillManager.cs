@@ -57,8 +57,19 @@ public class OnlineSkillManager : MonoBehaviour
     {
         Debug.Log("[SkillManager] SetPhase started - Enabling skill UI");
         
-        // AWSから使用済スキルを読み込み
+        // ローカルのキャッシュから即時更新（表示ラグ低減）
         UpdateUsedSkillsFromServer();
+
+        // 最新のGameStateを取得して使用済みスキルを同期
+        if (gameDataProvider != null)
+        {
+            OnePoker.Network.HttpManager.Instance.GetGameState(
+                gameDataProvider.GameId,
+                gameDataProvider.PlayerId,
+                OnSetPhaseGameStateReceived,
+                (error) => { Debug.LogError($"[SkillManager] Failed to refresh used skills on SetPhase: {error}"); }
+            );
+        }
         
         // Obstruct状態をチェック（1ターンのみ有効）
         CheckAndUpdateObstructStatus();
@@ -68,7 +79,47 @@ public class OnlineSkillManager : MonoBehaviour
         {
             panelManager.ShowSkillUI();
             UpdateSkillButtonStates();
+            // 使用済スキル表示を更新
+            panelManager.UpdateUsedSkillsDisplay(myUsedSkills, opponentUsedSkills);
         }
+    }
+
+    // SetPhase開始時に取得したGameStateのハンドラ
+    private void OnSetPhaseGameStateReceived(string response)
+    {
+        try
+        {
+            var gameState = JsonUtility.FromJson<SetPhaseGameState>(response);
+            if (gameState != null)
+            {
+                var p1 = gameState.player1UsedSkills != null ? new List<string>(gameState.player1UsedSkills) : new List<string>();
+                var p2 = gameState.player2UsedSkills != null ? new List<string>(gameState.player2UsedSkills) : new List<string>();
+
+                // Providerへ反映
+                gameDataProvider.UpdateUsedSkills(p1, p2);
+
+                // ローカルキャッシュとUIを更新
+                UpdateUsedSkillsFromServer();
+                UpdateSkillButtonStates();
+                if (panelManager != null)
+                {
+                    panelManager.UpdateUsedSkillsDisplay(myUsedSkills, opponentUsedSkills);
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[SkillManager] Error parsing game state on SetPhase: {e.Message}");
+        }
+    }
+
+    [System.Serializable]
+    private class SetPhaseGameState
+    {
+        public string gameId;
+        public string gamePhase;
+        public string[] player1UsedSkills;
+        public string[] player2UsedSkills;
     }
 
     /// <summary>
@@ -109,6 +160,12 @@ public class OnlineSkillManager : MonoBehaviour
 
         // 相手のスキル表示を更新
         UpdateOpponentSkillDisplay();
+
+        // 使用済スキル表示（ラベル）も更新
+        if (panelManager != null)
+        {
+            panelManager.UpdateUsedSkillsDisplay(myUsedSkills, opponentUsedSkills);
+        }
     }
 
     /// <summary>
@@ -246,6 +303,22 @@ public class OnlineSkillManager : MonoBehaviour
         if (response.usedSkills != null)
         {
             myUsedSkills = response.usedSkills.ToList();
+        }
+
+        // Providerにも即時反映（体感改善・フェーズ跨ぎでの確実な表示のため）
+        if (gameDataProvider != null && gameDataProvider.GameData != null)
+        {
+            bool isP1 = gameDataProvider.IsPlayer1;
+            var currentP1 = gameDataProvider.GameData.player1UsedSkills ?? new List<string>();
+            var currentP2 = gameDataProvider.GameData.player2UsedSkills ?? new List<string>();
+            if (isP1)
+            {
+                gameDataProvider.UpdateUsedSkills(myUsedSkills, currentP2);
+            }
+            else
+            {
+                gameDataProvider.UpdateUsedSkills(currentP1, myUsedSkills);
+            }
         }
 
         // スキルボタンの状態を更新

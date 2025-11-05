@@ -940,6 +940,90 @@ public class OnlinePanelManager : MonoBehaviour
         if (descriptionSkillPanel != null) descriptionSkillPanel.SetActive(false);
     }
 
+    // ========================================
+    // 使用済スキル表示（Player_UsedSkill / Opponent_UsedSkill）
+    // ========================================
+    [Header("Used Skill Labels - Player")]
+    public TextMeshProUGUI playerUsedScan1;
+    public TextMeshProUGUI playerUsedScan2;
+    public TextMeshProUGUI playerUsedChange;
+    public TextMeshProUGUI playerUsedObstruct;
+    public TextMeshProUGUI playerUsedCopy;
+
+    [Header("Used Skill Labels - Opponent")]
+    public TextMeshProUGUI opponentUsedScan1;
+    public TextMeshProUGUI opponentUsedScan2;
+    public TextMeshProUGUI opponentUsedChange;
+    public TextMeshProUGUI opponentUsedObstruct;
+    public TextMeshProUGUI opponentUsedCopy;
+
+    private static readonly Color UsedSkillDefaultGray = new Color(0.6f, 0.6f, 0.6f, 1f);
+    private static readonly Color UsedSkillActiveWhite = Color.white;
+    private bool usedSkillLabelsInitialized = false;
+
+    // ゲーム開始時に呼び出し、全ての使用済スキル表示を灰色に初期化する
+    public void InitializeUsedSkillsDisplay()
+    {
+        if (usedSkillLabelsInitialized) return;
+
+        SetLabelColor(playerUsedScan1, UsedSkillDefaultGray);
+        SetLabelColor(playerUsedScan2, UsedSkillDefaultGray);
+        SetLabelColor(playerUsedChange, UsedSkillDefaultGray);
+        SetLabelColor(playerUsedObstruct, UsedSkillDefaultGray);
+        SetLabelColor(playerUsedCopy, UsedSkillDefaultGray);
+
+        SetLabelColor(opponentUsedScan1, UsedSkillDefaultGray);
+        SetLabelColor(opponentUsedScan2, UsedSkillDefaultGray);
+        SetLabelColor(opponentUsedChange, UsedSkillDefaultGray);
+        SetLabelColor(opponentUsedObstruct, UsedSkillDefaultGray);
+        SetLabelColor(opponentUsedCopy, UsedSkillDefaultGray);
+
+        usedSkillLabelsInitialized = true;
+        Debug.Log("OnlinePanelManager - Used skill labels initialized to gray");
+    }
+
+    // 直近の使用済スキルリストに基づいて文字色を更新する
+    public void UpdateUsedSkillsDisplay(System.Collections.Generic.List<string> myUsedSkills, System.Collections.Generic.List<string> opponentUsedSkillsList)
+    {
+        // 自分側
+        int myScanLikeCount = CountScanLike(myUsedSkills);
+        SetLabelColor(playerUsedScan1, myScanLikeCount >= 1 ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+        SetLabelColor(playerUsedScan2, myScanLikeCount >= 2 ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+        SetLabelColor(playerUsedChange, Contains(myUsedSkills, "Change") ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+        SetLabelColor(playerUsedObstruct, Contains(myUsedSkills, "Obstruct") ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+        SetLabelColor(playerUsedCopy, Contains(myUsedSkills, "Copy") ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+
+        // 相手側
+        int oppScanLikeCount = CountScanLike(opponentUsedSkillsList);
+        SetLabelColor(opponentUsedScan1, oppScanLikeCount >= 1 ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+        SetLabelColor(opponentUsedScan2, oppScanLikeCount >= 2 ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+        SetLabelColor(opponentUsedChange, Contains(opponentUsedSkillsList, "Change") ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+        SetLabelColor(opponentUsedObstruct, Contains(opponentUsedSkillsList, "Obstruct") ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+        SetLabelColor(opponentUsedCopy, Contains(opponentUsedSkillsList, "Copy") ? UsedSkillActiveWhite : UsedSkillDefaultGray);
+
+        Debug.Log("OnlinePanelManager - Used skill labels updated");
+    }
+
+    private static int CountScanLike(System.Collections.Generic.List<string> list)
+    {
+        if (list == null) return 0;
+        int count = 0;
+        if (list.Contains("Scan")) count++;
+        if (list.Contains("FakeOut")) count++;
+        return count;
+    }
+
+    private static bool Contains(System.Collections.Generic.List<string> list, string key)
+    {
+        return list != null && list.Contains(key);
+    }
+
+    private static void SetLabelColor(TextMeshProUGUI label, Color color)
+    {
+        Debug.Log($"SetLabelColor: {label.name} - {color}");
+        if (label != null) label.color = color;
+    }
+
     /// <summary>
     /// 特定のスキルボタンの有効/無効を設定
     /// </summary>

@@ -127,6 +127,14 @@ public class OnlinePhaseManager : MonoBehaviour
             
             if (gameState != null)
             {
+                // 使用済スキルをプロバイダに反映
+                if (gameDataProvider != null)
+                {
+                    var p1 = gameState.player1UsedSkills != null ? new System.Collections.Generic.List<string>(gameState.player1UsedSkills) : new System.Collections.Generic.List<string>();
+                    var p2 = gameState.player2UsedSkills != null ? new System.Collections.Generic.List<string>(gameState.player2UsedSkills) : new System.Collections.Generic.List<string>();
+                    gameDataProvider.UpdateUsedSkills(p1, p2);
+                }
+
                 HandlePhaseChange(gameState.gamePhase);
             }
         }
@@ -298,6 +306,8 @@ public class OnlinePhaseManager : MonoBehaviour
     {
         public string gameId;
         public string gamePhase;
+        public string[] player1UsedSkills;
+        public string[] player2UsedSkills;
     }
 }
 

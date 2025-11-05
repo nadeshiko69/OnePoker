@@ -189,6 +189,12 @@ public class OnlineGameManager : MonoBehaviour
         // ライフUI初期化
         UpdateLifeUI();
         
+        // 使用済スキル表示を初期化（ゲーム開始時のみ）
+        if (panelManager != null)
+        {
+            panelManager.InitializeUsedSkillsDisplay();
+        }
+        
         if (resultViewManager != null)
         {
             resultViewManager.ResetResults();
