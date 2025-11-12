@@ -16,6 +16,7 @@ public class OnlineSkillManager : MonoBehaviour
     [Header("依存マネージャー")]
     private OnlineGameDataProvider gameDataProvider;
     private OnlinePanelManager panelManager;
+    private OnlinePhaseManager phaseManager;
 
     [Header("Obstruct状態管理")]
     private bool isPlayerObstructed = false;
@@ -30,14 +31,19 @@ public class OnlineSkillManager : MonoBehaviour
     [Header("使用済スキル")]
     private List<string> myUsedSkills = new List<string>();
     private List<string> opponentUsedSkills = new List<string>();
+    
+    // 前回のSetPhaseで通知済みの相手のスキル（重複通知を防ぐため）
+    private List<string> lastNotifiedOpponentSkills = new List<string>();
 
     void Start()
     {
         gameDataProvider = FindObjectOfType<OnlineGameDataProvider>();
         panelManager = FindObjectOfType<OnlinePanelManager>();
+        phaseManager = FindObjectOfType<OnlinePhaseManager>();
 
         Debug.Log($"[SkillManager] Start() - GameDataProvider found: {gameDataProvider != null}");
         Debug.Log($"[SkillManager] Start() - PanelManager found: {panelManager != null}");
+        Debug.Log($"[SkillManager] Start() - PhaseManager found: {phaseManager != null}");
         
         if (gameDataProvider != null)
         {
@@ -170,15 +176,35 @@ public class OnlineSkillManager : MonoBehaviour
 
     /// <summary>
     /// 相手が使用したスキルをUI上に表示
+    /// 注意: SetPhaseの時だけ通知を表示（BetPhaseなど他のフェーズでは表示しない）
+    /// また、前回のSetPhaseで既に通知したスキルは再度通知しない（重複通知を防ぐ）
     /// </summary>
     private void UpdateOpponentSkillDisplay()
     {
         if (panelManager == null) return;
 
-        // 相手が使用したスキルを表示
+        // SetPhaseの時だけ通知を表示（BetPhaseやRevealPhaseでは表示しない）
+        bool isSetPhase = phaseManager != null && phaseManager.IsSetPhaseActive;
+        if (!isSetPhase)
+        {
+            Debug.Log($"[SkillManager] UpdateOpponentSkillDisplay called but not in SetPhase - skipping notification");
+            return;
+        }
+
+        // 前回のSetPhase以降に追加された新しいスキルを特定
+        List<string> newSkills = new List<string>();
         foreach (string skillType in opponentUsedSkills)
         {
-            Debug.Log($"[SkillManager] Opponent used skill: {skillType}");
+            if (!lastNotifiedOpponentSkills.Contains(skillType))
+            {
+                newSkills.Add(skillType);
+            }
+        }
+
+        // 新しいスキルのみ通知を表示
+        foreach (string skillType in newSkills)
+        {
+            Debug.Log($"[SkillManager] New opponent skill detected: {skillType}");
             
             // Scanスキルの場合は通知を表示
             if (skillType == "Scan")
@@ -189,6 +215,13 @@ public class OnlineSkillManager : MonoBehaviour
             {
                 panelManager.ShowOpponentUsedSkillNotification("相手がScanを使用しました"); // ブラフ
             }
+        }
+
+        // 通知したスキルを記録（次回のSetPhaseで重複通知を防ぐ）
+        if (newSkills.Count > 0)
+        {
+            lastNotifiedOpponentSkills = new List<string>(opponentUsedSkills);
+            Debug.Log($"[SkillManager] Updated lastNotifiedOpponentSkills: {string.Join(", ", lastNotifiedOpponentSkills)}");
         }
     }
 
@@ -438,6 +471,7 @@ public class OnlineSkillManager : MonoBehaviour
     {
         myUsedSkills.Clear();
         opponentUsedSkills.Clear();
+        lastNotifiedOpponentSkills.Clear();
         isPlayerObstructed = false;
         obstructTurnCounter = 0;
         obstructAlreadyProcessed = false;

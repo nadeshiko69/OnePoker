@@ -169,9 +169,88 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'updatedAt': current_time
         }
         
-        # DynamoDBにゲーム状態を保存
-        game_table.put_item(Item=game_state)
-        print(f"New game state created and saved: {game_id}")
+        try:
+            # DynamoDBにゲーム状態を保存
+            game_table.put_item(Item=game_state)
+            print(f"New game state created and saved: {game_id}")
+            
+            # 競合状態を防ぐため、保存後に再度チェック
+            # 他のLambda関数が同時にゲームを作成した可能性がある
+            verify_games = game_table.scan(
+                FilterExpression='roomCode = :roomCode',
+                ExpressionAttributeValues={':roomCode': room_code}
+            )
+            
+            if len(verify_games['Items']) > 1:
+                print(f"Warning: Multiple games found for roomCode {room_code} after creation. Found {len(verify_games['Items'])} games.")
+                # 最初に作成されたゲーム（createdAtが最も古い）を返す
+                verify_games['Items'].sort(key=lambda x: x.get('createdAt', 0))
+                first_game = verify_games['Items'][0]
+                first_game_id = first_game['gameId']
+                
+                # 自分が作成したゲームが最初でない場合、最初のゲームを返す
+                if first_game_id != game_id:
+                    print(f"Another game ({first_game_id}) was created first. Returning first game instead of {game_id}.")
+                    first_game = convert_decimals(first_game)
+                    
+                    return {
+                        'statusCode': 200,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*',
+                            'Access-Control-Allow-Headers': 'Content-Type',
+                            'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                        },
+                        'body': json.dumps({
+                            'gameId': first_game['gameId'],
+                            'roomCode': first_game['roomCode'],
+                            'player1Id': first_game['player1Id'],
+                            'player2Id': first_game['player2Id'],
+                            'player1Cards': first_game['player1Cards'],
+                            'player2Cards': first_game['player2Cards'],
+                            'currentTurn': first_game['currentTurn'],
+                            'gamePhase': first_game['gamePhase'],
+                            'player1Life': first_game['player1Life'],
+                            'player2Life': first_game['player2Life']
+                        })
+                    }
+        except Exception as e:
+            print(f"Error creating game: {str(e)}")
+            # エラーが発生した場合、再度既存ゲームをチェック
+            retry_games = game_table.scan(
+                FilterExpression='roomCode = :roomCode',
+                ExpressionAttributeValues={':roomCode': room_code}
+            )
+            
+            if retry_games['Items']:
+                print(f"Found existing game after error, returning first game")
+                existing_game = retry_games['Items'][0]
+                existing_game = convert_decimals(existing_game)
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                    },
+                    'body': json.dumps({
+                        'gameId': existing_game['gameId'],
+                        'roomCode': existing_game['roomCode'],
+                        'player1Id': existing_game['player1Id'],
+                        'player2Id': existing_game['player2Id'],
+                        'player1Cards': existing_game['player1Cards'],
+                        'player2Cards': existing_game['player2Cards'],
+                        'currentTurn': existing_game['currentTurn'],
+                        'gamePhase': existing_game['gamePhase'],
+                        'player1Life': existing_game['player1Life'],
+                        'player2Life': existing_game['player2Life']
+                    })
+                }
+            else:
+                # 再試行してもゲームが見つからない場合はエラーを返す
+                raise
         
         # レスポンスを作成
         response = {
