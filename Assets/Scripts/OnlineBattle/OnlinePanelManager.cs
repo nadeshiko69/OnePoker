@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using UnityEngine.UI;
+using System;
 
 public class OnlinePanelManager : MonoBehaviour
 {
@@ -687,6 +688,58 @@ public class OnlinePanelManager : MonoBehaviour
     {
         if (ChangeCard1Button != null) ChangeCard1Button.gameObject.SetActive(visible);
         if (ChangeCard2Button != null) ChangeCard2Button.gameObject.SetActive(visible);
+    }
+
+    public void ShowChangeCardSelection(Action onSelectCard1, Action onSelectCard2)
+    {
+        VisibleChangeCardButtons(true);
+
+        if (ChangeCard1Button != null)
+        {
+            ChangeCard1Button.onClick.RemoveAllListeners();
+            if (onSelectCard1 != null)
+            {
+                ChangeCard1Button.onClick.AddListener(() => onSelectCard1());
+            }
+            ChangeCard1Button.gameObject.SetActive(true);
+            ChangeCard1Button.interactable = true;
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - ChangeCard1Button is null");
+        }
+
+        if (ChangeCard2Button != null)
+        {
+            ChangeCard2Button.onClick.RemoveAllListeners();
+            if (onSelectCard2 != null)
+            {
+                ChangeCard2Button.onClick.AddListener(() => onSelectCard2());
+            }
+            ChangeCard2Button.gameObject.SetActive(true);
+            ChangeCard2Button.interactable = true;
+        }
+        else
+        {
+            Debug.LogWarning("OnlinePanelManager - ChangeCard2Button is null");
+        }
+    }
+
+    public void HideChangeCardSelection()
+    {
+        if (ChangeCard1Button != null)
+        {
+            ChangeCard1Button.onClick.RemoveAllListeners();
+            ChangeCard1Button.gameObject.SetActive(false);
+        }
+
+        if (ChangeCard2Button != null)
+        {
+            ChangeCard2Button.onClick.RemoveAllListeners();
+            ChangeCard2Button.gameObject.SetActive(false);
+        }
+
+        VisibleChangeCardButtons(false);
     }
 
     public void ShowDescriptionSkillPanel(OnlineGameManager.SkillType skillType, string skillDescription)

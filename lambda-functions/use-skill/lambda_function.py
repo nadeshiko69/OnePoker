@@ -87,9 +87,15 @@ def lambda_handler(event, context):
                 })
             }
         
+        selected_card_index = body.get('selectedCardIndex', -1)
+        try:
+            selected_card_index = int(selected_card_index)
+        except (TypeError, ValueError):
+            selected_card_index = -1
+        
         # 使用済スキルリストを取得
         skill_list_key = 'player1UsedSkills' if is_player1 else 'player2UsedSkills'
-        used_skills = game_state.get(skill_list_key, [])
+        used_skills = list(game_state.get(skill_list_key, []))
         
         # 既に使用済みか確認
         if skill_type in used_skills:
@@ -106,18 +112,72 @@ def lambda_handler(event, context):
                 })
             }
         
-        # スキルを使用済リストに追加
-        used_skills.append(skill_type)
+        player_cards_key = 'player1Cards' if is_player1 else 'player2Cards'
+        player1_cards = [int(card) for card in game_state.get('player1Cards', [])]
+        player2_cards = [int(card) for card in game_state.get('player2Cards', [])]
+        deck = [int(card) for card in game_state.get('deck', [])]
         
-        # DynamoDBを更新
+        updated_used_skills = used_skills + [skill_type]
         current_time = int(time.time())
-        game_table.update_item(
-            Key={'gameId': game_id},
-            UpdateExpression=f'SET {skill_list_key} = :skills, updatedAt = :time',
-            ExpressionAttributeValues={
-                ':skills': used_skills,
+        drawn_card = -1
+        discarded_card = -1
+        
+        if skill_type == 'Change':
+            target_cards = player1_cards if is_player1 else player2_cards
+            
+            if selected_card_index < 0 or selected_card_index >= len(target_cards):
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                    },
+                    'body': json.dumps({
+                        'error': 'Invalid card index for Change skill'
+                    })
+                }
+            
+            if len(deck) == 0:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                    },
+                    'body': json.dumps({
+                        'error': 'Deck is empty. Cannot draw a new card.'
+                    })
+                }
+            
+            discarded_card = target_cards.pop(selected_card_index)
+            drawn_card = deck.pop(0)
+            target_cards.append(drawn_card)
+            
+            print(f"Change skill executed: discarded {discarded_card}, drew {drawn_card}")
+            
+            update_expression = f'SET {skill_list_key} = :skills, {player_cards_key} = :player_cards, deck = :deck, updatedAt = :time'
+            expression_values = {
+                ':skills': updated_used_skills,
+                ':player_cards': target_cards,
+                ':deck': deck,
                 ':time': current_time
             }
+        else:
+            update_expression = f'SET {skill_list_key} = :skills, updatedAt = :time'
+            expression_values = {
+                ':skills': updated_used_skills,
+                ':time': current_time
+            }
+        
+        # DynamoDBを更新
+        game_table.update_item(
+            Key={'gameId': game_id},
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expression_values
         )
         
         print(f"Skill {skill_type} used by player {player_id} in game {game_id}")
@@ -128,7 +188,12 @@ def lambda_handler(event, context):
             'gameId': game_id,
             'playerId': player_id,
             'skillType': skill_type,
-            'usedSkills': used_skills
+            'usedSkills': updated_used_skills,
+            'player1Cards': player1_cards,
+            'player2Cards': player2_cards,
+            'deck': deck,
+            'drawnCard': drawn_card,
+            'discardedCard': discarded_card
         }
         
         return {

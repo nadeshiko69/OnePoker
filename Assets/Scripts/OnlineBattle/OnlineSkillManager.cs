@@ -35,6 +35,13 @@ public class OnlineSkillManager : MonoBehaviour
     // 前回のSetPhaseで通知済みの相手のスキル（重複通知を防ぐため）
     private List<string> lastNotifiedOpponentSkills = new List<string>();
 
+    // Changeスキル選択状態
+    private bool isChangeSelectionMode = false;
+    private int pendingChangeCardIndex = -1;
+    private int lastChangeDrawnCard = -1;
+    private int lastChangeDiscardedCard = -1;
+    private string pendingSkillType = null;
+
     void Start()
     {
         gameDataProvider = FindObjectOfType<OnlineGameDataProvider>();
@@ -269,6 +276,12 @@ public class OnlineSkillManager : MonoBehaviour
             return;
         }
 
+        if (!string.IsNullOrEmpty(pendingSkillType))
+        {
+            Debug.LogWarning($"[SkillManager] Another skill ({pendingSkillType}) is currently processing. Please wait.");
+            return;
+        }
+
         // Obstructチェック
         if (isPlayerObstructed && skillType != "None")
         {
@@ -277,18 +290,43 @@ public class OnlineSkillManager : MonoBehaviour
             return;
         }
 
+        // 追加情報が必要なスキル（Changeなど）の事前処理
+        if (skillType == "Change")
+        {
+            pendingSkillType = skillType;
+            StartChangeSkillSelection();
+            return;
+        }
+
         // サーバーに送信
+        pendingSkillType = skillType;
         SendSkillToServer(skillType);
     }
 
     /// <summary>
     /// サーバーにスキル使用を送信
     /// </summary>
-    private void SendSkillToServer(string skillType)
+    private void SendSkillToServer(string skillType, int selectedCardIndex = -1)
     {
         if (gameDataProvider == null)
         {
             Debug.LogError("[SkillManager] GameDataProvider is null!");
+            if (skillType == "Change")
+            {
+                ResetChangeSelectionState(true);
+            }
+            pendingSkillType = null;
+            return;
+        }
+
+        if (panelManager == null)
+        {
+            Debug.LogError("[SkillManager] PanelManager is null!");
+            if (skillType == "Change")
+            {
+                ResetChangeSelectionState(true);
+            }
+            pendingSkillType = null;
             return;
         }
 
@@ -314,13 +352,18 @@ public class OnlineSkillManager : MonoBehaviour
         }
 
         Debug.Log($"[SkillManager] Sending skill to server - Game: {gameId}, Player: {playerId}, Skill: {skillType}");
+        if (selectedCardIndex >= 0)
+        {
+            Debug.Log($"[SkillManager] Change skill selected card index: {selectedCardIndex}");
+        }
 
         OnePoker.Network.HttpManager.Instance.UseSkill(
             gameId,
             playerId,
             skillType,
             OnSkillUsedSuccess,
-            OnSkillUsedError
+            OnSkillUsedError,
+            selectedCardIndex
         );
     }
 
@@ -331,6 +374,8 @@ public class OnlineSkillManager : MonoBehaviour
     {
         Debug.Log($"[SkillManager] Skill used successfully: {response.skillType}");
         Debug.Log($"[SkillManager] Updated used skills: {string.Join(", ", response.usedSkills)}");
+
+        pendingSkillType = null;
 
         // ローカルの使用済スキルリストを更新
         if (response.usedSkills != null)
@@ -354,8 +399,19 @@ public class OnlineSkillManager : MonoBehaviour
             }
         }
 
+        if (response.skillType == "Change")
+        {
+            ProcessChangeSkillResponse(response);
+        }
+
         // スキルボタンの状態を更新
         UpdateSkillButtonStates();
+
+        // 使用済スキル表示を即時更新
+        if (panelManager != null)
+        {
+            panelManager.UpdateUsedSkillsDisplay(myUsedSkills, opponentUsedSkills);
+        }
 
         // スキル効果を適用
         ApplySkillEffect(response.skillType);
@@ -368,6 +424,13 @@ public class OnlineSkillManager : MonoBehaviour
     {
         Debug.LogError($"[SkillManager] Failed to use skill: {error}");
         panelManager?.ShowOpponentUsedSkillNotification($"スキル使用エラー: {error}");
+
+        if (pendingSkillType == "Change")
+        {
+            ResetChangeSelectionState(true);
+        }
+
+        pendingSkillType = null;
     }
 
     /// <summary>
@@ -386,7 +449,16 @@ public class OnlineSkillManager : MonoBehaviour
 
             case "Change":
                 // Changeスキル: 自分の手札を1枚交換（実装予定）
-                panelManager?.ShowOpponentUsedSkillNotification("Changeを使用しました");
+                string changeMessage = "Changeを使用しました";
+                if (lastChangeDiscardedCard >= 0 && lastChangeDrawnCard >= 0)
+                {
+                    changeMessage = $"Change: {GetCardName(lastChangeDiscardedCard)} を捨て、{GetCardName(lastChangeDrawnCard)} を引きました";
+                }
+                else if (lastChangeDrawnCard >= 0)
+                {
+                    changeMessage = $"Change: 新しいカード {GetCardName(lastChangeDrawnCard)} を引きました";
+                }
+                panelManager?.ShowOpponentUsedSkillNotification(changeMessage);
                 break;
 
             case "Obstruct":
@@ -475,7 +547,193 @@ public class OnlineSkillManager : MonoBehaviour
         isPlayerObstructed = false;
         obstructTurnCounter = 0;
         obstructAlreadyProcessed = false;
+        isChangeSelectionMode = false;
+        pendingChangeCardIndex = -1;
+        pendingSkillType = null;
+        lastChangeDrawnCard = -1;
+        lastChangeDiscardedCard = -1;
+        if (panelManager != null)
+        {
+            panelManager.HideChangeCardSelection();
+            panelManager.SetSkillButtonInteractable("Change", true);
+        }
         Debug.Log("[SkillManager] Used skills reset");
+    }
+
+    // ========== Change スキル実装 ==========
+    
+    private void StartChangeSkillSelection()
+    {
+        Debug.Log("[SkillManager] Starting Change skill selection");
+
+        if (gameDataProvider == null)
+        {
+            Debug.LogError("[SkillManager] GameDataProvider is null. Cannot start Change skill.");
+            pendingSkillType = null;
+            return;
+        }
+
+        var myCards = gameDataProvider.MyCards;
+        if (myCards == null || myCards.Length < 2)
+        {
+            Debug.LogWarning("[SkillManager] Not enough cards to perform Change skill");
+            panelManager?.ShowOpponentUsedSkillNotification("交換できる手札がありません");
+            pendingSkillType = null;
+            return;
+        }
+
+        if (panelManager == null)
+        {
+            Debug.LogError("[SkillManager] PanelManager is null. Cannot show Change selection UI.");
+            pendingSkillType = null;
+            return;
+        }
+
+        if (handManager == null)
+        {
+            handManager = FindObjectOfType<OnlineHandManager>();
+        }
+
+        if (handManager == null)
+        {
+            Debug.LogError("[SkillManager] OnlineHandManager not found. Cannot perform Change skill.");
+            panelManager.ShowOpponentUsedSkillNotification("手札の管理コンポーネントが見つかりません");
+            pendingSkillType = null;
+            return;
+        }
+
+        if (isChangeSelectionMode)
+        {
+            Debug.LogWarning("[SkillManager] Change selection already in progress");
+            return;
+        }
+
+        isChangeSelectionMode = true;
+        pendingChangeCardIndex = -1;
+        lastChangeDrawnCard = -1;
+        lastChangeDiscardedCard = -1;
+
+        panelManager.SetSkillButtonInteractable("Change", false);
+        panelManager.ShowOpponentUsedSkillNotification("交換する手札を選択してください");
+        panelManager.ShowChangeCardSelection(
+            () => OnChangeCardSelected(0),
+            () => OnChangeCardSelected(1)
+        );
+    }
+
+    private void OnChangeCardSelected(int cardIndex)
+    {
+        Debug.Log($"[SkillManager] Change card selected: index={cardIndex}");
+
+        if (!isChangeSelectionMode)
+        {
+            Debug.LogWarning("[SkillManager] Change selection is not active");
+            return;
+        }
+
+        if (gameDataProvider == null)
+        {
+            Debug.LogError("[SkillManager] GameDataProvider is null during Change selection");
+            ResetChangeSelectionState(true);
+            return;
+        }
+
+        var myCards = gameDataProvider.MyCards;
+        if (myCards == null || cardIndex < 0 || cardIndex >= myCards.Length)
+        {
+            Debug.LogError("[SkillManager] Invalid card index for Change skill");
+            panelManager?.ShowOpponentUsedSkillNotification("選択できないカードです");
+            ResetChangeSelectionState(true);
+            return;
+        }
+
+        isChangeSelectionMode = false;
+        pendingChangeCardIndex = cardIndex;
+        lastChangeDiscardedCard = myCards[cardIndex];
+        lastChangeDrawnCard = -1;
+
+        if (panelManager != null)
+        {
+            panelManager.HideChangeCardSelection();
+            panelManager.ShowOpponentUsedSkillNotification("山札からカードを引いています...");
+        }
+
+        SendSkillToServer("Change", cardIndex);
+    }
+
+    private void ProcessChangeSkillResponse(OnePoker.Network.HttpManager.UseSkillResponse response)
+    {
+        Debug.Log("[SkillManager] Processing Change skill response");
+
+        if (gameDataProvider == null || gameDataProvider.GameData == null)
+        {
+            Debug.LogWarning("[SkillManager] GameDataProvider or GameData is null. Cannot apply Change result.");
+            return;
+        }
+
+        if (response.player1Cards != null && response.player1Cards.Length > 0)
+        {
+            gameDataProvider.GameData.player1Cards = response.player1Cards;
+            Debug.Log($"[SkillManager] Updated Player1 cards: {string.Join(",", response.player1Cards)}");
+        }
+
+        if (response.player2Cards != null && response.player2Cards.Length > 0)
+        {
+            gameDataProvider.GameData.player2Cards = response.player2Cards;
+            Debug.Log($"[SkillManager] Updated Player2 cards: {string.Join(",", response.player2Cards)}");
+        }
+
+        lastChangeDrawnCard = response.drawnCard;
+        if (response.discardedCard >= 0)
+        {
+            lastChangeDiscardedCard = response.discardedCard;
+        }
+
+        pendingChangeCardIndex = -1;
+
+        if (panelManager != null)
+        {
+            panelManager.HideChangeCardSelection();
+        }
+
+        if (handManager == null)
+        {
+            handManager = FindObjectOfType<OnlineHandManager>();
+        }
+
+        if (handManager != null)
+        {
+            var updatedCards = gameDataProvider.MyCards;
+            if (updatedCards != null)
+            {
+                handManager.SetPlayerHand(updatedCards);
+                Debug.Log($"[SkillManager] Player hand refreshed after Change: {string.Join(",", updatedCards)}");
+            }
+            else
+            {
+                Debug.LogWarning("[SkillManager] Updated hand is null after Change skill");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[SkillManager] OnlineHandManager not available when applying Change result");
+        }
+    }
+
+    private void ResetChangeSelectionState(bool reenableButton)
+    {
+        isChangeSelectionMode = false;
+        pendingChangeCardIndex = -1;
+        pendingSkillType = null;
+
+        if (panelManager != null)
+        {
+            panelManager.HideChangeCardSelection();
+            if (reenableButton)
+            {
+                panelManager.SetSkillButtonInteractable("Change", true);
+            }
+        }
     }
 
     // ========== Scan スキル実装 ==========
@@ -553,6 +811,11 @@ public class OnlineSkillManager : MonoBehaviour
     /// </summary>
     private string GetCardName(int cardValue)
     {
+        if (cardValue < 0 || cardValue > 51)
+        {
+            return $"Card({cardValue})";
+        }
+
         int rank = cardValue % 13;
         string[] ranks = { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
         int suit = cardValue / 13;

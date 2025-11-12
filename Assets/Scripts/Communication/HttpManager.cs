@@ -437,14 +437,15 @@ namespace OnePoker.Network
         /// <summary>
         /// スキル使用API
         /// </summary>
-        public void UseSkill(string gameId, string playerId, string skillType, Action<UseSkillResponse> onSuccess, Action<string> onError)
+        public void UseSkill(string gameId, string playerId, string skillType, Action<UseSkillResponse> onSuccess, Action<string> onError, int selectedCardIndex = -1)
         {
             string url = $"{ApiBaseUrl}/use-skill";
             string jsonBody = JsonUtility.ToJson(new UseSkillRequest
             {
                 gameId = gameId,
                 playerId = playerId,
-                skillType = skillType
+                skillType = skillType,
+                selectedCardIndex = selectedCardIndex
             });
 
             Debug.Log($"HttpManager - Using skill: {skillType} for player {playerId} in game {gameId}");
@@ -460,6 +461,7 @@ namespace OnePoker.Network
             public string gameId;
             public string playerId;
             public string skillType; // "Scan", "Change", "Obstruct", "FakeOut", "Copy"
+            public int selectedCardIndex = -1; // Changeスキル用。未指定の場合は-1
         }
 
         [System.Serializable]
@@ -470,6 +472,11 @@ namespace OnePoker.Network
             public string playerId;
             public string skillType;
             public string[] usedSkills;
+            public int[] player1Cards;
+            public int[] player2Cards;
+            public int[] deck;
+            public int drawnCard = -1;
+            public int discardedCard = -1;
         }
 
         /// <summary>
