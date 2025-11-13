@@ -407,6 +407,12 @@ public class OnlineSkillManager : MonoBehaviour
         // スキルボタンの状態を更新
         UpdateSkillButtonStates();
 
+        // 1つのスキルを使用したら、すべてのスキルボタンを非活性にする
+        if (panelManager != null)
+        {
+            panelManager.SetAllSkillButtonsInteractable(false);
+        }
+
         // 使用済スキル表示を即時更新
         if (panelManager != null)
         {
