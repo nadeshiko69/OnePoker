@@ -424,6 +424,11 @@ public class OnlineGameManager : MonoBehaviour
             currentDealer = response.currentDealer
         });
         
+        // 相手の手札が正しく更新されたか確認
+        var myCardsAfterUpdate = gameDataProvider.MyCards;
+        var opponentCardsAfterUpdate = gameDataProvider.OpponentCards;
+        Debug.Log($"[OnlineGameManager] After update - MyCards: {(myCardsAfterUpdate != null ? string.Join(",", myCardsAfterUpdate) : "null")}, OpponentCards: {(opponentCardsAfterUpdate != null ? string.Join(",", opponentCardsAfterUpdate) : "null")}");
+        
         // Dealer情報を更新
         gameDataProvider.UpdateCurrentDealer(response.currentDealer);
         
@@ -809,6 +814,8 @@ public class OnlineGameManager : MonoBehaviour
         public bool opponentCardPlaced;
         public int? opponentPlacedCardId;
         public string updatedAt;
+        public int[] player1Cards;
+        public int[] player2Cards;
     }
 }
 

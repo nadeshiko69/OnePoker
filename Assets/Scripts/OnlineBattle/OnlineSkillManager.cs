@@ -110,6 +110,43 @@ public class OnlineSkillManager : MonoBehaviour
 
                 // Providerへ反映
                 gameDataProvider.UpdateUsedSkills(p1, p2);
+                
+                // 手札情報を更新
+                if (gameState.player1Cards != null && gameState.player2Cards != null)
+                {
+                    gameDataProvider.UpdateGameData(new OnlineGameDataProvider.OnlineGameDataWithCards
+                    {
+                        gameId = gameDataProvider.GameId,
+                        playerId = gameDataProvider.MyPlayerId,
+                        opponentId = gameDataProvider.OpponentId,
+                        isPlayer1 = gameDataProvider.IsPlayer1,
+                        roomCode = gameDataProvider.RoomCode,
+                        player1Cards = gameState.player1Cards,
+                        player2Cards = gameState.player2Cards,
+                        player1CardValue = gameDataProvider.GameData?.player1CardValue,
+                        player2CardValue = gameDataProvider.GameData?.player2CardValue,
+                        player1Life = gameDataProvider.GameData?.player1Life ?? 20,
+                        player2Life = gameDataProvider.GameData?.player2Life ?? 20,
+                        player1UsedSkills = p1,
+                        player2UsedSkills = p2,
+                        currentDealer = gameDataProvider.GameData?.currentDealer ?? "P1"
+                    });
+                    
+                    Debug.Log($"[SkillManager] Updated hand cards from GameState on SetPhase - Player1: {string.Join(",", gameState.player1Cards)}, Player2: {string.Join(",", gameState.player2Cards)}");
+                    
+                    // 手札UIを更新
+                    if (handManager == null)
+                    {
+                        handManager = FindObjectOfType<OnlineHandManager>();
+                    }
+                    if (handManager != null)
+                    {
+                        var myCards = gameDataProvider.MyCards;
+                        var opponentCards = gameDataProvider.OpponentCards;
+                        if (myCards != null) handManager.SetPlayerHand(myCards);
+                        if (opponentCards != null) handManager.SetOpponentHand(opponentCards);
+                    }
+                }
 
                 // ローカルキャッシュとUIを更新
                 UpdateUsedSkillsFromServer();
@@ -133,6 +170,8 @@ public class OnlineSkillManager : MonoBehaviour
         public string gamePhase;
         public string[] player1UsedSkills;
         public string[] player2UsedSkills;
+        public int[] player1Cards;
+        public int[] player2Cards;
     }
 
     /// <summary>

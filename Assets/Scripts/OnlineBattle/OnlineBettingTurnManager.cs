@@ -233,5 +233,7 @@ public class OnlineBettingTurnManager : MonoBehaviour
         public int currentRequiredBet;     // 現在必要なベット額
         public int player1BetAmount;
         public int player2BetAmount;
+        public int[] player1Cards;
+        public int[] player2Cards;
     }
 }

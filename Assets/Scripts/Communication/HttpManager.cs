@@ -218,6 +218,8 @@ namespace OnePoker.Network
             public int currentRequiredBet; // 現在必要なベット額
             public string[] player1UsedSkills; // プレイヤー1の使用済スキル
             public string[] player2UsedSkills; // プレイヤー2の使用済スキル
+            public int[] player1Cards;
+            public int[] player2Cards;
         }
 
         [System.Serializable]

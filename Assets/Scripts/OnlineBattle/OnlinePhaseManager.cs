@@ -133,6 +133,30 @@ public class OnlinePhaseManager : MonoBehaviour
                     var p1 = gameState.player1UsedSkills != null ? new System.Collections.Generic.List<string>(gameState.player1UsedSkills) : new System.Collections.Generic.List<string>();
                     var p2 = gameState.player2UsedSkills != null ? new System.Collections.Generic.List<string>(gameState.player2UsedSkills) : new System.Collections.Generic.List<string>();
                     gameDataProvider.UpdateUsedSkills(p1, p2);
+                    
+                    // 手札情報を更新
+                    if (gameState.player1Cards != null && gameState.player2Cards != null)
+                    {
+                        gameDataProvider.UpdateGameData(new OnlineGameDataProvider.OnlineGameDataWithCards
+                        {
+                            gameId = gameDataProvider.GameId,
+                            playerId = gameDataProvider.MyPlayerId,
+                            opponentId = gameDataProvider.OpponentId,
+                            isPlayer1 = gameDataProvider.IsPlayer1,
+                            roomCode = gameDataProvider.RoomCode,
+                            player1Cards = gameState.player1Cards,
+                            player2Cards = gameState.player2Cards,
+                            player1CardValue = gameDataProvider.GameData?.player1CardValue,
+                            player2CardValue = gameDataProvider.GameData?.player2CardValue,
+                            player1Life = gameState.player1Life,
+                            player2Life = gameState.player2Life,
+                            player1UsedSkills = p1,
+                            player2UsedSkills = p2,
+                            currentDealer = gameDataProvider.GameData?.currentDealer ?? "P1"
+                        });
+                        
+                        Debug.Log($"[PhaseManager] Updated hand cards from GameState - Player1: {string.Join(",", gameState.player1Cards)}, Player2: {string.Join(",", gameState.player2Cards)}");
+                    }
                 }
 
                 HandlePhaseChange(gameState.gamePhase);
@@ -308,6 +332,10 @@ public class OnlinePhaseManager : MonoBehaviour
         public string gamePhase;
         public string[] player1UsedSkills;
         public string[] player2UsedSkills;
+        public int[] player1Cards;
+        public int[] player2Cards;
+        public int player1Life;
+        public int player2Life;
     }
 }
 

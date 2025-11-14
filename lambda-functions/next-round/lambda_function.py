@@ -365,6 +365,21 @@ def lambda_handler(event, context):
             print(f"Error updating game state: {str(e)}")
             return create_response(500, {'error': f'Failed to update game state: {str(e)}'})
         
+        # DynamoDBから最新のゲーム状態を取得して、両プレイヤーの手札を含める
+        try:
+            updated_response = game_table.get_item(Key={'gameId': game_id})
+            if 'Item' in updated_response:
+                updated_game_state = updated_response['Item']
+                # 最新の手札を取得
+                player1_cards = updated_game_state.get('player1Cards', [])
+                player2_cards = updated_game_state.get('player2Cards', [])
+                print(f"Retrieved latest cards - Player1: {player1_cards}, Player2: {player2_cards}")
+            else:
+                print(f"Warning: Could not retrieve updated game state for game {game_id}")
+        except Exception as e:
+            print(f"Warning: Could not retrieve updated game state: {str(e)}")
+            # エラーが発生しても、更新した手札を使用して続行
+        
         # レスポンスを作成
         response_data = {
             'success': True,
