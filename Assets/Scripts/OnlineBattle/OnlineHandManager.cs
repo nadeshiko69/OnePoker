@@ -9,6 +9,10 @@ public class OnlineHandManager : MonoBehaviour
     public CardDisplay playerCard2;
     public CardDisplay opponentCard1;
     public CardDisplay opponentCard2;
+    
+    // ========== デバッグ用フラグ ==========
+    [Header("Debug Settings")]
+    [SerializeField] private bool isDebugMode = true;
 
     // 参照がMissingの場合に自動で再取得する
     private void EnsureBindings()
@@ -332,14 +336,14 @@ public class OnlineHandManager : MonoBehaviour
             {
                 Debug.Log($"Setting opponentCard1 to cardId: {cardIds[0]}");
                 opponentCard1.SetCardValue(cardIds[0]);
-                opponentCard1.SetCard(false); // 裏向き
-                Debug.Log($"[HAND_DEBUG] opponentCard1.SetCard completed");
+                opponentCard1.SetCard(isDebugMode); // Debugなら表向きで表示
+                Debug.Log($"[HAND_DEBUG] opponentCard1.SetCard completed - isDebugMode: {isDebugMode}");
             }
             else
             {
                 Debug.Log("Setting opponentCard1 to default cardId: 0");
                 opponentCard1.SetCardValue(0);
-                opponentCard1.SetCard(false);
+                opponentCard1.SetCard(isDebugMode); // Debugなら表向きで表示
             }
         }
         else
@@ -362,14 +366,14 @@ public class OnlineHandManager : MonoBehaviour
             {
                 Debug.Log($"Setting opponentCard2 to cardId: {cardIds[1]}");
                 opponentCard2.SetCardValue(cardIds[1]);
-                opponentCard2.SetCard(false); // 裏向き
-                Debug.Log($"[HAND_DEBUG] opponentCard2.SetCard completed");
+                opponentCard2.SetCard(isDebugMode); // Debugなら表向きで表示
+                Debug.Log($"[HAND_DEBUG] opponentCard2.SetCard completed - isDebugMode: {isDebugMode}");
             }
             else
             {
                 Debug.Log("Setting opponentCard2 to default cardId: 0");
                 opponentCard2.SetCardValue(0);
-                opponentCard2.SetCard(false);
+                opponentCard2.SetCard(isDebugMode); // Debugなら表向きで表示
             }
         }
         else
@@ -484,21 +488,22 @@ public class OnlineHandManager : MonoBehaviour
     
     /// <summary>
     /// Scanスキルで表向きになった相手の手札を裏向きに戻す
+    /// Debugなら表向きのまま
     /// </summary>
     public void ResetOpponentCardsToFaceDown()
     {
-        Debug.Log("[HAND_MANAGER] Resetting opponent cards to face down");
+        Debug.Log($"[HAND_MANAGER] Resetting opponent cards to face down (isDebugMode: {isDebugMode})");
         
         if (opponentCard1 != null)
         {
-            opponentCard1.SetCard(false); // 裏向きに戻す
-            Debug.Log("[HAND_MANAGER] opponentCard1 set to face down");
+            opponentCard1.SetCard(isDebugMode); // Debugなら表向きで表示
+            Debug.Log($"[HAND_MANAGER] opponentCard1 set to {(isDebugMode ? "face up" : "face down")}");
         }
         
         if (opponentCard2 != null)
         {
-            opponentCard2.SetCard(false); // 裏向きに戻す
-            Debug.Log("[HAND_MANAGER] opponentCard2 set to face down");
+            opponentCard2.SetCard(isDebugMode); // Debugなら表向きで表示
+            Debug.Log($"[HAND_MANAGER] opponentCard2 set to {(isDebugMode ? "face up" : "face down")}");
         }
     }
 } 
